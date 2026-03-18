@@ -2,6 +2,9 @@
 
 This document defines the checkout flow for withdrawing/consuming inventory items from lab stock, including QR-based scanning, partial checkout, stock updates, and transaction history logging.
 
+> **Frontend page:** Checkout (`/inventory/checkout`). Primary flow uses `QrScanPanel` component for QR scanning with manual search fallback. See `23-page-and-route-planning.md`.
+> **UI components:** `QrScanPanel`, `FormSection`, `ConfirmationDialog`, `StatusBadge`. See `26-component-and-state-planning.md`.
+
 ---
 
 ## Checkout Overview

@@ -16,17 +16,18 @@
 
 The React application is responsible for:
 
-- **Rendering the UI** — All pages, dashboards, forms, tables, and modals.
-- **Client-side routing** — Navigation between modules (e.g., Dashboard, Orders, Inventory).
-- **State management** — Managing local UI state, form state, and cached server data.
+- **Rendering the UI** — All pages, dashboards, forms, tables, and modals. See `22-frontend-information-architecture.md` for page hierarchy and `23-page-and-route-planning.md` for 33 defined routes.
+- **Client-side routing** — Navigation between modules via React Router. Route guards enforce auth, role, and lab access. See `23-page-and-route-planning.md`.
+- **State management** — Server state via React Query (TanStack Query); global state via React Context (auth, lab context, theme). See `26-component-and-state-planning.md`.
 - **API communication** — Sending HTTP requests to the ASP.NET Core backend and handling responses.
 - **Authentication token handling** — Storing and attaching JWT/auth tokens to API requests.
-- **UI-level permission gating** — Showing/hiding UI elements based on the user's role and scope (visual only; backend enforces).
-- **QR code interactions** — Generating QR code images and integrating with device camera for scanning.
+- **UI-level permission gating** — Showing/hiding UI elements based on the user's role and scope (visual only; backend enforces). Role-based sidebar visibility defined in `22-frontend-information-architecture.md`.
+- **QR code interactions** — Generating QR code images and integrating with device camera for scanning via the `QrScanPanel` component.
 - **Client-side validation** — Input validation for forms before submission.
-- **Responsive design** — Adapting the UI for desktop and tablet use within the lab environment.
-- **Dashboard rendering** — Charts, widgets, alert cards, and data tables.
-- **Export triggers** — Initiating CSV/PDF export requests to the backend.
+- **Responsive design** — Adapting the UI for desktop and tablet use within the lab environment. Breakpoints defined in `25-design-system-and-theme-planning.md`.
+- **Theme management** — Light/dark dual-theme support with CSS custom properties. Default light; toggle via header. See `25-design-system-and-theme-planning.md`.
+- **Dashboard rendering** — Summary cards, data tables, filter bars, and status badges. Design tokens and component specs in `25-design-system-and-theme-planning.md` and `26-component-and-state-planning.md`.
+- **Export triggers** — Initiating CSV/PDF export requests to the backend via `ExportActions` component.
 
 **The frontend does NOT:**
 - Enforce authorization (backend is the authority).

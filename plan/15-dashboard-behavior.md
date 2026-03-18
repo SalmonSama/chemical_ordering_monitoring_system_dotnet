@@ -2,6 +2,11 @@
 
 This document defines the behavior, layout, data requirements, and scroll/filter specifications for each operational dashboard view in the system.
 
+> **Frontend UI specs:** See `24-dashboard-ui-planning.md` for column widths, filter types, export actions, and row behavior.
+> **Design tokens:** See `25-design-system-and-theme-planning.md` for status-to-color mapping, table styling, and badge specifications.
+> **Data queries:** See `21-reporting-and-dashboard-data-needs.md` for the underlying calculations and database views.
+> **Routes:** Dashboard home (`/`), Order Status (`/orders/status`), Min Stock (`/monitoring/min-stock`), Expired (`/monitoring/expired`), Peroxide Due (`/monitoring/peroxide-due`). See `23-page-and-route-planning.md`.
+
 ---
 
 ## Dashboard Architecture

@@ -17,11 +17,14 @@ This document describes the purpose, scope, and key capabilities of each major m
   - **Expiring Items** — Items approaching or past expiry date, grouped by urgency (30/60/90 days).
   - **Overdue Peroxide Tests** — Peroxide-forming chemicals with overdue monitoring.
   - **Recent Activity** — Latest check-ins, checkouts, and order activity.
-- Support drill-down from widgets to detailed module views.
+- Support drill-down from widgets to detailed module views ("View All →" pattern).
 - Respect the (Location, Lab) scope of the current user for all displayed data.
 - Refresh data on page load; optionally support periodic auto-refresh.
 
 > **See also:** `15-dashboard-behavior.md` for detailed table specifications, columns, filters, color coding, and scroll behavior.
+> **Frontend UI:** `24-dashboard-ui-planning.md` for dashboard card grid, filter bar, column specs, and export configuration.
+> **Route:** Dashboard home (`/`). See `23-page-and-route-planning.md`.
+> **Component:** `DashboardCard`, `StatusBadge`, `DataTable`, `FilterBar`. See `26-component-and-state-planning.md`.
 
 **User Access:** All roles (data filtered by scope).
 

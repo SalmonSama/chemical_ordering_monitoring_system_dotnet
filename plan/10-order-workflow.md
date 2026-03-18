@@ -2,6 +2,10 @@
 
 This document defines the complete order workflow from item selection through vendor notification, including all statuses, decision points, role interactions, and transaction history entries.
 
+> **Frontend pages:** Catalog & Cart (`/orders/catalog`), Cart Review (`/orders/cart`), My Orders (`/orders/my-orders`), Order Detail (`/orders/my-orders/:id`), Approval Queue (`/orders/approval-queue`), Order Status Dashboard (`/orders/status`). See `23-page-and-route-planning.md`.
+> **UI components:** `DataTable`, `FilterBar`, `DashboardCard`, `StatusBadge`, `ExportActions`. See `26-component-and-state-planning.md`.
+> **Cart state:** Server-persisted, client-cached via React Query. See `26-component-and-state-planning.md`, Cart State section.
+
 ---
 
 ## Normalized Order Statuses

@@ -2,6 +2,9 @@
 
 This document defines the peroxide monitoring workflow including the peroxide list page, lot-based monitoring events, PPM thresholds, and the data model for tracking key dates and test results.
 
+> **Frontend pages:** Peroxide List (`/monitoring/peroxide`), Log Peroxide Test (`/monitoring/peroxide/:lotId/log`), Peroxide History (`/monitoring/peroxide/:lotId/history`), Peroxide Due Dashboard (`/monitoring/peroxide-due`). See `23-page-and-route-planning.md`.
+> **UI components:** `DataTable`, `FilterBar`, `StatusBadge`, `FormSection`, `DashboardCard`. See `26-component-and-state-planning.md`.
+
 ---
 
 ## Overview

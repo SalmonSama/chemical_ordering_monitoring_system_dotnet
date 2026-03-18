@@ -2,6 +2,9 @@
 
 This document defines both check-in flows in detail: check-in from a pending delivery (against a purchase order) and manual check-in (no purchase order). Both flows result in the creation of inventory lot records and transaction history entries.
 
+> **Frontend pages:** Check-In Hub (`/inventory/check-in`) with two tabs: Pending Delivery (PO-based) and Manual Check-In. PO Check-In form (`/inventory/check-in/po/:purchaseRequestId`), Manual Check-In form (`/inventory/check-in/manual`). See `23-page-and-route-planning.md`.
+> **UI components:** `FormSection`, `LabelPreviewModal`, `DataTable`. See `26-component-and-state-planning.md`.
+
 ---
 
 ## Check-In Flow Overview
