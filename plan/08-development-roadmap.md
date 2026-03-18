@@ -44,15 +44,18 @@ Development is organized into **four phases**, ordered by business value, risk r
 | # | Deliverable | Description |
 |---|---|---|
 | 2.1 | **Chemical catalog UI** | Browse, search, and filter catalog items; category-aware display |
-| 2.2 | **Cart module** | Add to cart, edit quantities, remove items, persist across sessions |
-| 2.3 | **Order submission** | Submit cart as order; order scoped to a specific lab |
-| 2.4 | **Approval queue** | Focal Point / Admin view of pending orders; approve/reject with comments |
-| 2.5 | **Self-approval prevention** | Enforce rule that requester cannot approve their own order |
-| 2.6 | **Order status tracking** | Full status lifecycle: Draft → Submitted → Approved → Ordered → Partially Received → Received → Cancelled |
-| 2.7 | **Vendor email notification** | Auto-send structured email to vendor upon approval |
-| 2.8 | **Order history** | View past orders with status, filterable by lab, date, status |
-| 2.9 | **Dashboard: Pending Approvals** | Widget showing count/list of orders awaiting approval |
-| 2.10 | **Dashboard: My Orders** | Widget showing the user's own order statuses |
+| 2.2 | **Cart module** | Add to cart, edit quantities, remove items, per-user per-lab, persist across sessions. See `10-order-workflow.md`, Steps 2–3. |
+| 2.3 | **Order submission** | Submit cart as order; validate, create order record, clear cart, notify Focal Point. See `10-order-workflow.md`, Step 4. |
+| 2.4 | **Approval queue** | Focal Point / Admin view of pending orders; approve, modify, or reject with comments. See `10-order-workflow.md`, Steps 5–6. |
+| 2.5 | **Focal Point order modification** | Allow Focal Point to adjust quantities, add/remove items before approving; notify requester of changes |
+| 2.6 | **Self-approval prevention** | Enforce rule that requester cannot approve their own order |
+| 2.7 | **Order status tracking** | Full status lifecycle: Draft → In Cart → Pending Approval → Modified → Approved → Email Sent → Pending Delivery → Partially Received → Fully Received → Cancelled |
+| 2.8 | **Vendor email notification** | Group line items by vendor; send one email per vendor with PO number, items, quantities. See `10-order-workflow.md`, Step 7. |
+| 2.9 | **Order history** | View past orders with status, filterable by lab, date, status |
+| 2.10 | **Order status dashboard** | Full-table view with ~50 rows, scroll behavior, filters, status color coding. See `15-dashboard-behavior.md`. |
+| 2.11 | **Dashboard: Pending Approvals** | Widget showing count/list of orders awaiting approval |
+| 2.12 | **Dashboard: My Orders** | Widget showing the user's own order statuses |
+| 2.13 | **Transaction logging (ordering)** | Log `ADD_TO_CART`, `SUBMIT_ORDER`, `MODIFY_ORDER`, `APPROVE_ORDER`, `REJECT_ORDER`, `SEND_VENDOR_EMAIL`, `CANCEL_ORDER` events. See `16-transaction-history-and-audit.md`. |
 
 ### Dependencies
 - Phase 1 complete (users, roles, master data, auth).
@@ -73,17 +76,17 @@ Development is organized into **four phases**, ordered by business value, risk r
 
 | # | Deliverable | Description |
 |---|---|---|
-| 3.1 | **Check-in (against PO)** | Receive items against an approved order; record lot number, quantity, expiry, storage location |
-| 3.2 | **Manual check-in** | Register items without a purchase order (Focal Point / Admin) |
-| 3.3 | **QR code generation** | Generate QR codes for each lot at check-in |
-| 3.4 | **QR-based check-in** | Scan QR to pre-populate check-in form |
+| 3.1 | **Check-in (against PO)** | Line-item-level check-in with lot number, quantity, expiry, storage location. See `11-checkin-workflow.md`, Flow 1. |
+| 3.2 | **Manual check-in** | Register items without a PO (esp. Verify STD); source/reason required. See `11-checkin-workflow.md`, Flow 2. |
+| 3.3 | **QR code generation** | Generate QR codes for each lot at check-in; support label printing |
+| 3.4 | **Label / QR printing** | Print-friendly label view with QR code + lot details after check-in |
 | 3.5 | **Inventory list view** | View inventory by lab, with filters for category, status, expiry |
-| 3.6 | **Checkout** | Record item withdrawal with lot selection, quantity, purpose |
-| 3.7 | **QR-based checkout** | Scan lot QR code to pre-populate checkout form |
+| 3.6 | **Checkout (QR-scan primary)** | QR-scan to identify lot, enter quantity and purpose, update stock. See `12-checkout-workflow.md`. |
+| 3.7 | **Manual checkout fallback** | Search-based checkout when QR scanning is unavailable |
 | 3.8 | **Lot detail view** | View full lot history: check-in, checkouts, adjustments, current quantity |
-| 3.9 | **Transaction history module** | Append-only log of all inventory movements; filterable and searchable |
-| 3.10 | **Dashboard: Low Stock** | Widget alerting when items are below min-stock threshold |
-| 3.11 | **Dashboard: Expiring Items** | Widget showing items approaching expiry (30/60/90 day windows) |
+| 3.9 | **Transaction history module** | Append-only log of all system actions (16 types); filterable, searchable, exportable. See `16-transaction-history-and-audit.md`. |
+| 3.10 | **Min stock dashboard** | Full-table view with total qty, min stock, deficit, long lead time. See `15-dashboard-behavior.md`. |
+| 3.11 | **Expired dashboard** | Full-table view with days-to-expiry, near-expire/expired conditions. See `15-dashboard-behavior.md`. |
 | 3.12 | **Inventory adjustments** | Manual quantity corrections by Focal Point / Admin, with reason logging |
 
 ### Dependencies
@@ -106,15 +109,18 @@ Development is organized into **four phases**, ordered by business value, risk r
 
 | # | Deliverable | Description |
 |---|---|---|
-| 4.1 | **Peroxide monitoring module** | Schedule, log tests, track results, flag overdue |
-| 4.2 | **Peroxide classification management** | Admin UI for managing classification groups and monitoring intervals |
-| 4.3 | **Shelf-life extension module** | Document and approve shelf-life extensions per lot |
-| 4.4 | **Dashboard: Peroxide Alerts** | Widget showing overdue and upcoming peroxide tests |
-| 4.5 | **Notification system** | In-app and email notifications for approvals, expiry alerts, peroxide alerts, low stock |
-| 4.6 | **Regulatory reports** | Predefined report templates: inventory snapshot, transaction report, peroxide test report, shelf-life extension report |
-| 4.7 | **Export functionality** | CSV and PDF export for all reports |
-| 4.8 | **Expired items dashboard** | Dedicated view for managing expired and quarantined items |
-| 4.9 | **Viewer / Auditor experience** | Read-only views optimized for compliance review |
+| 4.1 | **Peroxide list page** | Scrollable, filterable list of all peroxide-monitored lots with status indicators. See `13-peroxide-workflow.md`. |
+| 4.2 | **Peroxide monitoring events** | Log multiple monitoring events per lot: test date, PPM result, classification (Normal/Warning/Quarantine). See `13-peroxide-workflow.md`. |
+| 4.3 | **PPM threshold logic** | < 25 ppm = Normal, ≥ 25 ppm = Warning, > 100 ppm = Quarantine (block checkout, notify). |
+| 4.4 | **Open date tracking** | Track when a container was first opened; anchor for monitoring schedules. |
+| 4.5 | **Peroxide classification management** | Admin UI for managing classification groups and monitoring intervals |
+| 4.6 | **Shelf-life extension module** | QR-scan entry, before/after values, immutable audit records. See `14-extend-shelf-life-workflow.md`. |
+| 4.7 | **Peroxide due dashboard** | Full-table view: reminder, item, lot, monitor due in, monitor date, lab. See `15-dashboard-behavior.md`. |
+| 4.8 | **Notification system** | In-app and email notifications for approvals, expiry alerts, peroxide alerts, low stock |
+| 4.9 | **Regulatory reports** | Predefined report templates: inventory snapshot, transaction report, peroxide test report, shelf-life extension report |
+| 4.10 | **Export functionality** | CSV and PDF export for all reports |
+| 4.11 | **Expired items dashboard** | Dedicated full-table view for managing expired and quarantined items |
+| 4.12 | **Viewer / Auditor experience** | Read-only views optimized for compliance review |
 
 ### Dependencies
 - Phase 3 complete (inventory and lot tracking must exist before monitoring).
@@ -228,3 +234,19 @@ All phases are strictly sequential. No phase can begin until its predecessor is 
 | **Full System** | | **13–17 weeks** | |
 
 > **Note:** Estimates assume a small development team (2–3 developers). Actual timelines depend on team size, experience, and stakeholder feedback cycles.
+
+---
+
+## Workflow Document References
+
+The following workflow documents provide detailed step-by-step flows that inform implementation within each phase:
+
+| Document | Primary Phase | Content |
+|---|---|---|
+| `10-order-workflow.md` | Phase 2 | Complete order flow: cart, submit, approval, modification, vendor email |
+| `11-checkin-workflow.md` | Phase 3 | PO check-in and manual check-in flows with lot record creation |
+| `12-checkout-workflow.md` | Phase 3 | QR-scan checkout, manual fallback, partial checkout |
+| `13-peroxide-workflow.md` | Phase 4 | Peroxide list page, monitoring events, PPM thresholds |
+| `14-extend-shelf-life-workflow.md` | Phase 4 | QR-scan entry, before/after audit, expiry update |
+| `15-dashboard-behavior.md` | Phases 2–4 | Table specs, columns, filters, scroll behavior for all dashboards |
+| `16-transaction-history-and-audit.md` | Phases 2–4 | Complete transaction type catalog, JSONB schemas, audit features |

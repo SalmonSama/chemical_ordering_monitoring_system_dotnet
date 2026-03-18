@@ -21,6 +21,8 @@ This document describes the purpose, scope, and key capabilities of each major m
 - Respect the (Location, Lab) scope of the current user for all displayed data.
 - Refresh data on page load; optionally support periodic auto-refresh.
 
+> **See also:** `15-dashboard-behavior.md` for detailed table specifications, columns, filters, color coding, and scroll behavior.
+
 **User Access:** All roles (data filtered by scope).
 
 ---
@@ -39,8 +41,10 @@ This document describes the purpose, scope, and key capabilities of each major m
   - **Gas:** Ordering supported in MVP; limited to order submission.
   - **Material & Consumable:** Ordering supported for specified items in MVP.
   - **Verify STD:** No ordering — items are received directly.
-- Track order status: Draft → Submitted → Approved → Ordered → Partially Received → Received → Cancelled.
+- Track order status: Draft → In Cart → Pending Approval → Modified → Approved → Email Sent → Pending Delivery → Partially Received → Fully Received → Cancelled.
 - Allow the requester to cancel a pending (not yet approved) order.
+
+> **See also:** `10-order-workflow.md` for full step-by-step workflow, modification rules, and vendor email grouping.
 
 **User Access:** Lab User, Focal Point, Admin (within scope).
 
@@ -58,8 +62,10 @@ This document describes the purpose, scope, and key capabilities of each major m
   - Remove items.
   - Add notes or special instructions per line item or per order.
 - Validate cart contents before submission (e.g., at least one item, valid quantities).
-- Submit the cart as an order, which transitions the order to "Submitted" status and routes it for approval.
+- Submit the cart as an order, which transitions the order to **Pending Approval** status and routes it for approval.
 - Cart persists across sessions (server-side storage) until submitted or cleared.
+
+> **See also:** `10-order-workflow.md`, Steps 2–4 for cart behavior and submission rules.
 
 **User Access:** Lab User, Focal Point, Admin (within scope).
 
@@ -70,14 +76,17 @@ This document describes the purpose, scope, and key capabilities of each major m
 **Purpose:** Route submitted orders to authorized approvers and enable accept/reject decisions with feedback.
 
 **Key Capabilities:**
-- Display a queue of orders pending the current user's approval, scoped to their assigned lab(s).
+- Display a queue of orders in **Pending Approval** status, scoped to the current user's assigned lab(s).
 - Show order details: requester, lab, items, quantities, notes, and submission date.
 - Allow approvers to:
-  - **Approve** — Moves the order to "Approved" status, triggering vendor notification.
-  - **Reject** — Returns the order to the requester with a mandatory rejection reason.
+  - **Approve** — Moves the order to **Approved** status, triggering vendor notification.
+  - **Modify then Approve** — Focal Point can adjust quantities, add/remove items, then approve. Order transitions through **Modified** → **Approved**.
+  - **Reject** — Sets the order to **Cancelled** with a mandatory rejection reason.
 - Enforce self-approval prevention: a user cannot approve an order they submitted.
 - Admin can override approval for escalation scenarios.
-- Maintain an approval history log: who approved/rejected, when, and with what comments.
+- Maintain an approval history log: who approved/rejected/modified, when, and with what comments.
+
+> **See also:** `10-order-workflow.md`, Steps 5–6 for approval and modification details.
 
 **User Access:** Focal Point, Admin.
 
@@ -89,16 +98,15 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 **Key Capabilities:**
 - Triggered automatically upon order approval.
-- Generate a structured email containing:
-  - Order reference number.
-  - List of items with quantities, catalog numbers, and units.
-  - Requesting lab and location.
-  - Contact information for the requester or lab.
-  - Any special instructions.
+- **Group line items by vendor** — if an order contains items from multiple vendors, one email is sent per vendor.
+- Each vendor email contains: PO number, item name, catalog number, quantity, unit, requesting lab/location, contact information, and any notes.
 - Send to the vendor contact email address defined in the vendor master data.
-- Log email dispatch status (sent, failed) against the order record.
+- Log email dispatch status (sent, failed) per vendor against the order record.
 - Support retry for failed email dispatches.
+- All vendor emails must succeed before order transitions to **Pending Delivery**.
 - Configurable email templates per vendor or as a system-wide default.
+
+> **See also:** `10-order-workflow.md`, Step 7 for vendor email content specification.
 
 **User Access:** System-triggered (no direct user interaction); Admin can view email logs.
 
@@ -119,18 +127,22 @@ This document describes the purpose, scope, and key capabilities of each major m
   - Expiry date.
   - Storage location (lab, shelf/cabinet).
 - Support partial check-ins (not all items received at once).
-- Update order status: Partially Received or Received.
+- Update order status: **Partially Received** or **Fully Received**.
 - Generate a QR code for each new lot upon check-in.
+- Support label/QR printing immediately after check-in.
 
 ### Manual Check-In (no Purchase Order)
 - Register items received outside the ordering process (donations, transfers, direct deliveries).
+- Especially relevant for **Verify STD** items that are never ordered through the system.
 - Requires Focal Point or Admin role.
-- Same lot-level data capture as standard check-in.
+- Same lot-level data capture as standard check-in, plus a source/reason field.
 - Creates an inventory record without a linked purchase order.
 
 ### QR-Based Check-In
 - Scan a QR code on a received item to pre-populate check-in fields.
 - Suitable for items with vendor-supplied or internally generated QR/barcodes.
+
+> **See also:** `11-checkin-workflow.md` for detailed step-by-step flows, lot record structure, and edge cases.
 
 **User Access:** Lab User, Focal Point, Admin (standard). Focal Point, Admin (manual).
 
@@ -149,8 +161,11 @@ This document describes the purpose, scope, and key capabilities of each major m
 - Validate that sufficient quantity remains in the lot.
 - Update lot remaining quantity.
 - Mark lots as depleted when quantity reaches zero.
-- Support QR-scan checkout: scan a lot's QR code to pre-populate checkout form.
+- Support QR-scan checkout as the **primary** interaction model: scan a lot's QR code to identify the lot and pre-populate the checkout form.
+- Manual fallback: search by item name, catalog number, or lot number.
 - Create a transaction record for every checkout operation.
+
+> **See also:** `12-checkout-workflow.md` for QR-scan flow, partial checkout, and concurrency handling.
 
 **User Access:** Lab User, Focal Point, Admin (within scope).
 
@@ -162,21 +177,18 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 **Key Capabilities:**
 - Maintain a list of chemicals classified as peroxide-forming, with their classification group (e.g., Class A, B, C).
-- Define monitoring intervals per classification group (e.g., Class A every 3 months, Class B every 6 months).
-- Display a monitoring schedule dashboard showing:
-  - Upcoming tests.
-  - Overdue tests (highlighted).
-  - Past test results.
-- Log test results:
-  - Tester name (auto-populated from logged-in user).
-  - Test date.
-  - Result: Pass / Fail.
-  - Observations / notes.
-  - Next test due date (auto-calculated from interval).
-- If a test **fails**, trigger actions:
-  - Flag the lot for disposal or quarantine.
-  - Notify Focal Point and Admin.
+- Define monitoring intervals per classification group.
+- Display a **peroxide list page** showing all monitored lots with status indicators, searchable and filterable.
+- Support **multiple monitoring events per lot** over the lot's lifetime.
+- Track key dates per lot: check-in date, open date, first inspect date, last monitor date, next monitor due.
+- Log monitoring events with: test date, tester, PPM result (numeric), classification (auto-calculated), observations/notes.
+- PPM-based classification thresholds:
+  - **< 25 ppm** → Normal.
+  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency.
+  - **> 100 ppm** → Quarantine — block checkout, notify Focal Point and Admin.
 - Maintain full test history per lot for audit purposes.
+
+> **See also:** `13-peroxide-workflow.md` for the complete workflow, PPM thresholds, and monitoring event data model.
 
 **User Access:** Lab User (log results), Focal Point (configure schedule, log results), Admin (full access), Viewer/Auditor (read-only).
 
@@ -198,7 +210,11 @@ This document describes the purpose, scope, and key capabilities of each major m
 - Update the lot's expiry date in the inventory.
 - Maintain a complete extension history per lot.
 - Apply only to individual lots, not to the entire catalog item.
-- Extensions are logged as a distinct transaction type for audit trail.
+- Extensions are logged as a distinct transaction type (`EXTEND_SHELF_LIFE`) for audit trail.
+- Preserve **before/after** values: old expiry, new expiry, days-to-expiry comparison.
+- Entry point is via **QR scan** of the lot (primary) or manual search (fallback).
+
+> **See also:** `14-extend-shelf-life-workflow.md` for the complete workflow and audit requirements.
 
 **User Access:** Focal Point, Admin.
 
@@ -209,17 +225,29 @@ This document describes the purpose, scope, and key capabilities of each major m
 **Purpose:** Provide a complete, immutable audit trail of every inventory-affecting action.
 
 **Key Capabilities:**
-- Record all inventory movements with the following transaction types:
-  - **Check-In** — Item received into inventory.
-  - **Checkout** — Item withdrawn from inventory.
-  - **Adjustment** — Manual quantity correction (increase or decrease).
-  - **Disposal** — Item disposed of (expired, failed test, waste).
-  - **Transfer** — Item moved between labs (future capability).
-  - **Shelf-Life Extension** — Expiry date modification.
-- Each record includes: transaction type, item, lot, quantity, user, date/time, lab, location, and notes.
-- Filter and search by: date range, transaction type, item, lot, user, lab, location.
-- Export to CSV for external analysis.
+- Record **all important actions** (not just inventory movements) with the following 16 transaction types:
+  - `ADD_TO_CART` — Item added to cart.
+  - `SUBMIT_ORDER` — Order submitted for approval.
+  - `MODIFY_ORDER` — Order modified by Focal Point.
+  - `APPROVE_ORDER` — Order approved.
+  - `REJECT_ORDER` — Order rejected.
+  - `SEND_VENDOR_EMAIL` — Vendor notification email sent.
+  - `CANCEL_ORDER` — Order cancelled.
+  - `CHECK_IN` — Items checked in against a purchase order.
+  - `MANUAL_CHECK_IN` — Items checked in without a purchase order.
+  - `CHECKOUT` — Items withdrawn from inventory.
+  - `PEROXIDE_TEST_LOGGED` — Peroxide monitoring event recorded.
+  - `LOT_QUARANTINED` — Lot quarantined due to high peroxide levels.
+  - `EXTEND_SHELF_LIFE` — Shelf life extended for a lot.
+  - `ADJUSTMENT` — Manual quantity correction.
+  - `DISPOSAL` — Lot disposed.
+  - `TRANSFER` — Lot transferred between labs (future).
+- Each record includes: transaction type, item, lot, quantity, user, date/time, lab, location, notes, and type-specific metadata (JSONB).
+- Filter and search by: date range, transaction type, item, lot, user, lab, location, PO number.
+- Export to CSV and PDF for external analysis and audit.
 - Records are append-only; transactions cannot be edited or deleted.
+
+> **See also:** `16-transaction-history-and-audit.md` for the complete catalog of transaction types, JSONB metadata schemas, and audit features.
 
 **User Access:** Admin, Focal Point, Viewer/Auditor (full scope). Lab User (own transactions).
 

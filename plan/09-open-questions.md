@@ -125,12 +125,54 @@ This document lists unresolved questions that require stakeholder input before o
 
 ---
 
+## Workflow-Specific Questions (from Deep-Dive)
+
+The following questions emerged during the detailed workflow analysis (documents 10–16):
+
+### Order & Approval Workflow
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-45 | **When a Focal Point modifies an order, should the requester be able to reject the modifications?** | Currently, modifications are applied and the requester is notified. If the requester can reject, it adds a back-and-forth negotiation step. | Affects order status state machine and UI. |
+| OQ-46 | **Should the system enforce maximum order quantities (per item or per order)?** | Some organizations limit order sizes to control spending. | Affects order validation logic. |
+| OQ-47 | **What is the PO number format?** (e.g., `PO-2026-0001`, `{Location}-{Year}-{Seq}`) | Auto-generated PO numbers need a defined format agreed upon by stakeholders. | Affects order creation logic. |
+
+### Check-In Workflow
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-48 | **Should check-in support receiving items from a different vendor than the one on the PO?** | Sometimes vendors substitute or a different vendor fulfills part of an order. | Affects check-in validation and data model. |
+| OQ-49 | **Should the system support splitting a single received delivery into multiple lots?** | e.g., 10 bottles of acetone arrive, 5 from Lot A and 5 from Lot B. Currently planned as supported. Confirm this is required. | Affects check-in UI complexity. |
+
+### Checkout Workflow
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-50 | **Should checkout of expired lots be blocked or just warned?** | Currently planned as blocked. Some labs may need to use recently expired chemicals under certain conditions. | Affects checkout validation logic. |
+| OQ-51 | **Should the system track the "open date" of a container at first checkout?** | Important for peroxide monitoring. Currently planned as a prompt at first checkout. | Affects checkout flow and lot data model. |
+
+### Peroxide Monitoring
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-52 | **Are the PPM thresholds (< 25, ≥ 25, > 100) fixed for all chemicals, or do they vary by chemical or classification group?** | Currently assumed fixed. If variable, the thresholds need to be configurable per classification group. | Affects peroxide configuration data model. |
+| OQ-53 | **What is the standard monitoring interval per peroxide classification group?** (e.g., Class A = 3 months, Class B = 6 months) | Need exact intervals to configure the monitoring schedule engine. | Affects monitoring schedule calculations. |
+
+### Shelf-Life Extension
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-54 | **Is there a maximum extension period per extension?** (e.g., max 6 months per extension) | If yes, the validation prevents excessively long extensions. | Affects extension validation logic. |
+| OQ-55 | **Should lot status changes (e.g., Expired → Active after extension) be highlighted in the audit trail?** | Currently logged as a transaction. Stakeholders may want additional visibility (e.g., a separate status change log). | Affects audit trail granularity. |
+
+---
+
 ## Priority Classification
 
 | Priority | Questions | Rationale |
 |---|---|---|
 | **Must resolve before Phase 1** | OQ-01, OQ-02, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41 | Foundation decisions that affect schema, auth, and initial data |
-| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16 | Ordering and approval workflow design |
-| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30 | Inventory management and lab structure |
-| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36 | Monitoring, notifications, and reporting |
+| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47 | Ordering, approval workflow design, and order modification rules |
+| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51 | Inventory management, check-in/checkout, and lab structure |
+| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55 | Monitoring, notifications, reporting, and shelf-life extension |
 | **Can be deferred** | OQ-03, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44 | Enhancements or post-MVP concerns |

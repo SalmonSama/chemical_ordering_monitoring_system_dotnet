@@ -126,7 +126,7 @@ The database is responsible for:
 5. Controller delegates to OrderService
 6. OrderService:
    a. Validates order data
-   b. Creates order record with status "Submitted"
+   b. Creates order record with status "Pending Approval"
    c. Creates order line items
    d. Creates a notification for the Focal Point
    e. Logs the transaction
@@ -145,7 +145,7 @@ The database is responsible for:
    a. The order belongs to a lab the Focal Point manages
    b. The Focal Point is not the order requester (self-approval blocked)
 5. ApprovalService:
-   a. Transitions order status from "Submitted" to "Approved"
+   a. Transitions order status from "Pending Approval" to "Approved"
    b. Triggers vendor email notification
    c. Creates notification for the requester
    d. Logs the transaction

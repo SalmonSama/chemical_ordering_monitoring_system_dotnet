@@ -10,7 +10,7 @@ The following capabilities are within the scope of this system:
 - Order submission by Lab Users.
 - Multi-step approval workflow (Lab Manager / Focal Point → Admin if needed).
 - Automated vendor notification email upon final approval.
-- Order status tracking: Draft → Submitted → Approved → Ordered → Partially Received → Received → Cancelled.
+- Order status tracking: Draft → In Cart → Pending Approval → Modified → Approved → Email Sent → Pending Delivery → Partially Received → Fully Received → Cancelled. (See `10-order-workflow.md` for full status definitions.)
 
 ### Inventory Management
 - Check-in of received items (manual data entry or QR-code scan).
@@ -74,14 +74,18 @@ The following are explicitly **not** included in this system:
 ### BR-02: Approval Workflow
 - All submitted orders require approval by the **Focal Point / Lab Manager** assigned to the relevant lab.
 - An approver cannot approve their own order.
-- Approved orders transition to "Ordered" status, triggering vendor notification.
-- Rejected orders return to the requester with a reason.
+- The Focal Point may **modify** an order before approving (adjust quantities, add/remove items). Modified orders transition to **Modified** status and the requester is notified of changes.
+- Approved orders transition to **Approved** status, triggering vendor email dispatch.
+- After vendor emails are sent, the order moves to **Pending Delivery**.
+- Rejected orders are set to **Cancelled** with a mandatory reason.
 - Admin users may override approval in exceptional circumstances.
 
 ### BR-03: Vendor Notification
-- Upon approval, the system generates and sends a notification email to the designated vendor contact(s).
-- The email includes: order number, item list with quantities, requester lab/location, and any special instructions.
+- Upon approval, the system **groups order line items by vendor** and sends one email per vendor.
+- Each vendor email includes: PO number, item list with quantities and catalog numbers, units, requesting lab/location, contact information, and any special instructions.
+- All vendor emails must succeed before the order transitions to **Pending Delivery**. Failed emails are retried.
 - The vendor does not log in; this is a one-way notification.
+- See `10-order-workflow.md`, Step 7 for detailed email content.
 
 ### BR-04: Check-In
 - Received items are checked in against an approved/ordered purchase order.
@@ -114,9 +118,15 @@ The following are explicitly **not** included in this system:
 
 ### BR-09: Peroxide Monitoring
 - Chemicals classified as peroxide-forming have a mandatory monitoring schedule.
-- Each scheduled test must be logged with: test date, tester, result (pass/fail), and next test date.
-- Overdue tests are surfaced on dashboards and may trigger notifications.
-- Peroxide classification groups (e.g., Class A, B, C) may define different monitoring intervals.
+- Each monitoring event is **lot-based** and records: test date, tester, PPM result, classification, observations, and next test due date.
+- Peroxide PPM thresholds define classification:
+  - **< 25 ppm** → Normal — lot remains Active, schedule next monitoring.
+  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency, notify Focal Point.
+  - **> 100 ppm** → Quarantine — lot blocked from checkout, notify Focal Point and Admin, require disposal.
+- Key dates tracked per lot: check-in date, open date, first inspect date, last monitor date, next monitor due.
+- Overdue tests are surfaced on dashboards and trigger notifications.
+- Peroxide classification groups (e.g., Class A, B, C) define different monitoring intervals.
+- See `13-peroxide-workflow.md` for the complete workflow and PPM logic.
 
 ### BR-10: Shelf-Life Extension
 - Certain chemicals may have their shelf life extended after passing a qualifying test.
@@ -124,10 +134,11 @@ The following are explicitly **not** included in this system:
 - A shelf-life extension resets the expiry date for the specific lot, not the entire catalog item.
 
 ### BR-11: Transaction History
-- Every inventory-affecting action creates a transaction record.
-- Transaction types include: Check-In, Checkout, Adjustment, Disposal, Transfer, Shelf-Life Extension.
-- Transaction records are immutable (append-only).
-- Transaction history is filterable by date range, item, lot, lab, location, user, and type.
+- Every important action in the system creates a transaction record — not just inventory-affecting actions.
+- Transaction types include: `ADD_TO_CART`, `SUBMIT_ORDER`, `MODIFY_ORDER`, `APPROVE_ORDER`, `REJECT_ORDER`, `SEND_VENDOR_EMAIL`, `CANCEL_ORDER`, `CHECK_IN`, `MANUAL_CHECK_IN`, `CHECKOUT`, `PEROXIDE_TEST_LOGGED`, `LOT_QUARANTINED`, `EXTEND_SHELF_LIFE`, `ADJUSTMENT`, `DISPOSAL`, `TRANSFER`.
+- Transaction records are immutable (append-only). No updates or deletes.
+- Transaction history is filterable by date range, transaction type, item, lot, lab, location, user, and order/PO number.
+- See `16-transaction-history-and-audit.md` for the complete transaction type catalog and data model.
 
 ### BR-12: Regulatory Reporting
 - The system must support generating reports suitable for regulatory audits.
@@ -144,19 +155,25 @@ Lab User submits order
         ▼
 Focal Point / Lab Manager reviews
         │
-    ┌───┴───┐
-    │       │
- Approve  Reject
-    │       │
-    ▼       ▼
-Vendor    Returned to
-email     requester
-sent      with reason
+    ┌───┴────────┬──────────┐
+    │            │          │
+ Approve    Modify +     Reject
+    │       Approve        │
+    ▼          │           ▼
+    └──────┬───┘        Cancelled
+           ▼            (with reason)
+    Vendor emails
+    (grouped by vendor)
+           │
+           ▼
+    Pending Delivery
 ```
 
-- **Single-tier approval** is the default: Focal Point / Lab Manager approves or rejects.
+- **Single-tier approval** is the default: Focal Point / Lab Manager approves, modifies, or rejects.
+- The Focal Point can **modify** the order (adjust quantities, add/remove items) before approving. The requester is notified of changes.
 - **Escalation** to Admin is available if the Focal Point is unavailable or for high-value orders (threshold TBD).
 - **Self-approval** is not permitted; an independent approver is always required.
+- See `10-order-workflow.md` for the complete step-by-step flow.
 
 ---
 
@@ -232,3 +249,6 @@ Monitoring covers two distinct domains:
 | A-10 | Authentication is handled via enterprise SSO or directory service (e.g., Azure AD). | If custom auth is needed, the authentication module must be built from scratch. |
 | A-11 | Gas and Material & Consumable categories have limited workflows in MVP (ordering only). | If full lifecycle tracking is needed for these categories, the scope significantly increases. |
 | A-12 | The system operates in a single timezone. | Multi-timezone support would require datetime normalization logic. |
+| A-13 | Peroxide PPM thresholds are fixed at < 25 (Normal), ≥ 25 (Warning), > 100 (Quarantine). | If thresholds vary by chemical or classification group, configurable threshold support is needed. |
+| A-14 | Vendor emails are grouped by vendor from a single order; vendors cannot see items from other vendors in the same batch. | If vendors need to see the full order context, email templates must be adjusted. |
+| A-15 | Cart is per-user, per-lab; users cannot share carts. | If shared/team carts are needed, the data model and UI must support multi-user carts. |
