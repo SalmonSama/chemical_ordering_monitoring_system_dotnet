@@ -15,4 +15,5 @@ public class User
     // Navigation
     public Role Role { get; set; } = null!;
     public ICollection<UserLab> UserLabs { get; set; } = new List<UserLab>();
+    public ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();
 }

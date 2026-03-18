@@ -1,12 +1,21 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
-const navItems = [
+const masterDataNav = [
   { to: '/admin/locations', label: '📍 Locations & Labs' },
   { to: '/admin/roles', label: '👤 Roles' },
   { to: '/admin/vendors', label: '🏭 Vendors' },
   { to: '/admin/categories', label: '📂 Item Categories' },
   { to: '/admin/items', label: '🧪 Items' },
   { to: '/admin/item-lab-settings', label: '⚙️ Item Lab Settings' },
+];
+
+const inventoryNav = [
+  { to: '/inventory/check-in/manual', label: '📥 Manual Check-In' },
+  { to: '/inventory/lots', label: '📦 Inventory Lots' },
+  { to: '/inventory/transactions', label: '📋 Stock Transactions' },
+];
+
+const utilityNav = [
   { to: '/', label: '🔌 Connection Test' },
 ];
 
@@ -15,18 +24,26 @@ function MasterDataLayout() {
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
         <h2 style={styles.logo}>🧪 ChemWatch</h2>
-        <p style={styles.phase}>Phase 2 — Master Data</p>
+        <p style={styles.phase}>Phase 3 — Inventory Core</p>
         <nav style={styles.nav}>
-          {navItems.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end
-              style={({ isActive }) => ({
-                ...styles.link,
-                ...(isActive ? styles.activeLink : {}),
-              })}
-            >
+          <p style={styles.sectionLabel}>Master Data</p>
+          {masterDataNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+              {label}
+            </NavLink>
+          ))}
+
+          <div style={styles.separator} />
+          <p style={styles.sectionLabel}>Inventory</p>
+          {inventoryNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+              {label}
+            </NavLink>
+          ))}
+
+          <div style={styles.separator} />
+          {utilityNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
               {label}
             </NavLink>
           ))}
@@ -87,6 +104,19 @@ const styles = {
     background: 'rgba(59, 130, 246, 0.15)',
     color: '#60a5fa',
     fontWeight: 600,
+  },
+  separator: {
+    height: '1px',
+    background: '#334155',
+    margin: '0.75rem 0',
+  },
+  sectionLabel: {
+    color: '#64748b',
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    margin: '0 0 0.25rem 0.75rem',
   },
   main: {
     flex: 1,

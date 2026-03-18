@@ -1,0 +1,110 @@
+import { useEffect, useState } from 'react';
+import apiClient from '../api/client';
+
+const TYPE_LABELS = {
+  manual_check_in: 'Manual Check-In',
+  check_in: 'Check-In (PO)',
+  checkout: 'Checkout',
+  adjustment: 'Adjustment',
+  disposal: 'Disposal',
+};
+
+function StockTransactionsPage() {
+  const [txns, setTxns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    apiClient.get('/stocktransactions')
+      .then(res => { setTxns(res.data); setError(null); })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const typeColor = (type) => {
+    switch (type) {
+      case 'manual_check_in':
+      case 'check_in': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' };
+      case 'checkout': return { color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)' };
+      case 'adjustment': return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' };
+      case 'disposal': return { color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
+      default: return { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
+    }
+  };
+
+  return (
+    <div>
+      <h1 style={styles.title}>Stock Transactions</h1>
+      <p style={styles.subtitle}>Append-only log of all inventory actions — the system's immutable audit trail.</p>
+
+      {loading && <p style={styles.info}>Loading...</p>}
+      {error && <p style={styles.error}>❌ {error}</p>}
+
+      {!loading && !error && txns.length === 0 && (
+        <p style={styles.info}>No transactions yet. Perform a check-in to create the first entry.</p>
+      )}
+
+      {!loading && !error && txns.length > 0 && (
+        <div style={styles.tableWrapper}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Timestamp</th>
+                <th style={styles.th}>Type</th>
+                <th style={styles.th}>Item</th>
+                <th style={styles.th}>Lot #</th>
+                <th style={styles.th}>Quantity</th>
+                <th style={styles.th}>User</th>
+                <th style={styles.th}>Lab</th>
+                <th style={styles.th}>Location</th>
+                <th style={styles.th}>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.map(txn => {
+                const tc = typeColor(txn.transactionType);
+                return (
+                  <tr key={txn.id} style={styles.tr}>
+                    <td style={styles.td}>{new Date(txn.createdAt).toLocaleString()}</td>
+                    <td style={styles.td}>
+                      <span style={{ color: tc.color, background: tc.bg, padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        {TYPE_LABELS[txn.transactionType] ?? txn.transactionType}
+                      </span>
+                    </td>
+                    <td style={styles.td}>{txn.item?.itemName ?? '—'}</td>
+                    <td style={styles.td}>
+                      {txn.inventoryLot ? <code style={styles.code}>{txn.inventoryLot.lotNumber}</code> : '—'}
+                    </td>
+                    <td style={styles.tdNum}>{txn.quantity ?? '—'}</td>
+                    <td style={styles.td}>{txn.userName}</td>
+                    <td style={styles.td}>{txn.lab?.name ?? '—'}</td>
+                    <td style={styles.td}>{txn.location?.name ?? '—'}</td>
+                    <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {txn.notes ?? '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  info: { color: '#94a3b8', fontStyle: 'italic' },
+  error: { color: '#f87171' },
+  tableWrapper: { overflowX: 'auto' },
+  table: { width: '100%', borderCollapse: 'collapse', minWidth: '900px' },
+  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  tr: { borderBottom: '1px solid #1e293b' },
+  td: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', whiteSpace: 'nowrap' },
+  tdNum: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+  code: { color: '#60a5fa', background: '#0f172a', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
+};
+
+export default StockTransactionsPage;
