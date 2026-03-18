@@ -71,6 +71,55 @@ The database is responsible for:
 
 ---
 
+## Database Design Overview
+
+The database schema is organized into three conceptual layers. See `17-database-conceptual-model.md` for the full rationale.
+
+### Layer 1: Master Data (Shared)
+
+Organization-wide reference data that changes infrequently:
+
+| Entity Group | Tables | Purpose |
+|---|---|---|
+| Organization | `locations`, `labs` | Physical hierarchy: Location → Lab |
+| Identity & Access | `users`, `roles`, `user_labs` | Who can access what |
+| Catalog | `items`, `item_categories`, `vendors` | What can be ordered or tracked |
+| Compliance | `regulations`, `item_regulations` | Regulatory applicability (M:N) |
+| Lab Configuration | `item_location_settings`, `item_lab_settings` | Per-lab min stock, stocked flags |
+
+### Layer 2: Transactional Data (Lab-Scoped)
+
+Operational data scoped to specific labs, growing continuously:
+
+| Entity Group | Tables | Purpose |
+|---|---|---|
+| Procurement | `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions` | Ordering and approval lifecycle |
+| Vendor Comms | `vendor_email_logs` | Email dispatch records |
+| Inventory | `inventory_lots`, `stock_transactions` | Lot-level stock tracking |
+| Safety Monitoring | `peroxide_tests`, `shelf_life_extensions` | Monitoring events and expiry management |
+| Operations | `label_print_logs` | QR label printing audit |
+
+### Layer 3: Reporting & Audit (Cross-Cutting)
+
+| Entity Group | Tables | Purpose |
+|---|---|---|
+| Audit | `audit_logs` | System-wide master data change tracking |
+| Reporting | Database views / functions | Aggregated dashboard queries |
+
+### Key Design Decisions
+
+- **Shared item master, lab-level inventory.** The `items` table is organization-wide; `inventory_lots` is scoped to labs. See `19-relationship-and-normalization-notes.md`.
+- **Normalized min stock.** Min stock is in `item_lab_settings` (per item, per lab), not as spreadsheet-style columns on items. See `19-relationship-and-normalization-notes.md`, Section 3.
+- **Behavior flags on items.** Category-driven behavior (`is_orderable`, `requires_checkin`, `tracks_expiry`, `requires_peroxide_monitoring`) is stored as explicit boolean flags, not inferred from category names.
+- **UUID primary keys** for all tables.
+- **Audit columns** (`created_at`, `updated_at`, `created_by`, `updated_by`) on all tables.
+
+> **Full entity-field specification:** `18-entity-list-and-field-planning.md`
+> **All statuses and enums:** `20-statuses-enums-and-reference-data.md`
+> **Dashboard query patterns:** `21-reporting-and-dashboard-data-needs.md`
+
+---
+
 ## Separation of Concerns
 
 ```
