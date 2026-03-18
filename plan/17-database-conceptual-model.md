@@ -1,243 +1,228 @@
 # 17 — Database Conceptual Model
 
-This document describes the overall relational design philosophy, data layer separation, and key architectural decisions behind the database schema for the Lab Inventory / Chemical Ordering / Peroxide Monitoring System.
+This document explains the overall relational design philosophy, the separation between master data, transactional data, and reporting-oriented data, and why shared item master and lab-level inventory are modeled as separate concerns.
 
 ---
 
-## Design Principles
+## Design Philosophy
 
-1. **Shared master data, lab-level operational data.** The item catalog (chemical/material master list) is organization-wide. Inventory lots, stock levels, transactions, and monitoring records are scoped to individual labs.
-2. **Strict normalization.** Location-specific settings (min stock, lead time overrides) are stored in proper relational tables, never as denormalized columns (e.g., no `AIE_min`, `MTP_min` columns on items).
-3. **Category-driven behavior via flags, not just names.** Item behavior (orderable, requires check-in, tracks expiry, requires peroxide monitoring) is expressed through explicit boolean flags on the item record, not inferred solely from the category name.
-4. **Append-only audit trail.** Transaction history and audit logs are insert-only. No updates or deletes. All state changes are traceable.
-5. **Temporal integrity.** All tables include `created_at`, `updated_at`, `created_by`, and `updated_by` columns for auditability.
+The database is designed around three guiding principles:
 
----
+1. **Single source of truth for master data.** Items, vendors, categories, locations, and labs are defined once and shared across the entire organization. There is no duplication of catalog information per location or lab.
 
-## Data Layer Separation
+2. **Lab-scoped transactional data.** All operational data — inventory lots, stock transactions, orders, peroxide tests, shelf-life extensions — belongs to a specific lab. This guarantees clear ownership, simplifies access control, and matches the real-world organizational model.
 
-The database schema is organized into three conceptual layers:
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                     LAYER 1: MASTER DATA (Shared)                    │
-│                                                                      │
-│  locations · labs · users · roles · user_labs                        │
-│  vendors · item_categories · items · regulations · item_regulations  │
-│  item_location_settings · item_lab_settings                         │
-│                                                                      │
-│  Characteristics:                                                    │
-│  ► Shared across the organization                                    │
-│  ► Changes infrequently (admin-managed)                              │
-│  ► Referenced by all transactional records                           │
-│  ► Defines WHAT can be ordered, WHERE it can go, WHO can act         │
-└──────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  │ referenced by (FK)
-                                  ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                  LAYER 2: TRANSACTIONAL DATA (Lab-Scoped)            │
-│                                                                      │
-│  purchase_requests · purchase_request_items                         │
-│  purchase_request_item_revisions                                    │
-│  vendor_email_logs · inventory_lots · stock_transactions            │
-│  peroxide_tests · shelf_life_extensions · label_print_logs          │
-│                                                                      │
-│  Characteristics:                                                    │
-│  ► Scoped to a specific lab and location                            │
-│  ► High volume — grows continuously                                  │
-│  ► Each record links back to master data via foreign keys            │
-│  ► Drives the operational workflows documented in 10–14              │
-│  ► Immutable in many cases (transactions, tests, extensions)         │
-└──────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  │ queried by
-                                  ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                  LAYER 3: REPORTING & AUDIT (Cross-Cutting)          │
-│                                                                      │
-│  audit_logs · (views & functions for dashboards)                    │
-│                                                                      │
-│  Characteristics:                                                    │
-│  ► Derived from Layers 1 and 2                                       │
-│  ► Aggregate queries, calculated fields (days to expiry, stock sum) │
-│  ► Dashboard-oriented (see 15-dashboard-behavior.md)                │
-│  ► Export-ready for regulatory reporting                             │
-│  ► Append-only (audit logs)                                         │
-└──────────────────────────────────────────────────────────────────────┘
-```
+3. **Immutable audit trail.** Transaction history and audit logs are append-only. They provide regulatory-grade evidence of who did what, when, and where.
 
 ---
 
-## Why Shared Item Master and Lab-Level Inventory Are Separate Concerns
+## Three-Layer Model
 
-### The Problem with Merging Them
-
-If the item catalog included per-lab columns (e.g., `AIE_PO_Lab_qty`, `MTP_Lab_min_stock`), the design would:
-
-- **Break with new labs.** Every new lab requires schema changes (new columns). This is fragile and anti-relational.
-- **Create sparse data.** Most items exist in only a few labs; the rest of the columns would be NULL.
-- **Prevent clean querying.** "Show me all items below min stock in Lab X" becomes a column-name-dependent query rather than a simple WHERE clause.
-- **Violate normalization.** Repeating the same concept (stock level, min stock) across N columns for N labs is a classic normalization failure.
-
-### The Relational Approach
+The schema is conceptually organized into three layers:
 
 ```
-┌───────────────┐        ┌──────────────────────┐        ┌──────────────────┐
-│     items     │        │  item_lab_settings    │        │  inventory_lots  │
-│               │        │                      │        │                  │
-│  id           │───1:N──│  item_id  (FK)       │        │  item_id  (FK)   │
-│  item_name    │        │  lab_id   (FK)       │        │  lab_id   (FK)   │
-│  category_id  │        │  min_stock           │        │  lot_number      │
-│  vendor_id    │        │  is_stocked_here     │        │  qty_remaining   │
-│  is_orderable │        │  custom_lead_time    │        │  expiry_date     │
-│  ...          │        │  ...                 │        │  status          │
-└───────────────┘        └──────────────────────┘        └──────────────────┘
-
-  Organization-wide              Per-lab settings             Per-lab, per-lot
-  "What exists"                  "What we keep here"          "What we have now"
+┌───────────────────────────────────────────────────────────┐
+│                  LAYER 1: MASTER DATA                     │
+│                  (Shared, Stable)                         │
+│                                                           │
+│  locations ─→ labs                                        │
+│  users ─→ roles ─→ user_labs                              │
+│  vendors                                                  │
+│  item_categories                                          │
+│  items ─→ item_location_settings ─→ item_lab_settings     │
+│  regulations ─→ item_regulations                          │
+└───────────────────────────────────────────────────────────┘
+                           │
+                     FK references
+                           │
+                           ▼
+┌───────────────────────────────────────────────────────────┐
+│                LAYER 2: TRANSACTIONAL DATA                │
+│                (Lab-Scoped, Growing)                      │
+│                                                           │
+│  purchase_requests ─→ purchase_request_items              │
+│       └──→ purchase_request_item_revisions                │
+│  vendor_email_logs                                        │
+│  inventory_lots                                           │
+│  stock_transactions                                       │
+│  peroxide_tests                                           │
+│  shelf_life_extensions                                    │
+│  label_print_logs                                         │
+└───────────────────────────────────────────────────────────┘
+                           │
+                      Joined for
+                      aggregation
+                           │
+                           ▼
+┌───────────────────────────────────────────────────────────┐
+│              LAYER 3: REPORTING & AUDIT                   │
+│              (Cross-Cutting, Append-Only)                 │
+│                                                           │
+│  audit_logs           (master data change tracking)       │
+│  stock_transactions   (also serves reporting directly)    │
+│  Database views       (aggregated dashboard queries)      │
+│  Database functions   (calculated columns, summaries)     │
+└───────────────────────────────────────────────────────────┘
 ```
 
-| Layer | Table | Scope | Purpose |
-|---|---|---|---|
-| Master | `items` | Organization | Defines the item: name, category, vendor, behavior flags |
-| Settings | `item_lab_settings` | Per lab | Defines the item's configuration in a specific lab: min stock, stocked flag |
-| Inventory | `inventory_lots` | Per lab, per lot | Tracks actual physical stock: lot number, quantity, expiry |
+---
 
-This separation means:
-- **Adding a new lab** → insert rows into `item_lab_settings`, not new columns.
-- **Querying stock** → `SELECT ... FROM inventory_lots WHERE lab_id = ? AND item_id = ?`
-- **Calculating min stock condition** → `JOIN item_lab_settings ON ... WHERE total_qty < min_stock`
+## Layer 1: Master Data (Shared)
+
+Master data represents the **organizational reference information** that is defined once and referenced by all transactional records. It changes infrequently and is managed by Admin or Focal Point users.
+
+### What belongs here
+
+| Entity Group | Tables | Why Shared |
+|---|---|---|
+| **Organization structure** | `locations`, `labs` | Locations and labs are organizational units, not inventory concepts. A lab in AIE and a lab in MTP share the same structural model. |
+| **Identity & Access** | `users`, `roles`, `user_labs` | Users are organization-wide. A user can be assigned to multiple labs across locations. Roles are system-wide definitions. |
+| **Catalog** | `items`, `item_categories`, `vendors` | The item master list is a shared product catalog. "Acetone" is defined once, not once per lab. Vendors supply across all locations. |
+| **Compliance** | `regulations`, `item_regulations` | Regulatory requirements apply to items regardless of where they are stocked. |
+| **Lab-specific configuration** | `item_location_settings`, `item_lab_settings` | While the item definition is shared, lab-specific details (min stock, stocked flag) are normalized into junction tables keyed by (item, lab). |
+
+### Why the item master is not lab-specific
+
+Consider the item "Tetrahydrofuran (THF)":
+- Its name, CAS number, catalog number, vendor, category, size, unit, and behavior flags (e.g., `requires_peroxide_monitoring = true`) are **universal facts** about the product.
+- But how much THF Lab A keeps on hand (min stock = 3), whether Lab B stocks it at all, and what Lab C's reorder threshold is — these are **lab-specific operational configurations**.
+
+Mixing these two concerns into one table would:
+- Require adding columns like `aie_min_stock`, `mtp_min_stock`, `ct_min_stock`, `atc_min_stock` — which breaks normalization, doesn't scale to new locations, and creates wide sparse tables.
+- Make it impossible to add a new location without altering the schema.
+
+The correct design is:
+- `items` holds the universal product definition.
+- `item_lab_settings` holds the per-lab configuration (keyed by `item_id + lab_id`).
+
+This is detailed further in `19-relationship-and-normalization-notes.md`, Section 3.
+
+---
+
+## Layer 2: Transactional Data (Lab-Scoped)
+
+Transactional data represents **operational activity** — things that happen over time. Every transactional record is scoped to a specific lab (and by extension, a location).
+
+### Why lab-scoped
+
+Lab-level scoping reflects the real-world operating model:
+- **Inventory lots** are physically stored in a specific lab. A bottle of Acetone in PO Lab at AIE is not the same as a bottle in EOU Lab at MTP.
+- **Purchase requests** are submitted for a specific lab's needs.
+- **Peroxide tests** are performed on a specific lot in a specific lab.
+- **Access control** is enforced at the lab level — a Lab User in PO Lab should not see or modify EOU Lab's inventory.
+
+Every transactional table carries a `lab_id` foreign key (and often `location_id` for query convenience), ensuring that:
+1. Row-level security can be applied based on the user's lab assignments.
+2. Dashboard queries can filter by lab/location efficiently.
+3. Regulatory reports can be scoped to a specific facility.
+
+### What belongs here
+
+| Entity Group | Tables | Scoping |
+|---|---|---|
+| **Procurement** | `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions` | Scoped to requesting lab |
+| **Vendor comms** | `vendor_email_logs` | Linked to purchase request (inherits lab scope) |
+| **Inventory** | `inventory_lots` | Scoped to the lab where the lot is stored |
+| **Stock movement** | `stock_transactions` | Scoped to the lot's lab |
+| **Safety monitoring** | `peroxide_tests` | Scoped to the tested lot's lab |
+| **Expiry management** | `shelf_life_extensions` | Scoped to the extended lot's lab |
+| **Operations** | `label_print_logs` | Linked to lot (inherits lab scope) |
+
+---
+
+## Layer 3: Reporting & Audit (Cross-Cutting)
+
+### `audit_logs` — Master Data Change Tracking
+
+The `audit_logs` table tracks changes to **master data** records: items modified, vendors updated, users activated/deactivated, lab settings changed. This is distinct from the `stock_transactions` table, which tracks **operational activity**.
+
+| Concern | Table | What It Tracks |
+|---|---|---|
+| Operational actions | `stock_transactions` | Checkouts, check-ins, peroxide tests, shelf-life extensions, order actions — i.e., things users do as part of daily work |
+| Master data changes | `audit_logs` | Item updated, vendor added, user role changed, min stock threshold modified — i.e., administrative configuration changes |
+
+Both tables are **append-only** (no UPDATE or DELETE). Together they provide a complete audit trail for regulatory compliance.
+
+### Database Views and Functions
+
+Complex dashboard queries (e.g., "show all items below min stock across all labs in AIE") require joining master data, inventory lots, and lab settings. Rather than embedding these complex joins in every API query, the database provides:
+
+- **Views** for common dashboard aggregations (e.g., `v_min_stock_status`, `v_expiry_status`, `v_peroxide_due`).
+- **Functions** for calculated values (e.g., days to expiry, total quantity per item per lab).
+
+These are described in `21-reporting-and-dashboard-data-needs.md`.
 
 ---
 
 ## Entity Relationship Overview
 
-The following diagram shows the major entities and their key relationships:
-
 ```
-                    ┌───────────┐
-                    │ locations  │
-                    └─────┬─────┘
-                          │ 1:N
-                          ▼
-                    ┌───────────┐         ┌──────────────┐
-                    │   labs     │◄────────│  user_labs   │
-                    └─────┬─────┘         └──────┬───────┘
-                          │                      │
-                          │                      │
-                    ┌─────┴──────────────────────┴────────┐
-                    │                                      │
-                    ▼                                      ▼
-          ┌───────────────────┐                    ┌───────────┐
-          │  item_lab_settings│                    │   users   │
-          └────────┬──────────┘                    └─────┬─────┘
-                   │                                     │
-                   │                                     │
-         ┌─────────┴─────────┐                           │
-         │                   │                           │
-         ▼                   ▼                           │
-   ┌──────────┐     ┌────────────────┐                   │
-   │  items   │     │ inventory_lots │◄──────────────────┘
-   └────┬─────┘     └───────┬────────┘        (checked_in_by,
-        │                   │                  checked_out_by)
-        │                   │
-        ▼                   ├────────────────────────────────┐
-  ┌──────────────┐          │                                │
-  │item_categories│         ▼                                ▼
-  └──────────────┘  ┌──────────────────┐         ┌─────────────────────┐
-                    │stock_transactions│         │   peroxide_tests    │
-                    └──────────────────┘         └─────────────────────┘
-                                                          │
-                                                          ▼
-                                                ┌─────────────────────┐
-                                                │shelf_life_extensions│
-                                                └─────────────────────┘
+locations ──┐
+             │ 1:M
+             ▼
+           labs ──────────────────────────────────┐
+             │ 1:M          1:M          1:M      │
+             ▼              ▼             ▼       │
+         user_labs    item_lab_settings  inventory_lots
+             │                                │
+             ▼                                │ 1:M
+           users                              ▼
+             │                         stock_transactions
+             │                         peroxide_tests
+             │                         shelf_life_extensions
+             ▼
+           roles
 
-  ┌──────────────────────┐       ┌──────────────────────────────┐
-  │  purchase_requests   │──1:N──│  purchase_request_items       │
-  └──────────────────────┘       └───────────────┬──────────────┘
-                                                  │ 1:N
-                                                  ▼
-                                 ┌──────────────────────────────────┐
-                                 │purchase_request_item_revisions   │
-                                 └──────────────────────────────────┘
+items ──────────────────────────────────────┐
+   │ 1:M              M:N                  │
+   ▼                   ▼                   │
+item_location_settings  item_regulations    │
+   │ 1:M                    │              │
+   ▼                        ▼              │
+item_lab_settings       regulations        │
+                                           │
+vendors ◄──────────────────────────────────┘
+                                           │
+item_categories ◄──────────────────────────┘
+
+purchase_requests ──┐
+                     │ 1:M
+                     ▼
+        purchase_request_items ──┐
+                                  │ 1:M
+                                  ▼
+             purchase_request_item_revisions
 ```
 
+> **Full field-level detail:** See `18-entity-list-and-field-planning.md`.
+> **Normalization rationale:** See `19-relationship-and-normalization-notes.md`.
+
 ---
 
-## Data Domains
+## Naming Conventions
 
-| Domain | Tables | Description |
+| Convention | Rule | Example |
 |---|---|---|
-| **Organization** | `locations`, `labs` | Physical locations and their sub-units (labs). Strict hierarchy: Location → Lab. |
-| **Identity & Access** | `users`, `roles`, `user_labs` | Who can access what. Users are assigned to labs with specific roles. |
-| **Catalog** | `items`, `item_categories`, `vendors`, `regulations`, `item_regulations` | What can be ordered, tracked, or monitored. Shared across all labs. |
-| **Lab Configuration** | `item_location_settings`, `item_lab_settings` | Per-location or per-lab overrides for items: min stock, stocked flag, custom thresholds. |
-| **Procurement** | `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions`, `vendor_email_logs` | The ordering and approval lifecycle. |
-| **Inventory** | `inventory_lots`, `stock_transactions` | Physical stock tracking at the lot level with full transaction history. |
-| **Monitoring** | `peroxide_tests`, `shelf_life_extensions` | Safety monitoring and controlled expiry management. |
-| **Audit & Operations** | `audit_logs`, `label_print_logs` | System-wide audit trail and operational logging. |
+| Table names | Plural, snake_case | `inventory_lots`, `purchase_requests` |
+| Column names | Singular, snake_case | `item_name`, `quantity_remaining` |
+| Primary keys | `id` (UUID) | `id UUID PRIMARY KEY DEFAULT gen_random_uuid()` |
+| Foreign keys | `{referenced_table_singular}_id` | `lab_id`, `item_id`, `vendor_id` |
+| Boolean flags | `is_` or `has_` or verb prefix | `is_active`, `has_failed_email`, `requires_peroxide_monitoring` |
+| Timestamps | `_at` suffix | `created_at`, `updated_at`, `checked_in_at` |
+| User references | `_by` suffix | `created_by`, `approved_by`, `tested_by` |
+| Status columns | `status` | `status VARCHAR NOT NULL DEFAULT 'active'` |
+| Enum-like values | UPPER_SNAKE_CASE in application; lowercase in DB | `PENDING_APPROVAL` → `'pending_approval'` |
 
 ---
 
-## Cross-Cutting Patterns
+## Design Rationale Summary
 
-### Soft Deletes
-
-Most master data entities use **soft deletes** (`is_active` boolean) rather than physical deletes. This preserves referential integrity — a deactivated vendor or item still appears in historical records.
-
-### Audit Columns
-
-Every table includes:
-
-| Column | Type | Description |
+| Decision | Rationale | Reference |
 |---|---|---|
-| `created_at` | `TIMESTAMPTZ` | Row creation timestamp (server-set) |
-| `created_by` | `UUID` (FK → users) | User who created the record |
-| `updated_at` | `TIMESTAMPTZ` | Last update timestamp |
-| `updated_by` | `UUID` (FK → users) | User who last updated the record |
-
-### UUID Primary Keys
-
-All primary keys are UUIDs (v4), generated server-side. This ensures:
-- No sequential ID guessing.
-- Safe for distributed systems.
-- Compatible with QR code payloads and URL identifiers.
-
-### Enum-Like Columns
-
-Statuses and category codes are stored as `VARCHAR` or `TEXT` with `CHECK` constraints, not as integer enums. This improves readability in raw SQL queries and debug logs. See `20-statuses-enums-and-reference-data.md` for the complete list.
-
----
-
-## Indexing Strategy (Overview)
-
-Performance-critical indexes will be created on:
-
-| Table | Column(s) | Reason |
-|---|---|---|
-| `inventory_lots` | `lab_id`, `item_id`, `status` | Core inventory queries |
-| `inventory_lots` | `expiry_date` | Expired / expiring dashboards |
-| `stock_transactions` | `lot_id`, `created_at` | Lot history queries |
-| `stock_transactions` | `transaction_type`, `lab_id` | Filtered transaction history |
-| `purchase_requests` | `lab_id`, `status` | Order dashboard queries |
-| `peroxide_tests` | `lot_id`, `test_date` | Monitoring history |
-| `audit_logs` | `entity_type`, `entity_id`, `created_at` | Audit trail lookups |
-| `item_lab_settings` | `lab_id`, `item_id` | Stock threshold checks |
-
-Detailed index definitions will be specified during the implementation phase.
-
----
-
-## Alignment with Workflow Documents
-
-| Workflow Document | Primary Tables |
-|---|---|
-| `10-order-workflow.md` | `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions`, `vendor_email_logs` |
-| `11-checkin-workflow.md` | `inventory_lots`, `stock_transactions`, `label_print_logs` |
-| `12-checkout-workflow.md` | `inventory_lots`, `stock_transactions` |
-| `13-peroxide-workflow.md` | `peroxide_tests`, `inventory_lots` |
-| `14-extend-shelf-life-workflow.md` | `shelf_life_extensions`, `inventory_lots` |
-| `15-dashboard-behavior.md` | All tables via aggregation queries / views |
-| `16-transaction-history-and-audit.md` | `stock_transactions`, `audit_logs` |
+| Shared item master | Prevents data duplication; ensures consistency across labs | §Layer 1 above |
+| Lab-scoped inventory | Matches physical reality; enables access control | §Layer 2 above |
+| Normalized min stock | Avoids wide sparse tables; scales to new locations | `19-relationship-and-normalization-notes.md` §3 |
+| Behavior flags on items | Makes category-driven behavior explicit and queryable | `18-entity-list-and-field-planning.md`, items entity |
+| Separate audit_logs vs stock_transactions | Different audiences, different retention, different query patterns | §Layer 3 above |
+| Append-only transaction tables | Regulatory compliance; immutable audit trail | All workflow docs (10–16) |
+| UUID primary keys | Safe for distributed systems; no sequence conflicts | Industry standard |

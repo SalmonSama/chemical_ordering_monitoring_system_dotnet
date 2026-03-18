@@ -15,6 +15,31 @@ The transaction history is the system's **immutable audit trail**. Every importa
 
 ---
 
+## Required Tracked Actions
+
+The following actions **must** be recorded in the transaction history. This list is normative and all workflow documents (10–14) reference these types:
+
+| # | Action | Transaction Type | Source Workflow |
+|---|---|---|---|
+| 1 | Add item to cart | `ADD_TO_CART` | `10-order-workflow.md`, Step 2 |
+| 2 | Submit order for approval | `SUBMIT_ORDER` | `10-order-workflow.md`, Step 4 |
+| 3 | Modify order before approval | `MODIFY_ORDER` | `10-order-workflow.md`, Step 5a |
+| 4 | Approve order | `APPROVE_ORDER` | `10-order-workflow.md`, Step 6 |
+| 5 | Reject order | `REJECT_ORDER` | `10-order-workflow.md`, Step 5b |
+| 6 | Send vendor email | `SEND_VENDOR_EMAIL` | `10-order-workflow.md`, Step 7 |
+| 7 | Cancel order | `CANCEL_ORDER` | `10-order-workflow.md` |
+| 8 | Check-in items (PO) | `CHECK_IN` | `11-checkin-workflow.md`, Flow 1 |
+| 9 | Check-in items (manual) | `MANUAL_CHECK_IN` | `11-checkin-workflow.md`, Flow 2 |
+| 10 | Checkout items | `CHECKOUT` | `12-checkout-workflow.md` |
+| 11 | Log peroxide test | `PEROXIDE_TEST_LOGGED` | `13-peroxide-workflow.md` |
+| 12 | Quarantine lot | `LOT_QUARANTINED` | `13-peroxide-workflow.md` |
+| 13 | Extend shelf life | `EXTEND_SHELF_LIFE` | `14-extend-shelf-life-workflow.md` |
+| 14 | Manual quantity adjustment | `ADJUSTMENT` | Inventory management |
+| 15 | Lot disposal | `DISPOSAL` | Inventory management |
+| 16 | Inter-lab transfer | `TRANSFER` | Future (post-MVP) |
+
+---
+
 ## Complete Transaction Type Catalog
 
 Every transaction type used across the system is defined below. These types are referenced consistently in all workflow documents (10–14).
@@ -109,6 +134,10 @@ The `metadata` JSONB field stores structured data specific to each transaction t
       "action": "added",
       "quantity": 2,
       "unit": "L"
+    },
+    {
+      "chemical_name": "Methanol",
+      "action": "removed"
     }
   ]
 }
@@ -148,7 +177,8 @@ The `metadata` JSONB field stores structured data specific to each transaction t
   "vendor_name": "Sigma-Aldrich",
   "vendor_email": "orders@sigma.com",
   "dispatch_status": "sent",
-  "items_included": 3
+  "items_included": 3,
+  "retry_count": 0
 }
 ```
 
@@ -223,7 +253,9 @@ The `metadata` JSONB field stores structured data specific to each transaction t
   "chemical_name": "Tetrahydrofuran",
   "lot_number": "LOT-2025-019",
   "test_date": "2026-03-15",
+  "result_type": "NUMERIC",
   "ppm_result": 18,
+  "result_text": null,
   "classification": "Normal",
   "next_monitor_due": "2026-06-15",
   "tested_by_user_id": "uuid"
@@ -251,6 +283,7 @@ The `metadata` JSONB field stores structured data specific to each transaction t
   "lot_id": "uuid",
   "chemical_name": "Tetrahydrofuran",
   "lot_number": "LOT-2025-019",
+  "extension_number": 1,
   "previous_expiry_date": "2026-04-15",
   "new_expiry_date": "2026-10-15",
   "previous_days_to_expiry": 28,

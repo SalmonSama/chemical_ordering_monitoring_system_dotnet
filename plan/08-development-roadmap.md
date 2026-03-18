@@ -16,7 +16,7 @@ Development is organized into **four phases**, ordered by business value, risk r
 
 | # | Deliverable | Description |
 |---|---|---|
-| 1.1 | **Database schema** | Design and create all core tables: `locations`, `labs`, `users`, `user_lab_assignments`, `roles`, `categories`, `chemicals`, `vendors`, `units_of_measure` |
+| 1.1 | **Database schema** | Design and create all core tables. Master data: `locations`, `labs`, `users`, `roles`, `user_labs`, `vendors`, `item_categories`, `items`, `item_location_settings`, `item_lab_settings`, `regulations`, `item_regulations`. Transactional: `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions`, `vendor_email_logs`, `inventory_lots`, `stock_transactions`, `peroxide_tests`, `shelf_life_extensions`, `label_print_logs`. Audit: `audit_logs`. See `18-entity-list-and-field-planning.md` for field-level detail. |
 | 1.2 | **Authentication integration** | JWT-based auth with enterprise identity provider; login/logout flow in React |
 | 1.3 | **Authorization middleware** | Role-based access control (RBAC) with (Location, Lab) scope enforcement in ASP.NET Core |
 | 1.4 | **User management** | Admin UI to create users, assign roles, assign lab access, deactivate users |
@@ -44,13 +44,13 @@ Development is organized into **four phases**, ordered by business value, risk r
 | # | Deliverable | Description |
 |---|---|---|
 | 2.1 | **Chemical catalog UI** | Browse, search, and filter catalog items; category-aware display |
-| 2.2 | **Cart module** | Add to cart, edit quantities, remove items, per-user per-lab, persist across sessions. See `10-order-workflow.md`, Steps 2–3. |
-| 2.3 | **Order submission** | Submit cart as order; validate, create order record, clear cart, notify Focal Point. See `10-order-workflow.md`, Step 4. |
+| 2.2 | **Cart module** | Add to cart, edit quantities, remove items, per-user per-lab, server-side persistence across sessions. See `10-order-workflow.md`, Steps 2–3. |
+| 2.3 | **Order submission** | Submit cart as order; validate, create order record with line-item statuses (Pending), clear cart, notify Focal Point. See `10-order-workflow.md`, Step 4. |
 | 2.4 | **Approval queue** | Focal Point / Admin view of pending orders; approve, modify, or reject with comments. See `10-order-workflow.md`, Steps 5–6. |
-| 2.5 | **Focal Point order modification** | Allow Focal Point to adjust quantities, add/remove items before approving; notify requester of changes |
+| 2.5 | **Focal Point order modification** | Allow Focal Point to adjust quantities, add/remove items before approving; record change log (old/new values); notify requester of changes |
 | 2.6 | **Self-approval prevention** | Enforce rule that requester cannot approve their own order |
-| 2.7 | **Order status tracking** | Full status lifecycle: Draft → In Cart → Pending Approval → Modified → Approved → Email Sent → Pending Delivery → Partially Received → Fully Received → Cancelled |
-| 2.8 | **Vendor email notification** | Group line items by vendor; send one email per vendor with PO number, items, quantities. See `10-order-workflow.md`, Step 7. |
+| 2.7 | **Order status tracking** | Full status lifecycle: Draft → In Cart → Pending Approval → Modified → Approved → Email Sent → Pending Delivery → Partially Received → Fully Received → Cancelled. Line-item statuses: Pending → Partially Received → Fully Received / Removed |
+| 2.8 | **Vendor email notification** | Group line items by vendor; send one email per vendor with PO number, items, quantities. Retry up to 3 times with exponential backoff. See `10-order-workflow.md`, Step 7. |
 | 2.9 | **Order history** | View past orders with status, filterable by lab, date, status |
 | 2.10 | **Order status dashboard** | Full-table view with ~50 rows, scroll behavior, filters, status color coding. See `15-dashboard-behavior.md`. |
 | 2.11 | **Dashboard: Pending Approvals** | Widget showing count/list of orders awaiting approval |
@@ -76,12 +76,12 @@ Development is organized into **four phases**, ordered by business value, risk r
 
 | # | Deliverable | Description |
 |---|---|---|
-| 3.1 | **Check-in (against PO)** | Line-item-level check-in with lot number, quantity, expiry, storage location. See `11-checkin-workflow.md`, Flow 1. |
-| 3.2 | **Manual check-in** | Register items without a PO (esp. Verify STD); source/reason required. See `11-checkin-workflow.md`, Flow 2. |
-| 3.3 | **QR code generation** | Generate QR codes for each lot at check-in; support label printing |
-| 3.4 | **Label / QR printing** | Print-friendly label view with QR code + lot details after check-in |
+| 3.1 | **Check-in (against PO)** | Line-item-level check-in with lot number, quantity, expiry, storage location. Support multi-lot per line item. See `11-checkin-workflow.md`, Flow 1. |
+| 3.2 | **Manual check-in** | Register items without a PO (esp. Verify STD with CoA fields); source/reason required. See `11-checkin-workflow.md`, Flow 2. |
+| 3.3 | **QR code generation** | Generate QR codes for each lot at check-in; QR payload: lot ID, item, lot number, lab, location |
+| 3.4 | **Label / QR printing** | Print-friendly label view with QR code + lot details after check-in; support single and batch printing |
 | 3.5 | **Inventory list view** | View inventory by lab, with filters for category, status, expiry |
-| 3.6 | **Checkout (QR-scan primary)** | QR-scan to identify lot, enter quantity and purpose, update stock. See `12-checkout-workflow.md`. |
+| 3.6 | **Checkout (QR-scan primary)** | QR-scan to identify lot, open-date prompt on first use, enter quantity and purpose, update stock with optimistic concurrency. See `12-checkout-workflow.md`. |
 | 3.7 | **Manual checkout fallback** | Search-based checkout when QR scanning is unavailable |
 | 3.8 | **Lot detail view** | View full lot history: check-in, checkouts, adjustments, current quantity |
 | 3.9 | **Transaction history module** | Append-only log of all system actions (16 types); filterable, searchable, exportable. See `16-transaction-history-and-audit.md`. |
@@ -110,11 +110,11 @@ Development is organized into **four phases**, ordered by business value, risk r
 | # | Deliverable | Description |
 |---|---|---|
 | 4.1 | **Peroxide list page** | Scrollable, filterable list of all peroxide-monitored lots with status indicators. See `13-peroxide-workflow.md`. |
-| 4.2 | **Peroxide monitoring events** | Log multiple monitoring events per lot: test date, PPM result, classification (Normal/Warning/Quarantine). See `13-peroxide-workflow.md`. |
-| 4.3 | **PPM threshold logic** | < 25 ppm = Normal, ≥ 25 ppm = Warning, > 100 ppm = Quarantine (block checkout, notify). |
-| 4.4 | **Open date tracking** | Track when a container was first opened; anchor for monitoring schedules. |
-| 4.5 | **Peroxide classification management** | Admin UI for managing classification groups and monitoring intervals |
-| 4.6 | **Shelf-life extension module** | QR-scan entry, before/after values, immutable audit records. See `14-extend-shelf-life-workflow.md`. |
+| 4.2 | **Peroxide monitoring events** | Log multiple monitoring events per lot: test date, result type (numeric or textual), PPM result or text result, classification (Normal/Warning/Quarantine). See `13-peroxide-workflow.md`. |
+| 4.3 | **PPM threshold logic** | < 25 ppm = Normal, ≥ 25 ppm = Warning (halved interval), > 100 ppm = Quarantine (block checkout, notify). Support both numeric and textual results. |
+| 4.4 | **Open date tracking** | Track when a container was first opened; anchor for monitoring schedules. Set via checkout prompt or manual entry. |
+| 4.5 | **Peroxide classification management** | Admin UI for managing classification groups (Class A/B/C), monitoring intervals, and warning reduction factors |
+| 4.6 | **Shelf-life extension module** | QR-scan entry, before/after values, extension numbering, immutable audit records. See `14-extend-shelf-life-workflow.md`. |
 | 4.7 | **Peroxide due dashboard** | Full-table view: reminder, item, lot, monitor due in, monitor date, lab. See `15-dashboard-behavior.md`. |
 | 4.8 | **Notification system** | In-app and email notifications for approvals, expiry alerts, peroxide alerts, low stock |
 | 4.9 | **Regulatory reports** | Predefined report templates: inventory snapshot, transaction report, peroxide test report, shelf-life extension report |

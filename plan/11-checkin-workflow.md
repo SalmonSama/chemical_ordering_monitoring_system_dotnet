@@ -47,11 +47,13 @@ There are two distinct check-in flows:
    - Previously received quantity (if any)
    - Remaining quantity expected
    - Vendor
+   - Line-item status (Pending / Partially Received / Fully Received)
 3. User selects the line item(s) being received in this delivery.
 
 **Rules:**
-- Line items that have been fully received (ordered qty = received qty) are shown as completed and cannot be checked in again.
+- Line items that have been fully received (ordered qty = received qty) are shown as completed (status: **Fully Received**) and cannot be checked in again.
 - Multiple line items can be checked in within a single check-in session.
+- Check-in is always at the **line-item level** — the user selects which specific line items are being received.
 
 ---
 
@@ -71,21 +73,22 @@ For each selected line item, the user enters:
 | **Notes** | No | Any observations about condition, discrepancies, etc. |
 
 **Rules:**
-- A single line item delivery can be split into **multiple lots** if the shipment contains different lot numbers for the same item (e.g., 10 bottles from Lot A and 5 from Lot B).
+- A single line item delivery can be split into **multiple lots** if the shipment contains different lot numbers for the same item (e.g., 10 bottles from Lot A and 5 from Lot B). The user clicks "Add Another Lot" to enter additional lot records for the same line item.
 - Expiry date is required for Chemical & Reagent and Verify STD categories. Optional for others.
 - Storage location defaults to the order's target lab; sublocation is entered manually.
+- The total quantity across all lots for a line item must not exceed the remaining expected quantity (warn if exceeded; allow override for legitimate over-deliveries).
 
 ---
 
 #### Step 4: Confirm Check-In
 
 **Actions:**
-1. User reviews all entered lot details.
+1. User reviews all entered lot details in a summary view.
 2. User clicks "Confirm Check-In".
 3. System validates all entries:
-   - Quantities are valid (> 0, ≤ remaining).
+   - Quantities are valid (> 0, ≤ remaining per line item, unless override).
    - Required fields are filled.
-   - Lot number is not a duplicate for the same item in the same lab (warn if already exists).
+   - Lot number is not a duplicate for the same item in the same lab (warn if already exists; allow proceed).
 4. On success, the system:
 
    **a) Creates Inventory Lot Record(s):**
@@ -101,24 +104,26 @@ For each selected line item, the user enters:
    - `checked_in_by` → current user.
    - `checked_in_at` → current timestamp.
    - `order_id` / `order_line_item_id` → linked to the source order.
-   - `status` → **Active**.
+   - `status` → **Active** (or **Expired** if expiry date is in the past).
+   - `source_type` → `PURCHASE_ORDER`.
 
    **b) Updates Order Line Item:**
    - Increments `quantity_received` on the order line item.
-   - If `quantity_received == quantity_ordered`: line item is fully received.
+   - If `quantity_received == quantity_ordered`: line item status → **Fully Received**.
+   - If `0 < quantity_received < quantity_ordered`: line item status → **Partially Received**.
 
    **c) Updates Order Status:**
-   - If all line items are fully received: order status → **Fully Received**.
-   - If some but not all line items are received: order status → **Partially Received**.
+   - If all line items are Fully Received: order status → **Fully Received**.
+   - If some but not all line items have received quantity > 0: order status → **Partially Received**.
 
    **d) Generates QR Code:**
    - A unique QR code is generated for each new lot.
-   - QR payload encodes: lot ID, item name, lot number, lab, location.
+   - QR payload encodes: lot ID (primary key), item name, lot number, lab, location.
    - QR code is available for printing/download immediately after check-in.
 
    **e) Creates Transaction History Entry:**
    - Type: `CHECK_IN`
-   - Data: order ID, line item, lot number, quantity, user, lab, location, timestamp.
+   - Data: order ID, line item, lot number, quantity, expiry, user, lab, location, timestamp.
 
 ---
 
@@ -127,9 +132,10 @@ For each selected line item, the user enters:
 **Actions:**
 1. After successful check-in, the system displays a confirmation with the generated QR code(s).
 2. User can:
-   - **Print label** — triggers a print-friendly view or PDF with QR code + lot details.
-   - **Download QR** — saves the QR code image.
+   - **Print label** — triggers a print-friendly view or PDF with QR code + lot details. The print layout is optimized for standard label formats (e.g., 2" × 1" labels).
+   - **Download QR** — saves the QR code image as PNG.
    - **Skip** — proceed without printing (can print later from lot detail page).
+3. If multiple lots were created in a single session, the user can print all labels at once (batch print).
 
 **QR Label Content:**
 ```
@@ -143,6 +149,17 @@ For each selected line item, the user enters:
 │ Lab: AIE / PO Lab        │
 │ ID: INV-00123            │
 └──────────────────────────┘
+```
+
+**QR Code Data Payload (JSON-encoded):**
+```json
+{
+  "lot_id": "uuid",
+  "item": "Acetone",
+  "lot_number": "LOT-2025-042",
+  "lab": "PO Lab",
+  "location": "AIE"
+}
 ```
 
 ---
@@ -168,12 +185,14 @@ For each selected line item, the user enters:
 │ qty, lot#, expiry,     │
 │ storage, notes         │
 │ (per line item)        │
+│ ► Multi-lot per line   │
 └───────────┬────────────┘
             │
             ▼
 ┌────────────────────────┐
 │ Confirm check-in       │
 │ ► Create lot record(s) │
+│ ► Update line-item qty │
 │ ► Update order status  │
 │ ► Generate QR code     │
 │ ► Log transaction      │
@@ -182,6 +201,7 @@ For each selected line item, the user enters:
             ▼
 ┌────────────────────────┐
 │ Print / Download QR    │
+│ (single or batch)      │
 │ or skip                │
 └────────────────────────┘
 ```
@@ -225,7 +245,7 @@ Manual check-in is used when items are received **outside the ordering workflow*
 
 #### Step 3: Enter Lot Details
 
-Same fields as PO check-in:
+Same fields as PO check-in, plus source/reason:
 
 | Field | Required | Description |
 |---|---|---|
@@ -238,10 +258,13 @@ Same fields as PO check-in:
 | **Notes** | No | Additional observations. |
 
 **Additional fields for Verify STD:**
+
 | Field | Required | Description |
 |---|---|---|
 | **Certificate of Analysis #** | No | Reference to the CoA document. |
 | **Assigned Value** | No | The certified value of the standard. |
+| **Uncertainty** | No | The certified uncertainty of the standard value. |
+| **Certifying Body** | No | Organization that certified the standard (e.g., USP, NIST). |
 
 ---
 
@@ -251,6 +274,13 @@ Same as PO check-in Step 4, except:
 - No order is linked. The lot record has `order_id = NULL`.
 - Transaction history type: `MANUAL_CHECK_IN`.
 - QR code is generated identically.
+- `source_type` field on the lot record is set to `MANUAL`.
+
+---
+
+#### Step 5: Print Label / QR Code
+
+Same as PO check-in Step 5.
 
 ---
 
@@ -271,6 +301,7 @@ Same as PO check-in Step 4, except:
 │ Enter lot details:       │
 │ qty, lot#, expiry,       │
 │ storage, source/reason   │
+│ (+ Verify STD fields)    │
 └───────────┬──────────────┘
             │
             ▼
@@ -309,7 +340,7 @@ Every check-in (PO or manual) creates a lot record with matching structure:
 | `order_line_item_id` | Linked to source line item | `NULL` |
 | `checked_in_by` | Current user | Current user |
 | `checked_in_at` | Current timestamp | Current timestamp |
-| `status` | Active | Active |
+| `status` | Active (or Expired) | Active (or Expired) |
 | `qr_code_data` | Generated | Generated |
 | `source_type` | `PURCHASE_ORDER` | `MANUAL` |
 
@@ -322,9 +353,11 @@ Every check-in (PO or manual) creates a lot record with matching structure:
 | **Active** | Lot is in inventory, available for checkout. |
 | **Depleted** | Lot quantity has reached zero through checkouts. |
 | **Expired** | Lot has passed its expiry date. |
-| **Quarantined** | Lot has been flagged (e.g., failed peroxide test). |
+| **Quarantined** | Lot has been flagged (e.g., failed peroxide test > 100 ppm). |
 | **Disposed** | Lot has been officially disposed of. |
-| **Extended** | Lot had its shelf life extended (returns to Active with new expiry). |
+| **Extended** | Transitional: lot had its shelf life extended. Returns to **Active** with new expiry. |
+
+> **Note:** Lot statuses are distinct from order statuses. A lot's status is tracked independently and changes based on checkout, expiry, peroxide testing, shelf-life extension, or disposal events.
 
 ---
 
@@ -353,7 +386,7 @@ Every check-in (PO or manual) creates a lot record with matching structure:
 If a lot number already exists for the same item in the same lab, the system should:
 1. Warn the user: "Lot number {X} already exists for this item in this lab."
 2. Allow the user to proceed (different deliveries of the same lot) or correct the entry.
-3. This creates a second lot record with the same lot number — they are tracked independently by lot record ID.
+3. This creates a second lot record with the same lot number — they are tracked independently by lot record ID (the system's internal UUID, not the vendor lot number).
 
 ### Over-Receipt
 If the quantity received exceeds the ordered quantity:
@@ -365,4 +398,10 @@ If the quantity received exceeds the ordered quantity:
 If the entered expiry date is before today:
 1. Warn: "This item is already expired based on the entered expiry date."
 2. Allow proceed (user may intentionally be logging already-expired stock for disposal tracking).
-3. Lot status should be set to **Expired** immediately.
+3. Lot status should be set to **Expired** immediately upon creation.
+
+### Partial Receipt Across Multiple Deliveries
+An order line item may be checked in across multiple deliveries:
+- Delivery 1: 5 of 10 units received → line item status: **Partially Received**.
+- Delivery 2: 5 of 10 units received → line item status: **Fully Received**.
+- Each delivery creates its own lot record(s), even if the lot number is the same.

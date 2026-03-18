@@ -21,6 +21,22 @@ All documents in this plan must use the following order statuses consistently:
 | **Fully Received** | All line items have been checked in. Order complete. |
 | **Cancelled** | Order cancelled by requester (before approval) or by Admin/Focal Point. |
 
+### Order-Line-Item Statuses
+
+Each line item within an order also carries its own status:
+
+| Line-Item Status | Description |
+|---|---|
+| **Pending** | Line item part of a submitted order; not yet received. |
+| **Partially Received** | Some quantity has been checked in, but ordered quantity is not fully met. |
+| **Fully Received** | All ordered quantity has been checked in. |
+| **Removed** | Line item was removed during Focal Point modification. |
+
+The order-level status is computed from the aggregate of its line-item statuses:
+- If **all** line items are Fully Received → order is **Fully Received**.
+- If **at least one** (but not all) line items has received quantity > 0 → order is **Partially Received**.
+- Otherwise, the order keeps its current status from the approval/email flow.
+
 ### Status Transition Diagram
 
 ```
@@ -82,6 +98,7 @@ All documents in this plan must use the following order statuses consistently:
 - Verify STD items are visible in the catalog but do **not** have an "Add to Cart" action.
 - Gas items are orderable in MVP.
 - Material & Consumable items show "Add to Cart" only if the item has the `is_orderable` flag set to `true`.
+- Items display vendor name and current in-stock quantity for the user's selected lab to aid ordering decisions.
 
 ---
 
@@ -98,10 +115,21 @@ All documents in this plan must use the following order statuses consistently:
 **Rules:**
 - Cart is **per-user, per-lab**. A user ordering for PO Lab at AIE has a separate cart from the same user ordering for EOU Lab at AIE.
 - Adding an item already in the cart increments its quantity or prompts the user to update.
-- Cart persists server-side across sessions.
+- Cart persists **server-side** across sessions (stored in the database, not local storage). This ensures cart contents are not lost when switching devices or browsers.
 - Adding to cart creates a **transaction history entry** (type: `ADD_TO_CART`).
 
 **Status change:** Item status is **In Cart**.
+
+**Cart data model per line:**
+
+| Field | Description |
+|---|---|
+| `user_id` | Owner of the cart |
+| `lab_id` | Target lab |
+| `chemical_id` | Catalog item |
+| `quantity` | Requested quantity |
+| `note` | Optional line-item note |
+| `added_at` | Timestamp of addition |
 
 ---
 
@@ -121,6 +149,7 @@ All documents in this plan must use the following order statuses consistently:
 - Cart must have at least one item to proceed to submission.
 - All quantities must be greater than zero.
 - Cart displays the vendor for each item to help the user anticipate vendor grouping.
+- Cart page shows a grouped preview of vendor grouping: items are visually grouped by vendor so the user can see how many vendor emails will be generated.
 
 ---
 
@@ -141,7 +170,7 @@ All documents in this plan must use the following order statuses consistently:
    - Target lab and location.
    - Submission date/time.
    - Status: **Pending Approval**.
-4. System creates **order line items** from the cart contents.
+4. System creates **order line items** from the cart contents, each with status **Pending**.
 5. Cart is cleared for the user/lab combination.
 6. Notification sent to the Focal Point(s) of the target lab.
 
@@ -167,6 +196,18 @@ All documents in this plan must use the following order statuses consistently:
 - The Focal Point must be assigned to the order's target lab.
 - Self-approval is blocked: if the Focal Point is the order requester, a different Focal Point or Admin must approve.
 
+**Approval Queue display columns:**
+
+| Column | Description |
+|---|---|
+| PO Number | Auto-generated order ID |
+| Requester | Who submitted the order |
+| Lab | Target lab |
+| Items | Count + first item name |
+| Total Qty | Sum of line-item quantities |
+| Submitted | Submission date |
+| Priority | Visual indicator if notes contain "Urgent" |
+
 ---
 
 ### Step 5a: Modify Order (before approval)
@@ -176,13 +217,16 @@ All documents in this plan must use the following order statuses consistently:
 **Actions:**
 1. Focal Point edits the order:
    - Adjust quantities on existing line items.
-   - Remove line items.
+   - Remove line items (line item status → **Removed**).
    - Add new line items from the catalog.
    - Change vendor for a specific line item (if multiple vendors supply the same item).
    - Add approval-level notes.
-2. System records the original values and the modified values.
+2. System records the original values and the modified values in a change log:
+   - For each changed field: `{ field, old_value, new_value }`.
+   - For added items: `{ action: "added", item, quantity }`.
+   - For removed items: `{ action: "removed", item }`.
 3. Order status transitions to **Modified**.
-4. A notification is sent to the requester informing them the order was modified.
+4. A notification is sent to the requester informing them the order was modified, including a summary of changes.
 5. The Focal Point then approves the modified order.
 
 **Transaction history entry:** `MODIFY_ORDER` — records order ID, modifier (Focal Point), what changed (original vs. new values), timestamp.
@@ -218,7 +262,7 @@ All documents in this plan must use the following order statuses consistently:
 2. System validates:
    - Approver is not the requester.
    - Approver is assigned to the order's lab.
-   - Order has at least one line item.
+   - Order has at least one active (non-removed) line item.
 3. Order status transitions to **Approved**.
 4. System immediately triggers the vendor email process (Step 7).
 5. Approval timestamp and approver are recorded on the order.
@@ -254,6 +298,12 @@ All documents in this plan must use the following order statuses consistently:
    - **Sent** — email dispatched successfully.
    - **Failed** — email dispatch failed; queued for retry.
 
+**Email retry logic:**
+- On failure, the system retries up to **3 times** with exponential backoff (e.g., 1 min, 5 min, 15 min).
+- If all retries fail, the order remains in **Email Sent** status with a `has_failed_email = true` flag.
+- Admin is notified of persistent failures.
+- Admin can manually re-trigger email dispatch from the order detail page.
+
 **Transaction history entry:** `SEND_VENDOR_EMAIL` — records order ID, vendor, email recipient, dispatch status, timestamp.
 
 **Status change:** Approved → **Email Sent**
@@ -276,7 +326,8 @@ The order remains in **Pending Delivery** status until items are physically rece
 
 This step is covered in detail in `11-checkin-workflow.md`. In summary:
 
-- When a line item is checked in, the order tracks received quantities.
+- Check-in is performed at the **line-item level** — each line item is checked in individually.
+- When a line item is checked in, the order tracks received quantities per line item.
 - If some but not all line items are fully received: **Partially Received**.
 - When all line items are fully received: **Fully Received**.
 
@@ -321,7 +372,7 @@ This step is covered in detail in `11-checkin-workflow.md`. In summary:
 | Order approved | Requester | In-app, Email |
 | Order rejected | Requester | In-app, Email |
 | Vendor email sent | Requester, Focal Point | In-app |
-| Vendor email failed | Admin | In-app, Email |
+| Vendor email failed (all retries exhausted) | Admin | In-app, Email |
 | Order cancelled | Requester (if cancelled by FP/Admin) | In-app, Email |
 
 ---
@@ -334,6 +385,7 @@ An order may contain items from multiple vendors. The system handles this by:
 2. Sending one email per vendor.
 3. The order itself is a single record; vendor grouping is a presentation/email concern.
 4. All vendor emails must succeed for the order to transition to Pending Delivery. If any fail, the order remains in Email Sent with a pending retry flag.
+5. Each vendor email includes **only that vendor's items** — vendors cannot see items assigned to other vendors.
 
 ### Focal Point Ordering for Their Own Lab
 A Focal Point can create and submit an order for their own lab but cannot approve it. Another Focal Point (if available) or Admin must approve.
@@ -345,3 +397,9 @@ Admin can approve any order regardless of lab assignment. This is for escalation
 - **Verify STD:** Cannot be added to cart. "Add to Cart" button hidden in UI; API rejects attempts.
 - **Gas:** Orderable in MVP. Standard order + approval + email flow. No check-in in MVP.
 - **Material & Consumable:** Orderable only if `is_orderable = true` on the catalog item.
+
+### Cart Session Behavior
+- Cart data is stored **server-side** (database row per cart item, keyed by `user_id + lab_id + chemical_id`).
+- If a user starts a cart on a desktop and switches to a tablet, the cart is intact.
+- Carts have no automatic expiration. Users can clear their cart manually.
+- If a catalog item is deactivated while it is in a user's cart, the system should warn the user on cart review and prevent submission until the deactivated item is removed.

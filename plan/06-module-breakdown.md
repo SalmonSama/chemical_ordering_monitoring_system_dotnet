@@ -120,6 +120,7 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 ### Standard Check-In (against a Purchase Order)
 - Select an approved/ordered purchase order.
+- Check-in is done at the **line-item level** — each line item is checked in individually.
 - For each line item, record:
   - Quantity received.
   - Lot number.
@@ -127,13 +128,14 @@ This document describes the purpose, scope, and key capabilities of each major m
   - Expiry date.
   - Storage location (lab, shelf/cabinet).
 - Support partial check-ins (not all items received at once).
-- Update order status: **Partially Received** or **Fully Received**.
+- A single line item can be split into **multiple lots** if the shipment contains different lot numbers.
+- Update order line-item status (**Pending** → **Partially Received** → **Fully Received**) and order-level status.
 - Generate a QR code for each new lot upon check-in.
-- Support label/QR printing immediately after check-in.
+- Support label/QR printing immediately after check-in (single or batch).
 
 ### Manual Check-In (no Purchase Order)
 - Register items received outside the ordering process (donations, transfers, direct deliveries).
-- Especially relevant for **Verify STD** items that are never ordered through the system.
+- Especially relevant for **Verify STD** items that are never ordered through the system. Additional fields for Verify STD: Certificate of Analysis #, Assigned Value, Uncertainty, Certifying Body.
 - Requires Focal Point or Admin role.
 - Same lot-level data capture as standard check-in, plus a source/reason field.
 - Creates an inventory record without a linked purchase order.
@@ -142,7 +144,7 @@ This document describes the purpose, scope, and key capabilities of each major m
 - Scan a QR code on a received item to pre-populate check-in fields.
 - Suitable for items with vendor-supplied or internally generated QR/barcodes.
 
-> **See also:** `11-checkin-workflow.md` for detailed step-by-step flows, lot record structure, and edge cases.
+> **See also:** `11-checkin-workflow.md` for detailed step-by-step flows, lot record structure, QR data payload specification, and edge cases.
 
 **User Access:** Lab User, Focal Point, Admin (standard). Focal Point, Admin (manual).
 
@@ -158,14 +160,16 @@ This document describes the purpose, scope, and key capabilities of each major m
   - Quantity checked out.
   - Purpose / reason for use.
   - Date and time.
+- On first checkout of a lot, prompt whether the container is being opened for the first time; if yes, record `open_date` on the lot.
 - Validate that sufficient quantity remains in the lot.
 - Update lot remaining quantity.
 - Mark lots as depleted when quantity reaches zero.
 - Support QR-scan checkout as the **primary** interaction model: scan a lot's QR code to identify the lot and pre-populate the checkout form.
 - Manual fallback: search by item name, catalog number, or lot number.
-- Create a transaction record for every checkout operation.
+- Create a transaction record for every checkout operation **in the same database transaction** as the stock update.
+- Use **optimistic concurrency control** (version column) to prevent over-withdrawal from concurrent checkouts.
 
-> **See also:** `12-checkout-workflow.md` for QR-scan flow, partial checkout, and concurrency handling.
+> **See also:** `12-checkout-workflow.md` for QR-scan flow, open-date prompt, partial checkout, and concurrency handling.
 
 **User Access:** Lab User, Focal Point, Admin (within scope).
 
@@ -177,18 +181,19 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 **Key Capabilities:**
 - Maintain a list of chemicals classified as peroxide-forming, with their classification group (e.g., Class A, B, C).
-- Define monitoring intervals per classification group.
-- Display a **peroxide list page** showing all monitored lots with status indicators, searchable and filterable.
+- Define monitoring intervals per classification group. Warning results halve the interval.
+- Display a **peroxide list page** showing all monitored lots with status indicators, searchable and filterable (including by classification group).
 - Support **multiple monitoring events per lot** over the lot's lifetime.
 - Track key dates per lot: check-in date, open date, first inspect date, last monitor date, next monitor due.
-- Log monitoring events with: test date, tester, PPM result (numeric), classification (auto-calculated), observations/notes.
+- Log monitoring events with: test date, tester, result type (numeric or textual), PPM result or text result, classification (auto-calculated for numeric; user-selected for textual), observations/notes.
 - PPM-based classification thresholds:
   - **< 25 ppm** → Normal.
-  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency.
+  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency (halved interval).
   - **> 100 ppm** → Quarantine — block checkout, notify Focal Point and Admin.
+- Quarantined lots follow a disposal path: Focal Point/Admin initiates disposal from the lot detail page.
 - Maintain full test history per lot for audit purposes.
 
-> **See also:** `13-peroxide-workflow.md` for the complete workflow, PPM thresholds, and monitoring event data model.
+> **See also:** `13-peroxide-workflow.md` for the complete workflow, PPM thresholds, textual result handling, classification groups, disposal path, and monitoring event data model.
 
 **User Access:** Lab User (log results), Focal Point (configure schedule, log results), Admin (full access), Viewer/Auditor (read-only).
 
@@ -208,13 +213,15 @@ This document describes the purpose, scope, and key capabilities of each major m
   - Justification / comments.
   - Person authorizing the extension.
 - Update the lot's expiry date in the inventory.
-- Maintain a complete extension history per lot.
+- If the lot was in **Expired** status, transition it back to **Active**.
+- Maintain a complete extension history per lot with sequential extension numbers.
 - Apply only to individual lots, not to the entire catalog item.
 - Extensions are logged as a distinct transaction type (`EXTEND_SHELF_LIFE`) for audit trail.
 - Preserve **before/after** values: old expiry, new expiry, days-to-expiry comparison.
+- Track **extension count** per lot (how many times extended), visible on the lot detail page.
 - Entry point is via **QR scan** of the lot (primary) or manual search (fallback).
 
-> **See also:** `14-extend-shelf-life-workflow.md` for the complete workflow and audit requirements.
+> **See also:** `14-extend-shelf-life-workflow.md` for the complete workflow, extension numbering, and audit requirements.
 
 **User Access:** Focal Point, Admin.
 
@@ -272,6 +279,8 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 **User Access:** Admin, Focal Point, Viewer/Auditor.
 
+> **Data requirements:** See `21-reporting-and-dashboard-data-needs.md` for the exact query patterns, calculations, index strategy, and suggested database views behind each report.
+
 ---
 
 ## 12. Master Data Module
@@ -279,14 +288,18 @@ This document describes the purpose, scope, and key capabilities of each major m
 **Purpose:** Manage the reference data that underpins all system operations.
 
 **Key Capabilities:**
-- **Chemical / Item Catalog** — Create, edit, deactivate chemicals and materials. Fields include: name, CAS number, catalog number, category, default vendor, unit, packaging, hazard classification, peroxide-forming flag.
+- **Chemical / Item Catalog** — Create, edit, deactivate chemicals and materials. Fields include: name, short name, CAS number, part number, category, default vendor, unit, size, description, storage conditions, and all behavior flags (`is_orderable`, `requires_checkin`, `allows_checkout`, `tracks_expiry`, `requires_peroxide_monitoring`, `is_regulatory_related`, `peroxide_class`). See `18-entity-list-and-field-planning.md`, entity 8.
+- **Behavior Flag Management** — Set category-based defaults for behavior flags; override per item as needed. Flags make category-driven behavior explicit and queryable.
 - **Vendors** — Manage vendor records: name, contact email, phone, address, notes.
-- **Categories** — Define and manage item categories (Chemical & Reagent, Verify STD, Gas, Material & Consumable). Categories drive workflow behavior.
-- **Units of Measure** — Define units (L, mL, kg, g, each, etc.).
+- **Categories** — Define and manage item categories (Chemical & Reagent, Verify STD, Gas, Material & Consumable). Categories drive default behavior flag values.
+- **Regulations** — Define regulatory frameworks and link items to applicable regulations (M:N via `item_regulations`). See `18-entity-list-and-field-planning.md`, entities 11–12.
 - **Locations** — Create, edit, deactivate locations (AIE, MTP, CT, ATC).
 - **Labs** — Create, edit, deactivate labs within locations. Each lab is linked to a parent location.
 - **Peroxide Classification Groups** — Define groups (Class A, B, C) with monitoring intervals.
-- **Min-Stock Thresholds** — Set per-item, per-lab minimum stock levels.
+- **Min-Stock Thresholds** — Set per-item, per-lab minimum stock levels via `item_lab_settings` (normalized, not spreadsheet columns). See `19-relationship-and-normalization-notes.md`, Section 3.
+- **Item Location Settings** — Configure which items are stocked at each location via `item_location_settings`.
+
+> **Database entities:** `items`, `item_categories`, `vendors`, `regulations`, `item_regulations`, `item_location_settings`, `item_lab_settings`, `locations`, `labs`. See `18-entity-list-and-field-planning.md`.
 
 **User Access:** Admin only (full CRUD). Focal Point and others (read-only where applicable).
 

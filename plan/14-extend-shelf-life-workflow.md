@@ -25,7 +25,7 @@ Shelf-life extension is the process of extending the expiry date of a specific c
 **Actor:** Focal Point or Admin
 
 **Actions:**
-1. Navigate to the **Extend Shelf Life** page (or access via the lot detail page or expired dashboard).
+1. Navigate to the **Extend Shelf Life** page (or access via the lot detail page or expired dashboard action column).
 2. Scan the QR code on the chemical's label.
 3. System decodes the QR payload and loads the lot record.
 
@@ -50,12 +50,13 @@ The system shows the current lot information:
 | Lot Status | Active (or Expired) |
 | Check-In Date | 2025-10-15 |
 | Open Date | 2025-11-01 |
-| Previous Extensions | 0 (or list of prior extensions) |
+| Previous Extensions | 0 (or list of prior extensions with count) |
 
 **Validation:**
 - The lot must be in **Active** or **Expired** status. (Expired lots are valid candidates for extension — that is a primary use case.)
 - The lot must not be **Quarantined** or **Disposed**.
 - The lot's category must be **Chemical & Reagent**. Other categories do not support shelf-life extension.
+- If the lot is quarantined due to peroxide results, the system displays: "This lot is quarantined and cannot have its shelf life extended. It must be disposed."
 
 ---
 
@@ -87,6 +88,7 @@ Before saving, the system displays a summary:
 │  Item:           Tetrahydrofuran (THF)           │
 │  Lot:            LOT-2025-019                    │
 │  Lab:            AIE / PO Lab                    │
+│  Extension #:    1 of N                          │
 │                                                  │
 │  ── BEFORE ──────────────────────────────────    │
 │  Expiry Date:    2026-04-15                      │
@@ -120,6 +122,7 @@ Before saving, the system displays a summary:
    | Field | Value |
    |---|---|
    | `lot_id` | FK to the lot |
+   | `extension_number` | Sequential: 1, 2, 3, … per lot |
    | `previous_expiry_date` | The old expiry date (before extension) |
    | `new_expiry_date` | The new expiry date (after extension) |
    | `previous_days_to_expiry` | Calculated: old expiry − today |
@@ -136,13 +139,15 @@ Before saving, the system displays a summary:
    - `expiry_date` → set to the **new expiry date**.
    - `status` → if the lot was **Expired**, set back to **Active**.
    - The lot's `updated_at` and `updated_by` fields are updated.
+   - `extension_count` → incremented by 1.
 
    **c) Logs Transaction History:**
    - Type: `EXTEND_SHELF_LIFE`
-   - Data: lot ID, item, lot number, previous expiry date, new expiry date, previous days to expiry, new days to expiry, extension days, test summary, authorized by, lab, location, timestamp.
+   - Data: lot ID, item, lot number, previous expiry date, new expiry date, previous days to expiry, new days to expiry, extension days, extension number, test summary, authorized by, lab, location, timestamp.
 
    **d) Sends Notification:**
    - To Admin and Viewer/Auditor: "Shelf life extended for lot {lot_number} of {item}. New expiry: {date}. Authorized by: {user}."
+   - If the lot was previously Expired and is now Active: additional notification to Focal Point with emphasis that an expired lot has been reactivated.
 
 ---
 
@@ -158,7 +163,7 @@ Before saving, the system displays a summary:
 ┌─────────────────────────────────┐
 │  Display lot details            │
 │  ► Current expiry, days to exp  │
-│  ► Previous extensions          │
+│  ► Previous extensions (count)  │
 │  ► Validate eligibility         │
 └──────────────┬──────────────────┘
                │
@@ -175,13 +180,15 @@ Before saving, the system displays a summary:
 │  ► Old expiry vs. new expiry    │
 │  ► Days to expiry comparison    │
 │  ► Extension period             │
+│  ► Extension number             │
 └──────────────┬──────────────────┘
                │
                ▼
 ┌─────────────────────────────────┐
 │  Confirm Extension              │
 │  ► Save extension record        │
-│  ► Update lot expiry            │
+│  ► Update lot expiry + status   │
+│  ► Increment extension count    │
 │  ► Log transaction history      │
 │  ► Send notifications           │
 └─────────────────────────────────┘
@@ -193,13 +200,14 @@ Before saving, the system displays a summary:
 
 The extension process is designed to be **fully auditable**:
 
-1. **No silent overwrites** — The old expiry date is preserved in the extension record, not discarded.
+1. **No silent overwrites** — The old expiry date is preserved in the extension record, not discarded. The lot record's `expiry_date` is updated, but the full history is in the extension records table.
 2. **Immutable extension records** — Extension records are append-only. They cannot be edited or deleted.
 3. **Authorization tracking** — Every extension records who authorized it and when.
 4. **Test documentation** — The justifying test and its result are part of the permanent record.
 5. **Transaction history** — A `EXTEND_SHELF_LIFE` transaction is logged for every extension.
 6. **Extension count** — The lot detail page shows how many times the lot has been extended, with full history.
 7. **Before/after values** — Both the old and new expiry dates, plus days-to-expiry calculations, are preserved.
+8. **Extension number** — Each extension is sequentially numbered per lot (1st, 2nd, 3rd, …) for easy identification.
 
 ---
 
@@ -218,7 +226,7 @@ Each lot's detail page includes an **Extension History** section:
 
 | Action | Transaction Type | Key Data |
 |---|---|---|
-| Extend shelf life | `EXTEND_SHELF_LIFE` | Lot ID, item, lot number, old expiry, new expiry, old days-to-expiry, new days-to-expiry, extension days, test summary, authorized by, lab, location, timestamp |
+| Extend shelf life | `EXTEND_SHELF_LIFE` | Lot ID, item, lot number, old expiry, new expiry, old days-to-expiry, new days-to-expiry, extension days, extension number, test summary, authorized by, lab, location, timestamp |
 
 ---
 
@@ -240,6 +248,7 @@ Each lot's detail page includes an **Extension History** section:
 | **New date validation** | New expiry date must be **after** the current expiry date. |
 | **Role restriction** | Only **Focal Point** and **Admin** can perform extensions. Lab Users cannot. |
 | **Lot-level only** | Extension applies to a single lot, not all lots of the same chemical. |
+| **Extension number tracking** | Each extension is sequentially numbered; the count is visible on the lot detail page. |
 
 ---
 
@@ -253,7 +262,7 @@ Each lot's detail page includes an **Extension History** section:
 
 ### Multiple Extensions
 - A lot can be extended multiple times.
-- Each extension creates a new, separate extension record.
+- Each extension creates a new, separate extension record with an incremented `extension_number`.
 - The extension history shows the full chain of extensions.
 - Whether there is a maximum number of extensions is an open question (see `09-open-questions.md`, OQ-26).
 

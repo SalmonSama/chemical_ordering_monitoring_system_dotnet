@@ -165,14 +165,45 @@ The following questions emerged during the detailed workflow analysis (documents
 | OQ-54 | **Is there a maximum extension period per extension?** (e.g., max 6 months per extension) | If yes, the validation prevents excessively long extensions. | Affects extension validation logic. |
 | OQ-55 | **Should lot status changes (e.g., Expired → Active after extension) be highlighted in the audit trail?** | Currently logged as a transaction. Stakeholders may want additional visibility (e.g., a separate status change log). | Affects audit trail granularity. |
 
+### Cart & Catalog (from Deep-Dive)
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-56 | **Should carts have an automatic expiration policy?** (e.g., clear carts older than 30 days) | Currently carts persist indefinitely. Stale carts with outdated items could cause confusion. | Affects cart cleanup logic. |
+| OQ-57 | **How should the system handle a deactivated catalog item that is currently in a user's cart?** | Currently planned: warn on cart review and block submission. Alternative: auto-remove with notification. | Affects cart validation and user notification. |
+
+### Peroxide Monitoring (from Deep-Dive)
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-58 | **When a peroxide test result is textual (not numeric ppm), who has authority to assign the classification?** | Currently planned: user selects Normal/Warning/Quarantine manually. Should it require Focal Point role? | Affects role permissions for classification assignment. |
+| OQ-59 | **Should the system support uploading photos or documents as evidence for peroxide test results?** | Some labs photograph test strips as evidence. If yes, file upload and storage is needed. | Affects monitoring event data model and storage requirements. |
+
+### Checkout (from Deep-Dive)
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-60 | **What should the user experience be when a concurrent checkout conflict occurs?** | Currently planned: show error, reload latest quantity, ask user to retry. Alternative: auto-retry with the same quantity if still available. | Affects checkout UX and concurrency handling. |
+
+### Database Design (from Deep-Dive)
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-61 | **How long should `audit_logs` and `stock_transactions` be retained?** | Both tables are append-only. At ~17,000 records/year, storage is minimal, but a retention policy should be defined for compliance. | Affects storage planning and archival strategy. |
+| OQ-62 | **Should soft-deleting a parent (e.g., a vendor) cascade to related items' `default_vendor_id`?** | Currently planned: `is_active = false` on vendor, but `items.default_vendor_id` still references it. Should the UI warn, clear, or block? | Affects soft-delete cascade logic. |
+| OQ-63 | **Should Verify STD items require Certificate of Analysis fields at manual check-in?** | Currently planned: CoA #, Assigned Value, Uncertainty, and Certifying Body are optional fields on `inventory_lots`. Should any of these be mandatory for Verify STD? | Affects validation rules for manual check-in. |
+| OQ-64 | **Should `item_location_settings.is_stocked` be required before `item_lab_settings` rows can be created?** | The two-level config pattern (location → lab) suggests that an item must be stocked at a location before it can be configured at the lab level. Should the system enforce this? | Affects item configuration workflow. |
+| OQ-65 | **Should denormalized `location_id` on transactional tables be maintained via database triggers or application logic?** | Currently planned: application sets `location_id` on INSERT by looking up `labs.location_id`. Alternative: a database trigger sets it automatically. | Affects data integrity guarantees. |
+| OQ-66 | **For `purchase_requests.po_number` auto-generation, what format should be used?** | Currently planned: `PO-{YYYY}-{####}` (e.g., `PO-2026-0001`). Should it include location code? Lab code? Reset counter annually? | Affects PO number readability and uniqueness. |
+
 ---
 
 ## Priority Classification
 
 | Priority | Questions | Rationale |
 |---|---|---|
-| **Must resolve before Phase 1** | OQ-01, OQ-02, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41 | Foundation decisions that affect schema, auth, and initial data |
-| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47 | Ordering, approval workflow design, and order modification rules |
-| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51 | Inventory management, check-in/checkout, and lab structure |
-| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55 | Monitoring, notifications, reporting, and shelf-life extension |
+| **Must resolve before Phase 1** | OQ-01, OQ-02, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41, OQ-61, OQ-65, OQ-66 | Foundation decisions that affect schema, auth, initial data, and PO numbering |
+| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47, OQ-56, OQ-57, OQ-62 | Ordering, approval workflow design, cart behavior, and vendor soft-delete |
+| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51, OQ-60, OQ-63, OQ-64 | Inventory management, check-in/checkout, Verify STD validation, and concurrency |
+| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55, OQ-58, OQ-59 | Monitoring, notifications, reporting, shelf-life extension, and peroxide result authority |
 | **Can be deferred** | OQ-03, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44 | Enhancements or post-MVP concerns |

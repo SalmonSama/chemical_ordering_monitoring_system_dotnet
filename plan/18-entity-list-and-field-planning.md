@@ -1,485 +1,513 @@
 # 18 — Entity List and Field Planning
 
-This document defines the major database entities, their key fields, data types, constraints, and relationships. This is a planning document — not executable DDL. Light SQL-style notation is used for clarity.
+This document describes every planned database entity, its key fields, purpose, and relationships. This is a **planning reference** — not executable DDL. See `17-database-conceptual-model.md` for the three-layer model these entities fit into.
 
-> **Convention:** All tables include audit columns (`created_at`, `updated_at`, `created_by`, `updated_by`) unless noted. These are omitted from the field lists below for brevity.
+All tables include standard audit columns unless otherwise noted:
+- `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`
+- `updated_at TIMESTAMPTZ`
+- `created_by UUID` (FK → users)
+- `updated_by UUID` (FK → users)
 
----
-
-## 1. locations
-
-**Purpose:** Top-level organizational unit. Examples: AIE, MTP, CT, ATC.
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | UUID | PK | Unique location identifier |
-| `code` | VARCHAR(20) | UNIQUE, NOT NULL | Short code (e.g., `AIE`, `MTP`) |
-| `name` | VARCHAR(150) | NOT NULL | Full name (e.g., "Analytical & Industrial Engineering") |
-| `address` | TEXT | NULL | Physical address |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
+All primary keys are `id UUID NOT NULL DEFAULT gen_random_uuid()`.
 
 ---
 
-## 2. labs
-
-**Purpose:** Sub-unit of a location where inventory is owned and operations occur.
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | UUID | PK | Unique lab identifier |
-| `location_id` | UUID | FK → locations, NOT NULL | Parent location |
-| `code` | VARCHAR(30) | NOT NULL | Short code (e.g., `PO_LAB`, `EOU`) |
-| `name` | VARCHAR(150) | NOT NULL | Full name (e.g., "PO Lab") |
-| `description` | TEXT | NULL | Description or notes about the lab |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
-
-**Unique constraint:** `(location_id, code)` — lab codes unique within a location.
+## Layer 1: Master Data
 
 ---
 
-## 3. users
+### 1. `locations`
 
-**Purpose:** All system users (admins, focal points, lab users, auditors).
+Physical sites / campuses where labs operate.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique user identifier |
-| `email` | VARCHAR(255) | UNIQUE, NOT NULL | Login email / SSO identifier |
-| `first_name` | VARCHAR(100) | NOT NULL | First name |
-| `last_name` | VARCHAR(100) | NOT NULL | Last name |
-| `display_name` | VARCHAR(200) | NOT NULL | Computed or entered display name |
-| `phone` | VARCHAR(30) | NULL | Contact phone number |
-| `external_id` | VARCHAR(255) | UNIQUE, NULL | Enterprise IdP identifier (Azure AD OID, etc.) |
-| `role_id` | UUID | FK → roles, NOT NULL | User's system-wide role |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete / deactivation flag |
-| `last_login_at` | TIMESTAMPTZ | NULL | Most recent login timestamp |
+| `id` | UUID PK | No | |
+| `name` | VARCHAR(100) | No | Display name (e.g., "AIE", "MTP", "CT", "ATC") |
+| `code` | VARCHAR(10) | No | Short code, unique (e.g., `AIE`) |
+| `address` | TEXT | Yes | Physical address |
+| `is_active` | BOOLEAN | No | Soft-delete / deactivation flag. Default `true` |
+
+**Unique:** `code`
 
 ---
 
-## 4. roles
+### 2. `labs`
 
-**Purpose:** System-wide role definitions.
+Laboratories within a location. A location has one or more labs.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique role identifier |
-| `name` | VARCHAR(50) | UNIQUE, NOT NULL | Role name |
-| `description` | TEXT | NULL | Human-readable description |
+| `id` | UUID PK | No | |
+| `location_id` | UUID FK → locations | No | Parent location |
+| `name` | VARCHAR(100) | No | Display name (e.g., "PO Lab", "EOU Lab") |
+| `code` | VARCHAR(20) | Yes | Optional short code |
+| `description` | TEXT | Yes | |
+| `is_active` | BOOLEAN | No | Default `true` |
 
-**Seed data:**
-
-| name | Description |
-|---|---|
-| `Admin` | Full system access across all locations and labs |
-| `Focal Point` | Lab manager; approve orders, manage inventory, perform monitoring |
-| `Lab User` | Standard user; order, checkout, log tests within assigned labs |
-| `Viewer` | Read-only access for auditors and compliance reviewers |
+**Unique:** `(location_id, name)`
 
 ---
 
-## 5. user_labs
+### 3. `roles`
 
-**Purpose:** Maps users to labs, defining their operational scope. A user can be assigned to multiple labs.
+System-wide role definitions.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique assignment identifier |
-| `user_id` | UUID | FK → users, NOT NULL | The user |
-| `lab_id` | UUID | FK → labs, NOT NULL | The lab the user can access |
-| `is_primary` | BOOLEAN | NOT NULL, DEFAULT false | Whether this is the user's default lab |
+| `id` | UUID PK | No | |
+| `name` | VARCHAR(50) | No | Role name: `admin`, `focal_point`, `lab_user`, `viewer` |
+| `display_name` | VARCHAR(100) | No | Human-readable: "Admin", "Focal Point", "Lab User", "Viewer / Auditor" |
+| `description` | TEXT | Yes | |
+| `is_active` | BOOLEAN | No | Default `true` |
 
-**Unique constraint:** `(user_id, lab_id)` — prevent duplicate assignments.
-
-> **Note:** The user's role (`users.role_id`) is system-wide. The lab assignment determines scope, not permissions. Admin users have implicit access to all labs.
+**Unique:** `name`
 
 ---
 
-## 6. vendors
+### 4. `users`
 
-**Purpose:** Vendors/suppliers who provide chemicals, reagents, or materials.
+All system users. Authentication is handled externally (JWT/SSO); this table stores profile and role assignment.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique vendor identifier |
-| `name` | VARCHAR(200) | NOT NULL | Vendor company name |
-| `code` | VARCHAR(30) | UNIQUE, NULL | Short vendor code |
-| `contact_name` | VARCHAR(150) | NULL | Primary contact person |
-| `contact_email` | VARCHAR(255) | NULL | Primary order email address |
-| `contact_phone` | VARCHAR(30) | NULL | Phone number |
-| `website` | VARCHAR(500) | NULL | Vendor website |
-| `address` | TEXT | NULL | Vendor address |
-| `notes` | TEXT | NULL | Internal notes about the vendor |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
+| `id` | UUID PK | No | |
+| `external_id` | VARCHAR(255) | Yes | ID from the external identity provider (e.g., Azure AD object ID) |
+| `email` | VARCHAR(255) | No | Primary email, unique |
+| `full_name` | VARCHAR(200) | No | |
+| `role_id` | UUID FK → roles | No | User's system role |
+| `is_active` | BOOLEAN | No | Default `true`. Deactivated users cannot log in. |
+| `last_login_at` | TIMESTAMPTZ | Yes | Last successful login timestamp |
+
+**Unique:** `email`, `external_id` (if not null)
 
 ---
 
-## 7. item_categories
+### 5. `user_labs`
 
-**Purpose:** Classification of items by behavior type.
+Junction table mapping users to the labs they can access. A user may be assigned to multiple labs across multiple locations.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique category identifier |
-| `name` | VARCHAR(100) | UNIQUE, NOT NULL | Category name |
-| `code` | VARCHAR(30) | UNIQUE, NOT NULL | Short code for system use |
-| `description` | TEXT | NULL | Description of the category |
-| `display_order` | INT | NOT NULL, DEFAULT 0 | Sort order in UI dropdowns |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
+| `id` | UUID PK | No | |
+| `user_id` | UUID FK → users | No | |
+| `lab_id` | UUID FK → labs | No | |
+| `is_default` | BOOLEAN | No | If `true`, this is the user's default lab context on login. Exactly one per user. Default `false` |
 
-**Seed data:**
-
-| code | name |
-|---|---|
-| `CHEM_REAGENT` | Chemical & Reagent |
-| `VERIFY_STD` | Verify STD |
-| `GAS` | Gas |
-| `MAT_CONSUMABLE` | Material & Consumable |
+**Unique:** `(user_id, lab_id)`
 
 ---
 
-## 8. items
+### 6. `vendors`
 
-**Purpose:** Organization-wide item master list (shared catalog). Every orderable or trackable item has one record here.
+Supplier / vendor master list.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique item identifier |
-| `item_name` | VARCHAR(300) | NOT NULL | Full item name |
-| `item_short_name` | VARCHAR(100) | NULL | Abbreviated name for labels and compact views |
-| `part_no` | VARCHAR(100) | NULL | Manufacturer or catalog part number |
-| `cas_number` | VARCHAR(30) | NULL | CAS registry number (for chemicals) |
-| `category_id` | UUID | FK → item_categories, NOT NULL | Item category |
-| `default_vendor_id` | UUID | FK → vendors, NULL | Default/preferred vendor |
-| `type` | VARCHAR(50) | NULL | Sub-type within category (e.g., "Solvent", "Acid", "Calibration Gas") |
-| `size` | VARCHAR(50) | NULL | Package size description (e.g., "2.5 L", "500 mL", "25 kg") |
-| `unit` | VARCHAR(30) | NOT NULL | Unit of measure (e.g., "L", "mL", "kg", "each") |
-| `default_price` | DECIMAL(12,2) | NULL | Reference/estimated price (not binding) |
-| `currency` | VARCHAR(3) | NULL, DEFAULT 'USD' | Currency for the reference price |
-| `lead_time_days` | INT | NULL | Default procurement lead time in days |
-| `description` | TEXT | NULL | Detailed item description |
-| `storage_instructions` | TEXT | NULL | Handling or storage notes |
-| `sds_url` | VARCHAR(500) | NULL | Link to Safety Data Sheet |
+| `id` | UUID PK | No | |
+| `name` | VARCHAR(200) | No | Vendor name (e.g., "Sigma-Aldrich") |
+| `code` | VARCHAR(20) | Yes | Optional short code |
+| `contact_email` | VARCHAR(255) | Yes | Primary order email |
+| `contact_phone` | VARCHAR(50) | Yes | |
+| `website` | VARCHAR(500) | Yes | |
+| `address` | TEXT | Yes | |
+| `notes` | TEXT | Yes | |
+| `is_active` | BOOLEAN | No | Default `true` |
+
+**Unique:** `name`
+
+---
+
+### 7. `item_categories`
+
+Categories for the item master (e.g., Chemical & Reagent, Gas, Material & Consumable, Verify STD).
+
+| Column | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | UUID PK | No | |
+| `name` | VARCHAR(100) | No | Category name |
+| `code` | VARCHAR(20) | No | Short code (e.g., `CHEM`, `GAS`, `MAT`, `STD`) |
+| `description` | TEXT | Yes | |
+| `display_order` | INTEGER | No | Sort order in UI dropdowns |
+| `is_active` | BOOLEAN | No | Default `true` |
+
+**Unique:** `name`, `code`
+
+---
+
+### 8. `items`
+
+The **shared item master list**. Every orderable or trackable material/chemical is defined here once, shared across all locations and labs. Lab-specific settings (min stock, stocked flag) are in `item_lab_settings`.
+
+| Column | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | UUID PK | No | |
+| `item_name` | VARCHAR(300) | No | Full official name |
+| `item_short_name` | VARCHAR(100) | Yes | Abbreviated name for labels and compact views |
+| `part_no` | VARCHAR(100) | Yes | Manufacturer part number / catalog number |
+| `cas_no` | VARCHAR(50) | Yes | CAS registry number (chemicals only) |
+| `category_id` | UUID FK → item_categories | No | Item category |
+| `default_vendor_id` | UUID FK → vendors | Yes | Default / preferred vendor |
+| `type` | VARCHAR(50) | Yes | Sub-type within category (e.g., "Solvent", "Acid", "Standard") |
+| `size` | VARCHAR(50) | Yes | Package size (e.g., "2.5 L", "500 mL", "1 kg") |
+| `unit` | VARCHAR(20) | No | Unit of measure (e.g., "L", "mL", "kg", "g", "ea") |
+| `reference_price` | DECIMAL(12,2) | Yes | Indicative / reference price per unit (not binding) |
+| `currency` | VARCHAR(3) | Yes | Currency code for reference price (e.g., "USD") |
+| `lead_time_days` | INTEGER | Yes | Typical procurement lead time in days |
+| `description` | TEXT | Yes | Detailed description or specifications |
+| `storage_conditions` | VARCHAR(200) | Yes | Storage requirements (e.g., "Refrigerate 2–8°C", "Flammable cabinet") |
 | **Behavior Flags** | | | |
-| `is_orderable` | BOOLEAN | NOT NULL, DEFAULT true | Can be added to cart and ordered |
-| `requires_checkin` | BOOLEAN | NOT NULL, DEFAULT true | Must be checked in upon receipt |
-| `allows_checkout` | BOOLEAN | NOT NULL, DEFAULT true | Can be checked out from inventory |
-| `tracks_expiry` | BOOLEAN | NOT NULL, DEFAULT true | Has an expiry date; appears on expired dashboard |
-| `requires_peroxide_monitoring` | BOOLEAN | NOT NULL, DEFAULT false | Requires periodic peroxide testing |
-| `is_regulatory` | BOOLEAN | NOT NULL, DEFAULT false | Subject to regulatory reporting |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
+| `is_orderable` | BOOLEAN | No | Can this item be added to a purchase request? Default `true` |
+| `requires_checkin` | BOOLEAN | No | Must be checked in upon receipt? Default `true` |
+| `allows_checkout` | BOOLEAN | No | Can be checked out via the checkout workflow? Default `true` |
+| `tracks_expiry` | BOOLEAN | No | Does this item have an expiry date to monitor? Default `true` |
+| `requires_peroxide_monitoring` | BOOLEAN | No | Is this a peroxide-forming chemical? Default `false` |
+| `peroxide_class` | VARCHAR(10) | Yes | Peroxide classification group: `A`, `B`, `C` (null if not peroxide-forming) |
+| `is_regulatory_related` | BOOLEAN | No | Does this item have regulatory reporting requirements? Default `false` |
+| `is_active` | BOOLEAN | No | Soft-delete flag. Default `true` |
 
-### Behavior Flags by Category (Default Values)
+**Unique:** `(part_no, default_vendor_id)` where both are non-null (same part number from the same vendor is the same item)
 
-These are the expected defaults when creating items in each category. Flags can be overridden per item.
+**Notes on behavior flags:**
+- These flags make category-driven behavior **explicit and queryable**. Rather than writing logic like `IF category = 'Verify STD' THEN is_orderable = false`, the flag is stored directly on the item.
+- Flags allow exceptions: a Material & Consumable item can set `is_orderable = false` if it is not available for ordering, even though the category generally is orderable.
+- Default values for behavior flags should be set based on category when creating a new item (via application logic), but can be overridden per item.
 
-| Flag | Chemical & Reagent | Verify STD | Gas | Material & Consumable |
-|---|---|---|---|---|
-| `is_orderable` | ✅ true | ❌ false | ✅ true | ✅ true (configurable) |
-| `requires_checkin` | ✅ true | ✅ true | ❌ false (MVP) | ❌ false (MVP) |
-| `allows_checkout` | ✅ true | ✅ true | ❌ false (MVP) | ❌ false (MVP) |
-| `tracks_expiry` | ✅ true | ✅ true | ❌ false | ❌ false |
-| `requires_peroxide_monitoring` | ⚙️ per item | ❌ false | ❌ false | ❌ false |
-| `is_regulatory` | ⚙️ per item | ✅ true | ❌ false | ❌ false |
+**Category-to-flag defaults (application logic, not DB constraint):**
 
-> **Design decision:** Behavior is driven by these explicit flags, not by inspecting the category name in code. This allows exceptions — e.g., a Material & Consumable item that does track expiry, or a Chemical & Reagent item that is not orderable because it's been discontinued.
-
----
-
-## 9. item_location_settings
-
-**Purpose:** Optional per-location configuration for items. Used when a location-level default applies to all labs within that location.
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | UUID | PK | Unique record identifier |
-| `item_id` | UUID | FK → items, NOT NULL | The item |
-| `location_id` | UUID | FK → locations, NOT NULL | The location |
-| `is_stocked` | BOOLEAN | NOT NULL, DEFAULT false | Whether this item is generally stocked at this location |
-| `location_lead_time_days` | INT | NULL | Location-specific lead time override |
-| `notes` | TEXT | NULL | Location-specific notes |
-
-**Unique constraint:** `(item_id, location_id)`
+| Category | `is_orderable` | `requires_checkin` | `allows_checkout` | `tracks_expiry` | `requires_peroxide_monitoring` | `is_regulatory_related` |
+|---|---|---|---|---|---|---|
+| Chemical & Reagent | `true` | `true` | `true` | `true` | Per-item | Per-item |
+| Gas | `true` | `false` (MVP) | `false` | `false` | `false` | `false` |
+| Material & Consumable | Per-item | `true` | `true` | `false` | `false` | `false` |
+| Verify STD | `false` | `true` (manual) | `true` | `true` | `false` | `true` |
 
 ---
 
-## 10. item_lab_settings
+### 9. `item_location_settings`
 
-**Purpose:** Per-lab configuration for items. This is where min stock thresholds live.
+Per-item, per-location configuration. This is a **thin** layer between `items` and `item_lab_settings` that captures location-level defaults (e.g., "Is this item stocked at AIE at all?").
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique record identifier |
-| `item_id` | UUID | FK → items, NOT NULL | The item |
-| `lab_id` | UUID | FK → labs, NOT NULL | The lab |
-| `min_stock` | DECIMAL(10,3) | NULL | Minimum stock threshold for this item in this lab |
-| `max_stock` | DECIMAL(10,3) | NULL | Optional maximum stock level |
-| `reorder_qty` | DECIMAL(10,3) | NULL | Suggested reorder quantity when below min stock |
-| `is_stocked_here` | BOOLEAN | NOT NULL, DEFAULT false | Whether this item is actively stocked in this lab |
-| `custom_lead_time_days` | INT | NULL | Lab-specific lead time override |
-| `storage_sublocation` | VARCHAR(200) | NULL | Default storage sublocation (e.g., "Cabinet A3") |
-| `notes` | TEXT | NULL | Lab-specific notes |
+| `id` | UUID PK | No | |
+| `item_id` | UUID FK → items | No | |
+| `location_id` | UUID FK → locations | No | |
+| `is_stocked` | BOOLEAN | No | Is this item generally stocked at this location? Default `false` |
+| `notes` | TEXT | Yes | Location-specific notes |
 
-**Unique constraint:** `(item_id, lab_id)`
-
-> **Key normalization:** Instead of `items.AIE_PO_Lab_min`, `items.MTP_Lab_min`, etc., min stock is `item_lab_settings.min_stock` with a `(item_id, lab_id)` pair. New labs require only new rows, never schema changes.
+**Unique:** `(item_id, location_id)`
 
 ---
 
-## 11. regulations
+### 10. `item_lab_settings`
 
-**Purpose:** Reference table of regulatory frameworks that items may be subject to.
+Per-item, per-lab configuration. This is where **min stock thresholds** live — properly normalized, not as spreadsheet columns.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique regulation identifier |
-| `code` | VARCHAR(50) | UNIQUE, NOT NULL | Short code (e.g., `OSHA_PEL`, `EPA_RCRA`) |
-| `name` | VARCHAR(200) | NOT NULL | Full regulation name |
-| `description` | TEXT | NULL | Description of the regulation |
-| `is_active` | BOOLEAN | NOT NULL, DEFAULT true | Soft delete flag |
+| `id` | UUID PK | No | |
+| `item_id` | UUID FK → items | No | |
+| `lab_id` | UUID FK → labs | No | |
+| `min_stock` | DECIMAL(12,3) | Yes | Minimum stock threshold for this item in this lab. Null = no minimum configured. |
+| `reorder_quantity` | DECIMAL(12,3) | Yes | Suggested reorder quantity when below min stock |
+| `is_stocked` | BOOLEAN | No | Is this item stocked in this specific lab? Default `false` |
+| `storage_sublocation` | VARCHAR(100) | Yes | Default storage sublocation (e.g., "Cabinet A3", "Fridge 2") |
+| `notes` | TEXT | Yes | Lab-specific notes |
+
+**Unique:** `(item_id, lab_id)`
 
 ---
 
-## 12. item_regulations
+### 11. `regulations`
 
-**Purpose:** Many-to-many mapping between items and the regulations that apply to them.
+Regulatory frameworks and standards that may apply to items.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique record identifier |
-| `item_id` | UUID | FK → items, NOT NULL | The item |
-| `regulation_id` | UUID | FK → regulations, NOT NULL | The applicable regulation |
-| `notes` | TEXT | NULL | Notes on how the regulation applies |
+| `id` | UUID PK | No | |
+| `name` | VARCHAR(200) | No | Regulation name (e.g., "ISO 17025", "GLP", "OSHA HazCom") |
+| `code` | VARCHAR(50) | No | Short code |
+| `description` | TEXT | Yes | |
+| `is_active` | BOOLEAN | No | Default `true` |
 
-**Unique constraint:** `(item_id, regulation_id)`
+**Unique:** `code`
 
 ---
 
-## 13. purchase_requests
+### 12. `item_regulations`
 
-**Purpose:** An order request submitted by a user for a specific lab. Replaces the generic "order" concept.
+Many-to-many junction between items and regulations.
 
-> **Naming note:** "Purchase Request" is used instead of "Order" because the record starts as a request that must be approved before becoming a purchase order. The PO number is assigned upon approval.
-
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique request identifier |
-| `request_number` | VARCHAR(30) | UNIQUE, NOT NULL | Auto-generated request number (e.g., `REQ-2026-0001`) |
-| `po_number` | VARCHAR(30) | UNIQUE, NULL | PO number, assigned upon approval (e.g., `PO-2026-0001`) |
-| `lab_id` | UUID | FK → labs, NOT NULL | Target lab for this request |
-| `requester_id` | UUID | FK → users, NOT NULL | User who submitted the request |
-| `status` | VARCHAR(30) | NOT NULL, CHECK | Current workflow status (see `20-statuses-enums-and-reference-data.md`) |
-| `submitted_at` | TIMESTAMPTZ | NULL | When the request was submitted for approval |
-| `approved_at` | TIMESTAMPTZ | NULL | When the request was approved |
-| `approved_by` | UUID | FK → users, NULL | User who approved |
-| `rejected_at` | TIMESTAMPTZ | NULL | When rejected (if applicable) |
-| `rejected_by` | UUID | FK → users, NULL | User who rejected |
-| `rejection_reason` | TEXT | NULL | Mandatory reason if rejected |
-| `cancelled_at` | TIMESTAMPTZ | NULL | When cancelled (if applicable) |
-| `cancelled_by` | UUID | FK → users, NULL | User who cancelled |
-| `cancellation_reason` | TEXT | NULL | Reason for cancellation |
-| `order_notes` | TEXT | NULL | General notes for the order |
-| `total_line_items` | INT | NOT NULL, DEFAULT 0 | Denormalized line item count |
+| `id` | UUID PK | No | |
+| `item_id` | UUID FK → items | No | |
+| `regulation_id` | UUID FK → regulations | No | |
+| `compliance_notes` | TEXT | Yes | Specific compliance notes for this item under this regulation |
+
+**Unique:** `(item_id, regulation_id)`
 
 ---
 
-## 14. purchase_request_items
-
-**Purpose:** Individual line items within a purchase request.
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | UUID | PK | Unique line item identifier |
-| `purchase_request_id` | UUID | FK → purchase_requests, NOT NULL | Parent request |
-| `item_id` | UUID | FK → items, NOT NULL | The catalog item being ordered |
-| `vendor_id` | UUID | FK → vendors, NULL | Vendor for this line (default from item, overrideable) |
-| `quantity_requested` | DECIMAL(10,3) | NOT NULL, CHECK > 0 | Quantity requested |
-| `quantity_approved` | DECIMAL(10,3) | NULL | Quantity after Focal Point modification (null = same as requested) |
-| `quantity_received` | DECIMAL(10,3) | NOT NULL, DEFAULT 0 | Total quantity received across all check-ins |
-| `unit` | VARCHAR(30) | NOT NULL | Unit of measure |
-| `unit_price` | DECIMAL(12,2) | NULL | Price per unit (reference, not binding) |
-| `line_notes` | TEXT | NULL | Per-line notes |
-| `status` | VARCHAR(30) | NOT NULL, DEFAULT 'PENDING' | Line-level status: PENDING, PARTIALLY_RECEIVED, FULLY_RECEIVED, CANCELLED |
+## Layer 2: Transactional Data
 
 ---
 
-## 15. purchase_request_item_revisions
+### 13. `purchase_requests`
 
-**Purpose:** Immutable record of Focal Point modifications to purchase request line items before approval.
+An order submitted by a user for a specific lab. This is the "order header" — called `purchase_requests` rather than `orders` to distinguish from the vendor-facing PO number, which is a reference on this record.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique revision identifier |
-| `purchase_request_item_id` | UUID | FK → purchase_request_items, NOT NULL | The line item that was modified |
-| `revision_number` | INT | NOT NULL | Sequential revision counter (1, 2, 3...) |
-| `field_changed` | VARCHAR(50) | NOT NULL | Which field was changed (e.g., `quantity_requested`, `vendor_id`) |
-| `old_value` | TEXT | NULL | Previous value (as text representation) |
-| `new_value` | TEXT | NULL | New value (as text representation) |
-| `changed_by` | UUID | FK → users, NOT NULL | Focal Point who made the change |
-| `changed_at` | TIMESTAMPTZ | NOT NULL | When the change was made |
-| `change_reason` | TEXT | NULL | Optional reason for the modification |
+| `id` | UUID PK | No | |
+| `po_number` | VARCHAR(50) | No | System-generated PO number (e.g., `PO-2026-0001`). Unique. |
+| `lab_id` | UUID FK → labs | No | Target lab for this order |
+| `location_id` | UUID FK → locations | No | Denormalized from lab for query convenience |
+| `requested_by` | UUID FK → users | No | User who submitted the order |
+| `status` | VARCHAR(30) | No | See `20-statuses-enums-and-reference-data.md`. Default `'pending_approval'` |
+| `order_notes` | TEXT | Yes | Order-level notes from the requester |
+| `approval_notes` | TEXT | Yes | Notes from the approver (approve or reject) |
+| `approved_by` | UUID FK → users | Yes | Focal Point / Admin who approved |
+| `approved_at` | TIMESTAMPTZ | Yes | Approval timestamp |
+| `rejected_reason` | TEXT | Yes | Reason for rejection (required if status = cancelled via rejection) |
+| `submitted_at` | TIMESTAMPTZ | No | When the order was submitted |
+| `email_sent_at` | TIMESTAMPTZ | Yes | When vendor emails were dispatched |
+| `has_failed_email` | BOOLEAN | No | True if any vendor email failed all retries. Default `false` |
+| `completed_at` | TIMESTAMPTZ | Yes | When all line items were fully received |
+
+**Unique:** `po_number`
+
+**Indexes:** `lab_id`, `status`, `submitted_at`, `requested_by`
 
 ---
 
-## 16. vendor_email_logs
+### 14. `purchase_request_items`
 
-**Purpose:** Record of all vendor notification emails sent by the system.
+Individual line items within a purchase request.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique log entry identifier |
-| `purchase_request_id` | UUID | FK → purchase_requests, NOT NULL | The order that triggered the email |
-| `vendor_id` | UUID | FK → vendors, NOT NULL | The vendor being notified |
-| `recipient_email` | VARCHAR(255) | NOT NULL | Email address the message was sent to |
-| `subject` | VARCHAR(500) | NOT NULL | Email subject line |
-| `body_snapshot` | TEXT | NULL | Copy of the email body (for audit) |
-| `sent_at` | TIMESTAMPTZ | NULL | When the email was successfully sent |
-| `status` | VARCHAR(20) | NOT NULL | `PENDING`, `SENT`, `FAILED`, `RETRYING` |
-| `error_message` | TEXT | NULL | Error details if failed |
-| `retry_count` | INT | NOT NULL, DEFAULT 0 | Number of retry attempts |
-| `items_included` | INT | NOT NULL | Count of line items included in this email |
+| `id` | UUID PK | No | |
+| `purchase_request_id` | UUID FK → purchase_requests | No | Parent order |
+| `item_id` | UUID FK → items | No | Catalog item being ordered |
+| `vendor_id` | UUID FK → vendors | Yes | Vendor for this line item (defaults from item.default_vendor_id) |
+| `quantity_ordered` | DECIMAL(12,3) | No | Quantity requested |
+| `quantity_received` | DECIMAL(12,3) | No | Quantity received so far. Default `0` |
+| `unit` | VARCHAR(20) | No | Unit of measure (copied from item at time of order) |
+| `unit_price` | DECIMAL(12,2) | Yes | Price per unit at time of order (nullable) |
+| `line_item_notes` | TEXT | Yes | Per-line notes |
+| `status` | VARCHAR(30) | No | Line-item status: `pending`, `partially_received`, `fully_received`, `removed`. Default `'pending'` |
+
+**Indexes:** `purchase_request_id`, `item_id`, `vendor_id`
 
 ---
 
-## 17. inventory_lots
+### 15. `purchase_request_item_revisions`
 
-**Purpose:** Each physical lot of an item in a specific lab. Created at check-in. This is the core inventory tracking entity.
+Records Focal Point modifications to line items before approval. Each revision captures a before/after snapshot.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique lot identifier |
-| `item_id` | UUID | FK → items, NOT NULL | Which catalog item this lot is |
-| `lab_id` | UUID | FK → labs, NOT NULL | Which lab owns this lot |
-| `lot_number` | VARCHAR(100) | NOT NULL | Vendor or internally assigned lot/batch number |
-| `quantity_received` | DECIMAL(10,3) | NOT NULL | Original quantity received at check-in |
-| `quantity_remaining` | DECIMAL(10,3) | NOT NULL | Current remaining quantity |
-| `unit` | VARCHAR(30) | NOT NULL | Unit of measure |
-| `manufacture_date` | DATE | NULL | Date of manufacture |
-| `expiry_date` | DATE | NULL | Expiration date (may be extended) |
-| `original_expiry_date` | DATE | NULL | Original expiry before any extensions |
-| `open_date` | DATE | NULL | Date container was first opened |
-| `storage_location` | VARCHAR(200) | NULL | Physical sublocation (cabinet, shelf, fridge) |
-| `status` | VARCHAR(20) | NOT NULL, CHECK | Lot status (see `20-statuses-enums-and-reference-data.md`) |
-| `source_type` | VARCHAR(20) | NOT NULL | `PURCHASE_ORDER` or `MANUAL` |
-| `purchase_request_id` | UUID | FK → purchase_requests, NULL | Linked order (null for manual check-in) |
-| `purchase_request_item_id` | UUID | FK → purchase_request_items, NULL | Linked line item |
-| `checked_in_by` | UUID | FK → users, NOT NULL | User who performed check-in |
-| `checked_in_at` | TIMESTAMPTZ | NOT NULL | Check-in timestamp |
-| `source_reason` | TEXT | NULL | For manual check-ins: reason/source (Donation, Transfer, etc.) |
-| `qr_code_data` | TEXT | NULL | Encoded QR payload |
-| `notes` | TEXT | NULL | Check-in notes |
+| `id` | UUID PK | No | |
+| `purchase_request_item_id` | UUID FK → purchase_request_items | Yes | The line item modified (null if the revision is an addition or relates to the order header) |
+| `purchase_request_id` | UUID FK → purchase_requests | No | Parent order |
+| `action` | VARCHAR(20) | No | `modified`, `added`, `removed` |
+| `field_name` | VARCHAR(50) | Yes | Which field was changed (e.g., `quantity_ordered`, `vendor_id`) |
+| `old_value` | TEXT | Yes | Previous value (as string representation) |
+| `new_value` | TEXT | Yes | New value (as string representation) |
+| `revised_by` | UUID FK → users | No | User who made the modification |
+| `revised_at` | TIMESTAMPTZ | No | Timestamp of revision |
+| `notes` | TEXT | Yes | Revision notes |
 
-**Indexes:** `(lab_id, item_id, status)`, `(expiry_date)`, `(lab_id, status)`
+**Indexes:** `purchase_request_id`, `purchase_request_item_id`
 
 ---
 
-## 18. stock_transactions
+### 16. `vendor_email_logs`
 
-**Purpose:** Append-only log of every inventory-affecting action. Each row represents one state change.
+Records of vendor notification emails sent for purchase requests.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique transaction identifier |
-| `transaction_type` | VARCHAR(30) | NOT NULL, CHECK | One of the defined transaction types |
-| `lot_id` | UUID | FK → inventory_lots, NULL | The affected lot (null for order-level transactions) |
-| `item_id` | UUID | FK → items, NULL | The item (for context; redundant with lot but useful for direct queries) |
-| `purchase_request_id` | UUID | FK → purchase_requests, NULL | Linked order (if applicable) |
-| `lab_id` | UUID | FK → labs, NOT NULL | Lab context |
-| `user_id` | UUID | FK → users, NOT NULL | User who performed the action |
-| `quantity` | DECIMAL(10,3) | NULL | Quantity involved (positive for in, negative for out) |
-| `quantity_before` | DECIMAL(10,3) | NULL | Lot quantity before this transaction |
-| `quantity_after` | DECIMAL(10,3) | NULL | Lot quantity after this transaction |
-| `unit` | VARCHAR(30) | NULL | Unit of measure |
-| `purpose` | VARCHAR(100) | NULL | Purpose/reason (especially for checkouts) |
-| `notes` | TEXT | NULL | Additional context |
-| `metadata` | JSONB | NULL | Type-specific structured data (see `16-transaction-history-and-audit.md`) |
-| `created_at` | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | Transaction timestamp |
+| `id` | UUID PK | No | |
+| `purchase_request_id` | UUID FK → purchase_requests | No | Related order |
+| `vendor_id` | UUID FK → vendors | No | Target vendor |
+| `recipient_email` | VARCHAR(255) | No | Email address used |
+| `subject` | VARCHAR(500) | No | Email subject line |
+| `body_html` | TEXT | Yes | Email body (HTML) |
+| `status` | VARCHAR(20) | No | `sent`, `failed`, `retrying` |
+| `retry_count` | INTEGER | No | Number of retry attempts. Default `0` |
+| `last_retry_at` | TIMESTAMPTZ | Yes | Timestamp of last retry |
+| `error_message` | TEXT | Yes | Error details if failed |
+| `sent_at` | TIMESTAMPTZ | Yes | Successful dispatch timestamp |
+| `items_included` | INTEGER | No | Count of line items included in this email |
 
-**Constraints:** This table is INSERT-only. No UPDATE or DELETE operations are permitted at the application level.
-
-**Indexes:** `(lot_id, created_at)`, `(transaction_type, lab_id, created_at)`, `(purchase_request_id)`, `(user_id, created_at)`
+**Indexes:** `purchase_request_id`, `vendor_id`, `status`
 
 ---
 
-## 19. peroxide_tests
+### 17. `inventory_lots`
 
-**Purpose:** Individual peroxide monitoring test events. Multiple tests per lot over time.
+The core inventory table. Each row represents a **specific lot** of a specific item in a specific lab. This is where stock quantities, expiry dates, and lot-level status live.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique test event identifier |
-| `lot_id` | UUID | FK → inventory_lots, NOT NULL | The lot being tested |
-| `test_date` | DATE | NOT NULL | When the test was performed |
-| `tested_by` | UUID | FK → users, NOT NULL | User who performed the test |
-| `test_method` | VARCHAR(200) | NULL | Description of the testing method |
-| `ppm_result` | DECIMAL(8,2) | NOT NULL | Parts per million measured |
-| `classification` | VARCHAR(20) | NOT NULL, CHECK | `NORMAL`, `WARNING`, `QUARANTINE` |
-| `visual_observations` | TEXT | NULL | Observations (color, precipitate, odor) |
-| `next_monitor_due` | DATE | NULL | Calculated next test date (null if quarantined) |
-| `notes` | TEXT | NULL | Additional notes |
+| `id` | UUID PK | No | |
+| `item_id` | UUID FK → items | No | Catalog item |
+| `lab_id` | UUID FK → labs | No | Lab where this lot is stored |
+| `location_id` | UUID FK → locations | No | Denormalized from lab |
+| `lot_number` | VARCHAR(100) | No | Vendor-assigned or internal lot/batch number |
+| `quantity_received` | DECIMAL(12,3) | No | Original quantity at check-in |
+| `quantity_remaining` | DECIMAL(12,3) | No | Current remaining quantity |
+| `unit` | VARCHAR(20) | No | Unit of measure |
+| `manufacture_date` | DATE | Yes | Date of manufacture |
+| `expiry_date` | DATE | Yes | Current expiry date (may be extended) |
+| `open_date` | DATE | Yes | Date the container was first opened |
+| `storage_sublocation` | VARCHAR(200) | Yes | Physical storage (cabinet, shelf, fridge) |
+| `status` | VARCHAR(20) | No | Lot status: `active`, `depleted`, `expired`, `quarantined`, `disposed`. Default `'active'` |
+| `source_type` | VARCHAR(20) | No | `purchase_order` or `manual` |
+| `purchase_request_id` | UUID FK → purchase_requests | Yes | Source order (null if manual check-in) |
+| `purchase_request_item_id` | UUID FK → purchase_request_items | Yes | Source line item (null if manual check-in) |
+| `checked_in_by` | UUID FK → users | No | User who performed check-in |
+| `checked_in_at` | TIMESTAMPTZ | No | Check-in timestamp |
+| `qr_code_data` | JSONB | Yes | QR code payload data |
+| `extension_count` | INTEGER | No | Number of shelf-life extensions. Default `0` |
+| `version` | INTEGER | No | Optimistic concurrency version. Default `1`. Incremented on every `quantity_remaining` update. |
+| `notes` | TEXT | Yes | Check-in notes |
+| `manual_source_reason` | VARCHAR(50) | Yes | For manual check-ins: `donation`, `transfer`, `direct_delivery`, `other` |
+| `certificate_of_analysis` | VARCHAR(200) | Yes | CoA reference (for Verify STD) |
+| `assigned_value` | VARCHAR(100) | Yes | Certified value (for Verify STD) |
+| `uncertainty` | VARCHAR(100) | Yes | Uncertainty value (for Verify STD) |
+| `certifying_body` | VARCHAR(200) | Yes | Certifying organization (for Verify STD) |
 
-**Indexes:** `(lot_id, test_date)`, `(next_monitor_due)`
+**Indexes:** `lab_id`, `item_id`, `status`, `expiry_date`, `(item_id, lab_id)`, `lot_number`
 
 ---
 
-## 20. shelf_life_extensions
+### 18. `stock_transactions`
 
-**Purpose:** Immutable record of each shelf-life extension event. History table — multiple extensions per lot.
+**Append-only** log of every operational action in the system. This serves as both the transaction history and the primary audit trail for daily operations. See `16-transaction-history-and-audit.md` for the full transaction type catalog.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique extension identifier |
-| `lot_id` | UUID | FK → inventory_lots, NOT NULL | The lot being extended |
-| `extension_number` | INT | NOT NULL | Sequential extension counter (1, 2, 3...) |
-| `previous_expiry_date` | DATE | NOT NULL | Expiry date before this extension |
-| `new_expiry_date` | DATE | NOT NULL | Expiry date after this extension |
-| `extension_days` | INT | NOT NULL | Calculated: new - previous |
-| `reason` | TEXT | NOT NULL | Justification for the extension |
-| `test_performed` | TEXT | NOT NULL | Description of the qualifying test |
-| `test_result` | VARCHAR(200) | NOT NULL | Test outcome (e.g., "Pass", numeric) |
-| `test_date` | DATE | NOT NULL | When the qualifying test was performed |
-| `authorized_by` | UUID | FK → users, NOT NULL | Focal Point or Admin who authorized |
-| `authorized_at` | TIMESTAMPTZ | NOT NULL | When the extension was authorized |
+| `id` | UUID PK | No | |
+| `transaction_type` | VARCHAR(30) | No | One of the 16 defined types (see `20-statuses-enums-and-reference-data.md`) |
+| `user_id` | UUID FK → users | No | User who performed the action |
+| `user_name` | VARCHAR(200) | No | Denormalized for display in audit views |
+| `lab_id` | UUID FK → labs | Yes | Lab context (nullable for org-wide actions) |
+| `location_id` | UUID FK → locations | Yes | Location context |
+| `lot_id` | UUID FK → inventory_lots | Yes | Related lot (if applicable) |
+| `purchase_request_id` | UUID FK → purchase_requests | Yes | Related order (if applicable) |
+| `item_id` | UUID FK → items | Yes | Related item (if applicable) |
+| `quantity` | DECIMAL(12,3) | Yes | Quantity involved (if applicable) |
+| `notes` | TEXT | Yes | |
+| `metadata` | JSONB | No | Type-specific structured data (see `16-transaction-history-and-audit.md`) |
+| `created_at` | TIMESTAMPTZ | No | Immutable timestamp. Default `now()` |
 
-**Indexes:** `(lot_id, extension_number)`
+**No `updated_at` or `updated_by`** — this table is append-only.
+
+**Indexes:** `transaction_type`, `lab_id`, `lot_id`, `purchase_request_id`, `item_id`, `created_at`, `user_id`
 
 ---
 
-## 21. label_print_logs
+### 19. `peroxide_tests`
 
-**Purpose:** Track QR label printing events for audit purposes.
+Individual peroxide monitoring events, each linked to a specific inventory lot.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique log entry identifier |
-| `lot_id` | UUID | FK → inventory_lots, NOT NULL | The lot whose label was printed |
-| `printed_by` | UUID | FK → users, NOT NULL | User who initiated the print |
-| `printed_at` | TIMESTAMPTZ | NOT NULL | When the label was printed |
-| `print_method` | VARCHAR(30) | NOT NULL | `BROWSER_PRINT`, `PDF_DOWNLOAD`, `LABEL_PRINTER` |
-| `label_content_snapshot` | JSONB | NULL | Snapshot of what was on the label at print time |
+| `id` | UUID PK | No | |
+| `lot_id` | UUID FK → inventory_lots | No | Tested lot |
+| `test_date` | DATE | No | Date the test was performed |
+| `tested_by` | UUID FK → users | No | User who performed the test |
+| `test_method` | VARCHAR(100) | Yes | Method: "Test strip", "Titration", "Electronic meter", etc. |
+| `result_type` | VARCHAR(10) | No | `numeric` or `textual` |
+| `ppm_result` | DECIMAL(8,2) | Yes | PPM measurement (required if result_type = numeric) |
+| `result_text` | VARCHAR(200) | Yes | Textual result (required if result_type = textual) |
+| `classification` | VARCHAR(20) | No | `normal`, `warning`, `quarantine` |
+| `visual_observations` | TEXT | Yes | |
+| `next_monitor_due` | DATE | Yes | Auto-calculated next test date (null if quarantined) |
+| `notes` | TEXT | Yes | |
+
+**Indexes:** `lot_id`, `test_date`, `classification`, `next_monitor_due`
 
 ---
 
-## 22. audit_logs
+### 20. `shelf_life_extensions`
 
-**Purpose:** System-wide audit trail capturing all significant actions, including non-inventory actions (user management, master data changes, configuration changes).
+Immutable record of each shelf-life extension event. One row per extension, per lot.
 
-| Field | Type | Constraints | Description |
+| Column | Type | Nullable | Description |
 |---|---|---|---|
-| `id` | UUID | PK | Unique log entry identifier |
-| `action` | VARCHAR(50) | NOT NULL | Action performed (e.g., `USER_CREATED`, `ITEM_UPDATED`, `ROLE_CHANGED`) |
-| `entity_type` | VARCHAR(50) | NOT NULL | Type of entity affected (e.g., `user`, `item`, `lab`, `purchase_request`) |
-| `entity_id` | UUID | NOT NULL | ID of the affected entity |
-| `user_id` | UUID | FK → users, NOT NULL | User who performed the action |
-| `lab_id` | UUID | FK → labs, NULL | Lab context (null for system-wide actions) |
-| `old_values` | JSONB | NULL | Previous state of the changed fields |
-| `new_values` | JSONB | NULL | New state of the changed fields |
-| `ip_address` | VARCHAR(45) | NULL | Client IP address |
-| `user_agent` | VARCHAR(500) | NULL | Client user agent string |
-| `notes` | TEXT | NULL | Additional context |
-| `created_at` | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | When the action occurred |
+| `id` | UUID PK | No | |
+| `lot_id` | UUID FK → inventory_lots | No | Extended lot |
+| `extension_number` | INTEGER | No | Sequential number per lot (1, 2, 3, …) |
+| `previous_expiry_date` | DATE | No | Expiry date before extension |
+| `new_expiry_date` | DATE | No | Expiry date after extension |
+| `previous_days_to_expiry` | INTEGER | No | Calculated: old expiry − extension date |
+| `new_days_to_expiry` | INTEGER | No | Calculated: new expiry − extension date |
+| `extension_days` | INTEGER | No | Calculated: new expiry − old expiry |
+| `reason` | TEXT | No | Justification |
+| `test_performed` | TEXT | No | Qualifying test description |
+| `test_result` | VARCHAR(200) | No | Test outcome |
+| `test_date` | DATE | No | When the qualifying test was performed |
+| `authorized_by` | UUID FK → users | No | Focal Point / Admin |
 
-**Constraints:** INSERT-only. No UPDATE or DELETE.
+**No `updated_at` or `updated_by`** — this table is append-only.
 
-**Indexes:** `(entity_type, entity_id, created_at)`, `(user_id, created_at)`, `(action, created_at)`
+**Indexes:** `lot_id`, `extension_number`
+**Unique:** `(lot_id, extension_number)`
 
-> **Note:** `audit_logs` captures master data and system configuration changes. `stock_transactions` captures inventory and order workflow actions. They are separate tables because their access patterns, retention policies, and query shapes differ.
+---
+
+### 21. `label_print_logs`
+
+Records of QR label printing events for audit traceability.
+
+| Column | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | UUID PK | No | |
+| `lot_id` | UUID FK → inventory_lots | No | Lot the label was printed for |
+| `printed_by` | UUID FK → users | No | User who triggered printing |
+| `printed_at` | TIMESTAMPTZ | No | Default `now()` |
+| `print_method` | VARCHAR(20) | No | `single`, `batch` |
+| `copies` | INTEGER | No | Number of copies printed. Default `1` |
+
+**Indexes:** `lot_id`
+
+---
+
+## Layer 3: Reporting & Audit
+
+---
+
+### 22. `audit_logs`
+
+Tracks **master data changes** (as opposed to `stock_transactions` which tracks operational activity). This table records when admin-level data is created, updated, or deactivated.
+
+| Column | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | UUID PK | No | |
+| `table_name` | VARCHAR(100) | No | Which table was changed (e.g., `items`, `vendors`, `users`) |
+| `record_id` | UUID | No | PK of the changed record |
+| `action` | VARCHAR(20) | No | `insert`, `update`, `delete` (logical) |
+| `changed_fields` | JSONB | Yes | `{ "field_name": { "old": "...", "new": "..." } }` |
+| `changed_by` | UUID FK → users | No | User who made the change |
+| `changed_at` | TIMESTAMPTZ | No | Default `now()` |
+| `ip_address` | VARCHAR(45) | Yes | Client IP (if available) |
+
+**No `updated_at` or `updated_by`** — this table is append-only.
+
+**Indexes:** `table_name`, `record_id`, `changed_by`, `changed_at`
+
+---
+
+## Summary: Entity Count
+
+| Layer | Entities | Count |
+|---|---|---|
+| Master Data | locations, labs, roles, users, user_labs, vendors, item_categories, items, item_location_settings, item_lab_settings, regulations, item_regulations | 12 |
+| Transactional | purchase_requests, purchase_request_items, purchase_request_item_revisions, vendor_email_logs, inventory_lots, stock_transactions, peroxide_tests, shelf_life_extensions, label_print_logs | 9 |
+| Reporting & Audit | audit_logs | 1 |
+| **Total** | | **22** |

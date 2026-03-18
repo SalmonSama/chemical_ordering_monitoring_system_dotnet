@@ -74,7 +74,7 @@ The following are explicitly **not** included in this system:
 ### BR-02: Approval Workflow
 - All submitted orders require approval by the **Focal Point / Lab Manager** assigned to the relevant lab.
 - An approver cannot approve their own order.
-- The Focal Point may **modify** an order before approving (adjust quantities, add/remove items). Modified orders transition to **Modified** status and the requester is notified of changes.
+- The Focal Point may **modify** an order before approving (adjust quantities, add/remove items). Modified orders transition to **Modified** status and the requester is notified of changes. The system records a change log with original and new values for each modified field.
 - Approved orders transition to **Approved** status, triggering vendor email dispatch.
 - After vendor emails are sent, the order moves to **Pending Delivery**.
 - Rejected orders are set to **Cancelled** with a mandatory reason.
@@ -83,21 +83,24 @@ The following are explicitly **not** included in this system:
 ### BR-03: Vendor Notification
 - Upon approval, the system **groups order line items by vendor** and sends one email per vendor.
 - Each vendor email includes: PO number, item list with quantities and catalog numbers, units, requesting lab/location, contact information, and any special instructions.
-- All vendor emails must succeed before the order transitions to **Pending Delivery**. Failed emails are retried.
+- Each vendor receives **only their own items**; vendors cannot see items from other vendors in the same order.
+- All vendor emails must succeed before the order transitions to **Pending Delivery**. Failed emails are retried up to 3 times with exponential backoff; persistent failures notify Admin.
 - The vendor does not log in; this is a one-way notification.
-- See `10-order-workflow.md`, Step 7 for detailed email content.
+- See `10-order-workflow.md`, Step 7 for detailed email content and retry logic.
 
 ### BR-04: Check-In
-- Received items are checked in against an approved/ordered purchase order.
+- Received items are checked in against an approved/ordered purchase order at the **line-item level**.
 - Check-in records: lot number, quantity received, manufacture date, expiry date, and storage location.
-- Partial check-ins are supported (not all items on an order need to arrive at once).
+- Partial check-ins are supported (not all items on an order need to arrive at once). A single line item can also be split into **multiple lot records** if the shipment contains different lot numbers.
 - Manual check-in (form entry) and QR-scan-assisted check-in are both supported.
-- A check-in without a linked order is allowed for certain scenarios (e.g., donations, transfers).
+- A check-in without a linked order is allowed for certain scenarios (e.g., donations, transfers, Verify STD items).
+- Successful check-in generates a QR code for each lot and supports label/QR printing.
 
 ### BR-05: Checkout / Consumption
 - Lab Users may check out inventory items assigned to their lab.
 - Checkout records: item, lot, quantity withdrawn, user, date/time, and purpose/reason.
 - Checkout reduces the lot's remaining quantity.
+- On first checkout of a lot, the system prompts whether this is the first time the container is being opened; if yes, `open_date` is recorded on the lot. This is important for peroxide monitoring schedules.
 - A lot at zero quantity is marked as depleted.
 
 ### BR-06: Inventory Ownership
@@ -118,14 +121,16 @@ The following are explicitly **not** included in this system:
 
 ### BR-09: Peroxide Monitoring
 - Chemicals classified as peroxide-forming have a mandatory monitoring schedule.
-- Each monitoring event is **lot-based** and records: test date, tester, PPM result, classification, observations, and next test due date.
+- Each monitoring event is **lot-based** and records: test date, tester, PPM result (numeric) or textual result, classification, observations, and next test due date.
+- Results may be **numeric (ppm)** or **textual** (e.g., "Negative", "Positive"). For numeric results, the system auto-calculates classification; for textual results, the user manually selects the classification.
 - Peroxide PPM thresholds define classification:
   - **< 25 ppm** → Normal — lot remains Active, schedule next monitoring.
-  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency, notify Focal Point.
+  - **≥ 25 ppm and ≤ 100 ppm** → Warning — increased monitoring frequency (interval halved), notify Focal Point.
   - **> 100 ppm** → Quarantine — lot blocked from checkout, notify Focal Point and Admin, require disposal.
 - Key dates tracked per lot: check-in date, open date, first inspect date, last monitor date, next monitor due.
 - Overdue tests are surfaced on dashboards and trigger notifications.
 - Peroxide classification groups (e.g., Class A, B, C) define different monitoring intervals.
+- Quarantined lots follow a disposal path: Focal Point/Admin initiates disposal, logs `DISPOSAL` transaction, lot status → Disposed.
 - See `13-peroxide-workflow.md` for the complete workflow and PPM logic.
 
 ### BR-10: Shelf-Life Extension
@@ -138,7 +143,15 @@ The following are explicitly **not** included in this system:
 - Transaction types include: `ADD_TO_CART`, `SUBMIT_ORDER`, `MODIFY_ORDER`, `APPROVE_ORDER`, `REJECT_ORDER`, `SEND_VENDOR_EMAIL`, `CANCEL_ORDER`, `CHECK_IN`, `MANUAL_CHECK_IN`, `CHECKOUT`, `PEROXIDE_TEST_LOGGED`, `LOT_QUARANTINED`, `EXTEND_SHELF_LIFE`, `ADJUSTMENT`, `DISPOSAL`, `TRANSFER`.
 - Transaction records are immutable (append-only). No updates or deletes.
 - Transaction history is filterable by date range, transaction type, item, lot, lab, location, user, and order/PO number.
-- See `16-transaction-history-and-audit.md` for the complete transaction type catalog and data model.
+- See `16-transaction-history-and-audit.md` for the complete transaction type catalog, JSONB metadata schemas, and audit features.
+
+### BR-13: Cart Behavior
+- Cart is **per-user, per-lab**. Users cannot share carts.
+- Cart data is stored **server-side** in the database, persisting across sessions and devices.
+- Adding an item already in the cart increments its quantity or prompts the user to update.
+- If a catalog item is deactivated while in a cart, the system warns the user on cart review and prevents submission.
+- Carts have no automatic expiration; users clear their carts manually.
+- See `10-order-workflow.md`, Steps 2–3 for cart behavior details.
 
 ### BR-12: Regulatory Reporting
 - The system must support generating reports suitable for regulatory audits.

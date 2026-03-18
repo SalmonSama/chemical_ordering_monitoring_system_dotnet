@@ -31,7 +31,7 @@ Checkout is the process of recording the consumption or withdrawal of an item fr
 4. The system decodes the QR payload and identifies the specific inventory lot.
 
 **QR Payload Contains:**
-- Lot record ID (primary identifier).
+- Lot record ID (primary identifier — UUID).
 - Item name (for display verification).
 - Lot number.
 - Lab and location.
@@ -51,9 +51,12 @@ After a successful scan, the system displays:
 | Category | e.g., Chemical & Reagent |
 | Lab / Location | e.g., AIE / PO Lab |
 | Quantity Remaining | e.g., 2.500 L |
+| Unit | e.g., L |
 | Expiry Date | e.g., 2026-06-15 |
+| Days to Expiry | e.g., 89 days |
 | Lot Status | e.g., Active |
 | Storage Location | e.g., Cabinet A3 |
+| Open Date | e.g., 2025-11-01 (or "Not opened") |
 
 **Validation checks on scan:**
 
@@ -61,10 +64,22 @@ After a successful scan, the system displays:
 |---|---|
 | Lot exists in system | If not found → Error: "Lot not recognized" |
 | Lot is in user's lab scope | If not → Error: "You do not have access to this lab's inventory" |
-| Lot status is Active | If Expired → Warning: "This lot is expired" (block checkout) |
+| Lot status is Active | If Expired → Error: "This lot is expired and cannot be checked out. Contact your Focal Point." |
 | | If Quarantined → Error: "This lot is quarantined and cannot be checked out" |
 | | If Depleted → Error: "This lot has zero quantity remaining" |
 | | If Disposed → Error: "This lot has been disposed" |
+| Near-expire warning | If Days to Expiry ≤ 30 → Warning: "This lot expires on {date} ({N} days). Proceed?" |
+
+---
+
+### Step 2a: Open Date Prompt (First Use)
+
+If the lot's `open_date` is `NULL` at the time of this checkout:
+1. System prompts: **"Is this the first time this container is being opened?"**
+2. If the user answers **Yes**: `open_date` is set to today's date on the lot record.
+3. If the user answers **No** or **Skip**: `open_date` remains `NULL` (can be set later from the lot detail page).
+
+This is especially important for **peroxide-forming chemicals**, where the open date anchors monitoring schedules.
 
 ---
 
@@ -107,9 +122,10 @@ The user enters:
    - `quantity_remaining` = `quantity_remaining` - `quantity_checked_out`.
    - If `quantity_remaining` reaches 0: lot status → **Depleted**.
 
-   **b) Creates Transaction History Entry:**
+   **b) Creates Transaction History Entry (immediately):**
    - Type: `CHECKOUT`
-   - Data: lot ID, item, lot number, quantity, purpose/reason, user, lab, location, timestamp, quantity remaining after checkout.
+   - Data: lot ID, item, lot number, quantity withdrawn, quantity remaining after checkout, purpose/reason, user, lab, location, timestamp, checkout method (`QR_SCAN` or `MANUAL`).
+   - The transaction record is written **in the same database transaction** as the stock update to ensure atomicity.
 
    **c) Displays Confirmation:**
    - "Checkout successful. {quantity} {unit} of {item} (Lot: {lot_number}) checked out."
@@ -136,11 +152,12 @@ If QR scanning is unavailable (damaged label, no camera), the user can check out
 4. Filter by lab (defaults to current lab context).
 
 ### Step 2: Select Lot
-1. Search results show matching inventory lots with: item name, lot number, quantity remaining, expiry, storage location.
-2. User selects the specific lot to check out from.
+1. Search results show matching inventory lots with: item name, lot number, quantity remaining, expiry, storage location, lot status.
+2. Only lots in **Active** status are selectable.
+3. User selects the specific lot to check out from.
 
 ### Steps 3–5: Same as QR Flow
-Enter quantity and purpose, confirm, continue or finish.
+Enter quantity and purpose, open-date prompt if applicable, confirm, continue or finish.
 
 ---
 
@@ -160,6 +177,12 @@ Enter quantity and purpose, confirm, continue or finish.
             │  Display lot details     │
             │  Validate lot status     │
             │  & user access           │
+            └───────────┬──────────────┘
+                        │
+                        ▼
+            ┌──────────────────────────┐
+            │  Open Date prompt        │
+            │  (if open_date is NULL)  │
             └───────────┬──────────────┘
                         │
                         ▼
@@ -204,7 +227,7 @@ Partial checkout means withdrawing **less than the full remaining quantity** of 
 
 | Action | Transaction Type | Key Data |
 |---|---|---|
-| Checkout (QR or manual) | `CHECKOUT` | Lot ID, item, lot number, quantity withdrawn, quantity remaining after, purpose/reason, user, lab, location, timestamp |
+| Checkout (QR or manual) | `CHECKOUT` | Lot ID, item, lot number, quantity withdrawn, quantity remaining after, purpose/reason, user, lab, location, timestamp, checkout method |
 
 ---
 
@@ -228,10 +251,15 @@ Partial checkout means withdrawing **less than the full remaining quantity** of 
 - Expired lots must go through shelf-life extension or disposal, not direct checkout.
 
 ### Concurrent Checkouts
-- If two users attempt to check out from the same lot simultaneously, the system must use **optimistic concurrency control** or row-level locking to prevent over-withdrawal.
+- If two users attempt to check out from the same lot simultaneously, the system must use **optimistic concurrency control** (version column on the lot record) to prevent over-withdrawal.
+- Implementation: the lot record has a `version` column. On update, the query includes `WHERE version = {expected_version}`. If the update affects 0 rows, the system reloads the latest data and informs the user: "The lot quantity has been updated by another user. Please review and try again."
 - The second user should see the updated remaining quantity and receive an error if their requested quantity exceeds what remains.
 
 ### Checkout for Disposal
 - If the purpose is "Disposal," the checkout follows the same flow but the Focal Point may want visibility.
 - The transaction type is still `CHECKOUT` with purpose = "Disposal."
 - Future enhancement: a dedicated disposal workflow could be added.
+
+### Open Date Already Set
+- If the lot's `open_date` is already populated, the open-date prompt (Step 2a) is skipped entirely.
+- The lot detail page shows the open date for reference.

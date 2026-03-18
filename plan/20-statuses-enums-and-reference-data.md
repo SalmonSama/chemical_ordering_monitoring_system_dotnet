@@ -1,196 +1,183 @@
 # 20 — Statuses, Enums, and Reference Data
 
-This document defines all status values, enumeration types, and reference data used throughout the database. These definitions ensure consistent terminology across all planning documents (01–19) and will be used as `CHECK` constraints or reference tables during implementation.
+This document defines all status values, enum-like constants, and reference data used throughout the system. These definitions are the single source of truth — all workflow documents (10–16) and entity definitions (18) must use these exact values.
 
 ---
 
 ## 1. Purchase Request Statuses
 
-Used on `purchase_requests.status`.
+Used on `purchase_requests.status`. See `10-order-workflow.md` for transition rules.
 
-| Value | Display Label | Description | Can Transition To |
-|---|---|---|---|
-| `DRAFT` | Draft | Request created but not yet finalized | `IN_CART`, _deleted_ |
-| `IN_CART` | In Cart | Items in the user's cart; not yet submitted | `PENDING_APPROVAL`, _cleared_ |
-| `PENDING_APPROVAL` | Pending Approval | Submitted; awaiting Focal Point review | `MODIFIED`, `APPROVED`, `CANCELLED` |
-| `MODIFIED` | Modified | Focal Point has modified line items | `APPROVED` |
-| `APPROVED` | Approved | Approved by Focal Point / Admin | `EMAIL_SENT` |
-| `EMAIL_SENT` | Email Sent | Vendor notification email(s) dispatched | `PENDING_DELIVERY` |
-| `PENDING_DELIVERY` | Pending Delivery | All vendor emails sent; awaiting physical delivery | `PARTIALLY_RECEIVED`, `CANCELLED` |
-| `PARTIALLY_RECEIVED` | Partially Received | Some but not all line items fully received | `FULLY_RECEIVED` |
-| `FULLY_RECEIVED` | Fully Received | All line items fully received; order complete | _(terminal)_ |
-| `CANCELLED` | Cancelled | Cancelled by requester, Focal Point, or Admin | _(terminal)_ |
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `draft` | Draft | Order created but not finalized (future — not in MVP cart flow) |
+| `in_cart` | In Cart | Items added to the user's cart; not yet submitted |
+| `pending_approval` | Pending Approval | Order submitted; awaiting Focal Point review |
+| `modified` | Modified | Focal Point has modified the order before approving |
+| `approved` | Approved | Order approved; vendor email dispatch triggered |
+| `email_sent` | Email Sent | Vendor notification email(s) dispatched |
+| `pending_delivery` | Pending Delivery | Vendor notified; awaiting physical delivery |
+| `partially_received` | Partially Received | Some (not all) line items have been checked in |
+| `fully_received` | Fully Received | All line items fully received; order complete |
+| `cancelled` | Cancelled | Order cancelled by requester, Focal Point, or Admin |
 
-### Status Transition Rules
+### Status Transitions
 
 ```
-DRAFT → IN_CART → PENDING_APPROVAL → MODIFIED ──┐
-                         │                       │
-                         ├── APPROVED ◄──────────┘
-                         │       │
-                         │       ▼
-                         │   EMAIL_SENT → PENDING_DELIVERY
-                         │                      │
-                         │          ┌────────────┤
-                         │          ▼            ▼
-                         │  PARTIALLY_RECEIVED → FULLY_RECEIVED
-                         │
-                         └── CANCELLED
+draft → in_cart → pending_approval → modified → approved → email_sent → pending_delivery → partially_received → fully_received
+                  pending_approval → approved   (direct approve, no modification)
+                  pending_approval → cancelled   (rejected or requester cancelled)
+                  approved → email_sent          (auto-transition after emails sent)
+                  email_sent → pending_delivery  (auto-transition after all emails succeed)
+                  pending_delivery → partially_received → fully_received
+                  approved/email_sent/pending_delivery → cancelled   (Admin only)
 ```
-
-**Reference:** `10-order-workflow.md`
 
 ---
 
-## 2. Purchase Request Item Statuses
+## 2. Purchase Request Line Item Statuses
 
-Used on `purchase_request_items.status`.
+Used on `purchase_request_items.status`. See `10-order-workflow.md`.
 
-| Value | Display Label | Description |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| `PENDING` | Pending | Not yet received |
-| `PARTIALLY_RECEIVED` | Partially Received | Some quantity received, more expected |
-| `FULLY_RECEIVED` | Fully Received | All ordered quantity received |
-| `CANCELLED` | Cancelled | Line item cancelled |
+| `pending` | Pending | Line item submitted; not yet received |
+| `partially_received` | Partially Received | Some quantity checked in, but not all |
+| `fully_received` | Fully Received | All ordered quantity checked in |
+| `removed` | Removed | Line item removed by Focal Point during modification |
 
 ---
 
 ## 3. Inventory Lot Statuses
 
-Used on `inventory_lots.status`.
+Used on `inventory_lots.status`. See `11-checkin-workflow.md`.
 
-| Value | Display Label | Description | Can Transition To |
-|---|---|---|---|
-| `ACTIVE` | Active | Lot is in inventory, available for checkout | `DEPLETED`, `EXPIRED`, `QUARANTINED`, `DISPOSED` |
-| `DEPLETED` | Depleted | Lot quantity has reached zero through checkouts | _(terminal)_ |
-| `EXPIRED` | Expired | Lot has passed its expiry date | `ACTIVE` (via shelf-life extension), `DISPOSED` |
-| `QUARANTINED` | Quarantined | Lot flagged due to failed peroxide test (> 100 ppm) | `DISPOSED` |
-| `DISPOSED` | Disposed | Lot has been officially disposed of | _(terminal)_ |
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `active` | Active | Lot is in inventory, available for checkout |
+| `depleted` | Depleted | Lot quantity has reached zero through checkouts |
+| `expired` | Expired | Lot has passed its expiry date |
+| `quarantined` | Quarantined | Lot flagged due to high peroxide levels (> 100 ppm) or other safety concern |
+| `disposed` | Disposed | Lot has been officially disposed of |
 
-### Status Transition Diagram
+### Status Transitions
 
 ```
-                     ┌──────────────────────────────┐
-                     │                              │
-  CHECK_IN ──→ ACTIVE ──→ DEPLETED                 │
-                  │                                  │
-                  ├──→ EXPIRED ──→ ACTIVE (extended) │
-                  │        │                         │
-                  │        └──→ DISPOSED             │
-                  │                                  │
-                  └──→ QUARANTINED ──→ DISPOSED      │
-                                                     │
-                     (shelf-life extension) ──────────┘
+active → depleted        (quantity_remaining reaches 0 via checkout)
+active → expired         (expiry_date passes; can be set by scheduled job or on-access check)
+active → quarantined     (peroxide test > 100 ppm)
+expired → active         (shelf-life extension: new expiry date set)
+quarantined → disposed   (disposal action by Focal Point / Admin)
+expired → disposed       (disposal action)
 ```
 
-**Reference:** `11-checkin-workflow.md`, `12-checkout-workflow.md`, `14-extend-shelf-life-workflow.md`
+### Note on `expired` Detection
+
+The system can detect expiry in two ways:
+1. **On-access check:** When a lot is loaded for checkout or display, compare `expiry_date` to today. If expired and status is still `active`, update to `expired`.
+2. **Scheduled job:** A nightly batch process updates all lots where `expiry_date < today AND status = 'active'` to `expired`.
+
+Both approaches should be used for robustness.
 
 ---
 
 ## 4. Peroxide Test Classifications
 
-Used on `peroxide_tests.classification`.
+Used on `peroxide_tests.classification`. See `13-peroxide-workflow.md`.
 
-| Value | Display Label | PPM Threshold | Action |
+| Value (DB) | Display Label | Indicator | PPM Threshold |
 |---|---|---|---|
-| `NORMAL` | Normal | < 25 ppm | Lot remains Active; schedule next test |
-| `WARNING` | Warning | ≥ 25 ppm and ≤ 100 ppm | Increased monitoring frequency; notify Focal Point |
-| `QUARANTINE` | Quarantine | > 100 ppm | Lot quarantined; block checkout; notify Focal Point + Admin |
+| `normal` | Normal | ✅ Green | < 25 ppm |
+| `warning` | Warning | ⚠️ Orange | ≥ 25 ppm and ≤ 100 ppm |
+| `quarantine` | Quarantine | 🛑 Red | > 100 ppm |
 
-**Reference:** `13-peroxide-workflow.md`
+For **textual results** (where PPM is not available), the classification is manually selected by the user.
 
 ---
 
-## 5. Lot Source Types
+## 5. Peroxide Result Types
 
-Used on `inventory_lots.source_type`.
+Used on `peroxide_tests.result_type`. See `13-peroxide-workflow.md`.
 
-| Value | Display Label | Description |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| `PURCHASE_ORDER` | Purchase Order | Received against an approved purchase request |
-| `MANUAL` | Manual | Manually checked in (donation, transfer, Verify STD) |
+| `numeric` | Numeric (ppm) | PPM value measured; system auto-calculates classification |
+| `textual` | Textual | Descriptive result (e.g., "Negative"); user selects classification manually |
 
 ---
 
-## 6. Transaction Types
+## 6. Peroxide Classification Groups
 
-Used on `stock_transactions.transaction_type`.
+Used on `items.peroxide_class`. See `13-peroxide-workflow.md`.
 
-| Value | Display Label | Description | Module |
+| Value (DB) | Display Label | Description | Default Monitoring Interval |
 |---|---|---|---|
-| `ADD_TO_CART` | Add to Cart | User adds an item to their cart | Order |
-| `SUBMIT_ORDER` | Submit Order | User submits cart as a purchase request | Order |
-| `MODIFY_ORDER` | Modify Order | Focal Point modifies a request before approval | Approval |
-| `APPROVE_ORDER` | Approve Order | Focal Point or Admin approves a request | Approval |
-| `REJECT_ORDER` | Reject Order | Focal Point or Admin rejects a request | Approval |
-| `SEND_VENDOR_EMAIL` | Send Vendor Email | System sends vendor notification email | Vendor Email |
-| `CANCEL_ORDER` | Cancel Order | Request cancelled | Order |
-| `CHECK_IN` | Check-In | Items checked in against a purchase order | Check-In |
-| `MANUAL_CHECK_IN` | Manual Check-In | Items checked in without a purchase order | Check-In |
-| `CHECKOUT` | Checkout | Items withdrawn from inventory | Checkout |
-| `PEROXIDE_TEST` | Peroxide Test | Peroxide monitoring test result recorded | Peroxide |
-| `LOT_QUARANTINED` | Lot Quarantined | Lot quarantined due to high peroxide levels | Peroxide |
-| `EXTEND_SHELF_LIFE` | Shelf-Life Extension | Shelf life of a lot extended | Shelf Life |
-| `ADJUSTMENT` | Adjustment | Manual quantity correction | Inventory |
-| `DISPOSAL` | Disposal | Lot disposed | Inventory |
-| `TRANSFER` | Transfer | Lot transferred between labs (future) | Inventory |
+| `A` | Class A | Severe hazard — form peroxides readily | 3 months |
+| `B` | Class B | Concentration hazard — hazardous on concentration | 6 months |
+| `C` | Class C | Low hazard — autopolymerize with peroxide initiation | 12 months |
 
-**Reference:** `16-transaction-history-and-audit.md`
+> **Note:** Monitoring intervals are configurable. These are recommended defaults. On a Warning classification, the interval is halved.
 
 ---
 
-## 7. Vendor Email Statuses
+## 7. Transaction Types
 
-Used on `vendor_email_logs.status`.
+Used on `stock_transactions.transaction_type`. See `16-transaction-history-and-audit.md` for the full catalog and JSONB metadata schemas.
 
-| Value | Display Label | Description |
+| Value (DB) | Display Label | Module |
 |---|---|---|
-| `PENDING` | Pending | Email queued but not yet sent |
-| `SENT` | Sent | Email successfully dispatched |
-| `FAILED` | Failed | Email dispatch failed |
-| `RETRYING` | Retrying | Failed email being retried |
+| `add_to_cart` | Add to Cart | Order |
+| `submit_order` | Submit Order | Order |
+| `modify_order` | Modify Order | Approval |
+| `approve_order` | Approve Order | Approval |
+| `reject_order` | Reject Order | Approval |
+| `send_vendor_email` | Send Vendor Email | Vendor Email |
+| `cancel_order` | Cancel Order | Order |
+| `check_in` | Check-In (PO) | Check-In |
+| `manual_check_in` | Manual Check-In | Check-In |
+| `checkout` | Checkout | Checkout |
+| `peroxide_test_logged` | Peroxide Test Logged | Peroxide |
+| `lot_quarantined` | Lot Quarantined | Peroxide |
+| `extend_shelf_life` | Extend Shelf Life | Shelf Life |
+| `adjustment` | Manual Adjustment | Inventory |
+| `disposal` | Disposal | Inventory |
+| `transfer` | Inter-Lab Transfer | Inventory (future) |
 
 ---
 
-## 8. Label Print Methods
+## 8. Inventory Lot Source Types
 
-Used on `label_print_logs.print_method`.
+Used on `inventory_lots.source_type`. See `11-checkin-workflow.md`.
 
-| Value | Display Label | Description |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| `BROWSER_PRINT` | Browser Print | Printed via browser's print dialog |
-| `PDF_DOWNLOAD` | PDF Download | Downloaded as a PDF file |
-| `LABEL_PRINTER` | Label Printer | Sent to a dedicated label printer |
+| `purchase_order` | Purchase Order | Checked in against an approved order |
+| `manual` | Manual | Manually registered (donation, transfer, Verify STD) |
 
 ---
 
-## 9. Roles
+## 9. Manual Check-In Source Reasons
 
-Used in `roles` table as seed data.
+Used on `inventory_lots.manual_source_reason`. See `11-checkin-workflow.md`, Flow 2.
 
-| Name | Code | Description |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| Admin | `ADMIN` | Full system access across all locations and labs |
-| Focal Point | `FOCAL_POINT` | Lab manager; approve orders, manage inventory, perform monitoring |
-| Lab User | `LAB_USER` | Standard user; order, checkout, log tests within assigned labs |
-| Viewer | `VIEWER` | Read-only access for auditors and compliance reviewers |
-
-**Reference:** `04-user-roles-and-permissions.md`
+| `donation` | Donation | Received as a donation from another organization |
+| `transfer` | Transfer | Transferred from another lab or department |
+| `direct_delivery` | Direct Delivery | Delivered directly by vendor outside the ordering process |
+| `other` | Other | Other reason (notes field should explain) |
 
 ---
 
-## 10. Item Categories
+## 10. Vendor Email Statuses
 
-Used in `item_categories` table as seed data.
+Used on `vendor_email_logs.status`. See `10-order-workflow.md`, Step 7.
 
-| Code | Name | Default Behavior Summary |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| `CHEM_REAGENT` | Chemical & Reagent | Orderable, check-in, checkout, tracks expiry, may require peroxide monitoring |
-| `VERIFY_STD` | Verify STD | Not orderable (manual check-in only), tracks expiry, regulatory |
-| `GAS` | Gas | Orderable, no check-in/checkout in MVP |
-| `MAT_CONSUMABLE` | Material & Consumable | Orderable (configurable), no check-in/checkout in MVP |
-
-**Reference:** `07-category-behavior-matrix.md`
+| `sent` | Sent | Email dispatched successfully |
+| `failed` | Failed | Email failed all retry attempts |
+| `retrying` | Retrying | Email failed but retries remaining |
 
 ---
 
@@ -198,97 +185,89 @@ Used in `item_categories` table as seed data.
 
 Used on `audit_logs.action`.
 
-| Value | Description |
-|---|---|
-| `USER_CREATED` | New user account created |
-| `USER_UPDATED` | User profile or role updated |
-| `USER_DEACTIVATED` | User account deactivated |
-| `USER_REACTIVATED` | User account reactivated |
-| `ROLE_CHANGED` | User's role was changed |
-| `LAB_ASSIGNMENT_ADDED` | User assigned to a lab |
-| `LAB_ASSIGNMENT_REMOVED` | User unassigned from a lab |
-| `ITEM_CREATED` | New item added to catalog |
-| `ITEM_UPDATED` | Item master data updated |
-| `ITEM_DEACTIVATED` | Item deactivated in catalog |
-| `VENDOR_CREATED` | New vendor added |
-| `VENDOR_UPDATED` | Vendor details updated |
-| `VENDOR_DEACTIVATED` | Vendor deactivated |
-| `LAB_CREATED` | New lab added |
-| `LAB_UPDATED` | Lab details updated |
-| `LOCATION_CREATED` | New location added |
-| `LOCATION_UPDATED` | Location details updated |
-| `ITEM_LAB_SETTINGS_UPDATED` | Min stock or lab config changed for an item |
-| `REGULATION_CREATED` | New regulation added |
-| `REGULATION_UPDATED` | Regulation updated |
-| `CONFIG_CHANGED` | System configuration changed |
-
----
-
-## 12. Audit Log Entity Types
-
-Used on `audit_logs.entity_type`.
-
-| Value | Description |
-|---|---|
-| `user` | Users table |
-| `role` | Roles table |
-| `user_lab` | User-lab assignments |
-| `location` | Locations table |
-| `lab` | Labs table |
-| `item` | Items table |
-| `item_category` | Item categories table |
-| `vendor` | Vendors table |
-| `item_lab_settings` | Item lab settings |
-| `item_location_settings` | Item location settings |
-| `regulation` | Regulations table |
-| `item_regulation` | Item-regulation mappings |
-| `purchase_request` | Purchase requests |
-| `inventory_lot` | Inventory lots |
-| `system_config` | System configuration |
-
----
-
-## 13. Manual Check-In Source Reasons
-
-Suggested reference values for `inventory_lots.source_reason` when `source_type = 'MANUAL'`:
-
-| Value | Description |
-|---|---|
-| `DONATION` | Received as a donation or sample |
-| `TRANSFER` | Transferred from another lab or department |
-| `DIRECT_DELIVERY` | Procured outside the system (emergency, legacy order) |
-| `STANDARDS_BODY` | Received from a standards organization (Verify STD) |
-| `OTHER` | Other reason (freeform notes required) |
-
----
-
-## 14. Checkout Purpose Values
-
-Suggested reference values for `stock_transactions.purpose` when `transaction_type = 'CHECKOUT'`:
-
-| Value | Description |
-|---|---|
-| `ROUTINE_TESTING` | Standard laboratory testing |
-| `SAMPLE_PREPARATION` | Preparing samples for analysis |
-| `CALIBRATION` | Equipment calibration |
-| `RESEARCH` | Research or experimental use |
-| `QUALITY_CONTROL` | Quality control procedures |
-| `DISPOSAL` | Intentional discard |
-| `OTHER` | Other purpose (notes required) |
-
----
-
-## Summary: All CHECK Constraint Values
-
-For implementation reference, here is a consolidated list of all enumerated values that should be enforced via `CHECK` constraints:
-
-| Column | Table | Valid Values |
+| Value (DB) | Display Label | Description |
 |---|---|---|
-| `status` | `purchase_requests` | DRAFT, IN_CART, PENDING_APPROVAL, MODIFIED, APPROVED, EMAIL_SENT, PENDING_DELIVERY, PARTIALLY_RECEIVED, FULLY_RECEIVED, CANCELLED |
-| `status` | `purchase_request_items` | PENDING, PARTIALLY_RECEIVED, FULLY_RECEIVED, CANCELLED |
-| `status` | `inventory_lots` | ACTIVE, DEPLETED, EXPIRED, QUARANTINED, DISPOSED |
-| `classification` | `peroxide_tests` | NORMAL, WARNING, QUARANTINE |
-| `source_type` | `inventory_lots` | PURCHASE_ORDER, MANUAL |
-| `transaction_type` | `stock_transactions` | ADD_TO_CART, SUBMIT_ORDER, MODIFY_ORDER, APPROVE_ORDER, REJECT_ORDER, SEND_VENDOR_EMAIL, CANCEL_ORDER, CHECK_IN, MANUAL_CHECK_IN, CHECKOUT, PEROXIDE_TEST, LOT_QUARANTINED, EXTEND_SHELF_LIFE, ADJUSTMENT, DISPOSAL, TRANSFER |
-| `status` | `vendor_email_logs` | PENDING, SENT, FAILED, RETRYING |
-| `print_method` | `label_print_logs` | BROWSER_PRINT, PDF_DOWNLOAD, LABEL_PRINTER |
+| `insert` | Created | New record created |
+| `update` | Updated | Existing record modified |
+| `delete` | Deleted | Record soft-deleted / deactivated |
+
+---
+
+## 12. User Roles
+
+Used on `roles.name`. See `02-business-rules-and-scope.md`, `04-rbac-and-permissions.md`.
+
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `admin` | Admin | Full system access across all locations and labs |
+| `focal_point` | Focal Point | Lab manager; approves orders, manages inventory for assigned labs |
+| `lab_user` | Lab User | Standard user; submits orders, performs checkout, logs peroxide tests |
+| `viewer` | Viewer / Auditor | Read-only access for audit and compliance purposes |
+
+---
+
+## 13. Item Categories
+
+Seeded into `item_categories`. See `02-business-rules-and-scope.md`.
+
+| Code | Name | Description | Display Order |
+|---|---|---|---|
+| `CHEM` | Chemical & Reagent | Laboratory chemicals, solvents, acids, bases, reagents | 1 |
+| `GAS` | Gas | Laboratory gases (nitrogen, argon, etc.) | 2 |
+| `MAT` | Material & Consumable | Lab consumables, filters, glassware, PPE | 3 |
+| `STD` | Verify STD | Certified reference standards (USP, NIST, etc.) | 4 |
+
+---
+
+## 14. Checkout Purpose / Reason
+
+Used in the checkout workflow (captured in `stock_transactions.metadata`). See `12-checkout-workflow.md`.
+
+| Value | Display Label |
+|---|---|
+| `routine_testing` | Routine Testing |
+| `sample_preparation` | Sample Preparation |
+| `calibration` | Calibration |
+| `research` | Research / Experiment |
+| `quality_control` | Quality Control |
+| `disposal` | Disposal |
+| `other` | Other |
+
+---
+
+## 15. Label Print Methods
+
+Used on `label_print_logs.print_method`.
+
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `single` | Single | One label printed for one lot |
+| `batch` | Batch | Multiple labels printed in a single session |
+
+---
+
+## 16. Purchase Request Item Revision Actions
+
+Used on `purchase_request_item_revisions.action`. See `10-order-workflow.md`, Step 5a.
+
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `modified` | Modified | An existing field was changed (before/after recorded) |
+| `added` | Added | A new line item was added to the order |
+| `removed` | Removed | An existing line item was removed |
+
+---
+
+## Reference Data Seeding Summary
+
+The following reference tables must be seeded with initial data before the application can operate:
+
+| Table | Seed Data | Notes |
+|---|---|---|
+| `roles` | admin, focal_point, lab_user, viewer | Fixed set; changes require application update |
+| `item_categories` | CHEM, GAS, MAT, STD | Rarely changed; Admin can add more |
+| `locations` | AIE, MTP, CT, ATC | Based on current org structure |
+| `labs` | Per-location labs (from stakeholder input) | See `09-open-questions.md`, OQ-28 |
+| `regulations` | Per regulatory landscape | Requires stakeholder input |
+
+All other enum-like values (statuses, transaction types, source types) are **application-defined constants** validated in the API layer, not separate database tables.

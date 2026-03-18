@@ -96,7 +96,7 @@ Provide a comprehensive, scrollable table view of all orders in the system with 
 - User can toggle to show all statuses.
 
 ### Row Click Behavior
-Clicking a row opens the order detail page with full line items, approval history, and vendor email status.
+Clicking a row opens the order detail page with full line items (including line-item-level statuses), approval history, modification log, and vendor email status.
 
 ### Status Color Coding
 
@@ -131,11 +131,12 @@ Identify items whose aggregated stock level in a lab is at or below the defined 
 | 5 | **Lab** | Lab name | Yes |
 | 6 | **Location** | Location name | Yes |
 | 7 | **Total Quantity** | Sum of `quantity_remaining` across all active lots for this item in this lab | Yes |
-| 8 | **Min Stock** | Configured minimum stock threshold for this item in this lab | Yes |
-| 9 | **Deficit** | `Min Stock - Total Quantity` (positive = below threshold) | Yes |
-| 10 | **Long Lead Time** | Flag (Yes/No) indicating if the item typically has a long procurement lead time | Yes |
-| 11 | **Last Order Date** | Date of the most recent order for this item in this lab | Yes |
-| 12 | **Last Check-In Date** | Date of the most recent check-in for this item in this lab | Yes |
+| 8 | **Unit** | Unit of measure | No |
+| 9 | **Min Stock** | Configured minimum stock threshold for this item in this lab | Yes |
+| 10 | **Deficit** | `Min Stock - Total Quantity` (positive = below threshold) | Yes |
+| 11 | **Long Lead Time** | Flag (Yes/No) indicating if the item typically has a long procurement lead time | Yes |
+| 12 | **Last Order Date** | Date of the most recent order for this item in this lab | Yes |
+| 13 | **Last Check-In Date** | Date of the most recent check-in for this item in this lab | Yes |
 
 ### Stock Condition Logic
 
@@ -184,8 +185,9 @@ Surface inventory lots that are expired or approaching expiry, enabling timely a
 | 7 | **Expiry Date** | Lot expiry date | Yes |
 | 8 | **Days to Expiry** | Calculated: `Expiry Date - Today`. Negative = expired. | Yes |
 | 9 | **Quantity Remaining** | Current lot quantity | Yes |
-| 10 | **Times Extended** | Number of shelf-life extensions applied to this lot | Yes |
-| 11 | **Last Action Date** | Date of most recent transaction (check-in, checkout, extension) | Yes |
+| 10 | **Unit** | Unit of measure | No |
+| 11 | **Times Extended** | Number of shelf-life extensions applied to this lot | Yes |
+| 12 | **Last Action Date** | Date of most recent transaction (check-in, checkout, extension) | Yes |
 
 ### Expiry Condition Logic
 
@@ -212,7 +214,7 @@ Surface inventory lots that are expired or approaching expiry, enabling timely a
 - Sorted by **Days to Expiry** ascending (most urgent first — expired, then soonest to expire).
 
 ### Action Column
-- **Extend**: Link to the Extend Shelf Life workflow for this lot (Chemical & Reagent only).
+- **Extend**: Link to the Extend Shelf Life workflow for this lot (Chemical & Reagent only). See `14-extend-shelf-life-workflow.md`.
 - **Dispose**: Mark the lot for disposal (creates a `DISPOSAL` transaction).
 - **View**: Open the lot detail page.
 
@@ -228,17 +230,17 @@ Show all peroxide-forming chemical lots with their monitoring status, highlighti
 | # | Column | Description | Sortable |
 |---|---|---|---|
 | 1 | **Status Indicator** | 🔴 Overdue / 🟡 Due Soon / ✅ Normal / ⚠️ Warning / 🛑 Quarantined | Yes |
-| 2 | **Item Name** | Chemical name | Yes |
-| 3 | **Lot Number** | Inventory lot number | Yes |
-| 4 | **Lab** | Lab name | Yes |
-| 5 | **Location** | Location name | Yes |
-| 6 | **Last Monitor Date** | Date of the most recent peroxide test | Yes |
-| 7 | **Next Monitor Due** | Date the next test is due | Yes |
-| 8 | **Monitor Due In** | Calculated: `Next Monitor Due - Today` (days). Negative = overdue. | Yes |
-| 9 | **Last PPM Result** | The most recent PPM reading | Yes |
-| 10 | **Last Classification** | Normal / Warning / Quarantine | Yes |
-| 11 | **Open Date** | Date the container was first opened | Yes |
-| 12 | **Reminder** | Notification indicator: bell icon if reminder has been sent for upcoming due date | — |
+| 2 | **Reminder** | Notification indicator: bell icon if automated reminder has been sent for upcoming due date | — |
+| 3 | **Item Name** | Chemical name | Yes |
+| 4 | **Lot Number** | Inventory lot number | Yes |
+| 5 | **Lab** | Lab name | Yes |
+| 6 | **Location** | Location name | Yes |
+| 7 | **Monitor Due In** | Calculated: `Next Monitor Due - Today` (days). Negative = overdue. | Yes |
+| 8 | **Monitor Date** | Date the next test is due (`Next Monitor Due` value) | Yes |
+| 9 | **Last Monitor Date** | Date of the most recent peroxide test | Yes |
+| 10 | **Last PPM Result** | The most recent PPM reading (or textual result) | Yes |
+| 11 | **Last Classification** | Normal / Warning / Quarantine | Yes |
+| 12 | **Open Date** | Date the container was first opened | Yes |
 
 ### Due Condition Logic
 
@@ -264,7 +266,7 @@ Show all peroxide-forming chemical lots with their monitoring status, highlighti
 - Quarantined lots displayed in a separate section or at the top with distinct styling.
 
 ### Action Column
-- **Log Test**: Opens the peroxide monitoring event entry form for this lot.
+- **Log Test**: Opens the peroxide monitoring event entry form for this lot. See `13-peroxide-workflow.md`.
 - **View History**: Opens the full monitoring event history for this lot.
 
 ---
