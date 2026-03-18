@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using ChemWatch.Data;
 
+// Npgsql 6+ requires DateTime values to have Kind=Utc for timestamptz columns.
+// Enable legacy behavior so DateTime.Kind=Unspecified is accepted.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Services ─────────────────────────────────────────────────────────

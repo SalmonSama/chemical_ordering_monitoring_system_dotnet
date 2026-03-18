@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ChemWatch")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7f505742b825746474ae055e026c0312e88948c2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d9f3cc1a256d942abcc58ed6e9509e335fa377f5")]
 [assembly: System.Reflection.AssemblyProductAttribute("ChemWatch")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ChemWatch")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
