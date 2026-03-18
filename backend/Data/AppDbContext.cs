@@ -21,6 +21,10 @@ public class AppDbContext : DbContext
     public DbSet<Item> Items => Set<Item>();
     public DbSet<ItemLabSetting> ItemLabSettings => Set<ItemLabSetting>();
 
+    // Phase 3 — Inventory Core
+    public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
+    public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -147,6 +151,98 @@ public class AppDbContext : DbContext
              .WithMany(l => l.ItemLabSettings)
              .HasForeignKey(ils => ils.LabId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── InventoryLot ──────────────────────────────────────────────
+        modelBuilder.Entity<InventoryLot>(e =>
+        {
+            e.HasIndex(il => il.LabId);
+            e.HasIndex(il => il.ItemId);
+            e.HasIndex(il => il.Status);
+            e.HasIndex(il => il.ExpiryDate);
+            e.HasIndex(il => new { il.ItemId, il.LabId });
+            e.HasIndex(il => il.LotNumber);
+
+            e.Property(il => il.LotNumber).HasMaxLength(100);
+            e.Property(il => il.Unit).HasMaxLength(20);
+            e.Property(il => il.QuantityReceived).HasColumnType("decimal(12,3)");
+            e.Property(il => il.QuantityRemaining).HasColumnType("decimal(12,3)");
+            e.Property(il => il.StorageSublocation).HasMaxLength(200);
+            e.Property(il => il.Status).HasMaxLength(20);
+            e.Property(il => il.SourceType).HasMaxLength(20);
+            e.Property(il => il.ManualSourceReason).HasMaxLength(50);
+            e.Property(il => il.CertificateOfAnalysis).HasMaxLength(200);
+            e.Property(il => il.AssignedValue).HasMaxLength(100);
+            e.Property(il => il.Uncertainty).HasMaxLength(100);
+            e.Property(il => il.CertifyingBody).HasMaxLength(200);
+            e.Property(il => il.QrCodeData).HasColumnType("jsonb");
+
+            e.HasOne(il => il.Item)
+             .WithMany(i => i.InventoryLots)
+             .HasForeignKey(il => il.ItemId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(il => il.Lab)
+             .WithMany(l => l.InventoryLots)
+             .HasForeignKey(il => il.LabId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(il => il.Location)
+             .WithMany()
+             .HasForeignKey(il => il.LocationId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(il => il.Vendor)
+             .WithMany(v => v.InventoryLots)
+             .HasForeignKey(il => il.VendorId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(il => il.CheckedInByUser)
+             .WithMany()
+             .HasForeignKey(il => il.CheckedInBy)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── StockTransaction ──────────────────────────────────────────
+        modelBuilder.Entity<StockTransaction>(e =>
+        {
+            e.HasIndex(st => st.TransactionType);
+            e.HasIndex(st => st.LabId);
+            e.HasIndex(st => st.LotId);
+            e.HasIndex(st => st.PurchaseRequestId);
+            e.HasIndex(st => st.ItemId);
+            e.HasIndex(st => st.CreatedAt);
+            e.HasIndex(st => st.UserId);
+
+            e.Property(st => st.TransactionType).HasMaxLength(30);
+            e.Property(st => st.UserName).HasMaxLength(200);
+            e.Property(st => st.Metadata).HasColumnType("jsonb");
+            e.Property(st => st.Quantity).HasColumnType("decimal(12,3)");
+
+            e.HasOne(st => st.User)
+             .WithMany(u => u.StockTransactions)
+             .HasForeignKey(st => st.UserId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(st => st.Lab)
+             .WithMany(l => l.StockTransactions)
+             .HasForeignKey(st => st.LabId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(st => st.Location)
+             .WithMany()
+             .HasForeignKey(st => st.LocationId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(st => st.InventoryLot)
+             .WithMany(il => il.StockTransactions)
+             .HasForeignKey(st => st.LotId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(st => st.Item)
+             .WithMany()
+             .HasForeignKey(st => st.ItemId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ── Seed Data ─────────────────────────────────────────────────
@@ -298,6 +394,18 @@ public class AppDbContext : DbContext
             new ItemLabSetting { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), ItemId = itemAcetone.Id, LabId = labEBSM.Id, MinStock = 2.0m, ReorderQuantity = 4.0m, IsStocked = true, StorageSublocation = "Shelf B1", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new ItemLabSetting { Id = Guid.Parse("10000000-0000-0000-0000-000000000003"), ItemId = itemTHF.Id, LabId = labPO.Id, MinStock = 2.0m, ReorderQuantity = 3.0m, IsStocked = true, StorageSublocation = "Flammable Cabinet 1", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new ItemLabSetting { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), ItemId = itemHCl.Id, LabId = labCT.Id, MinStock = 5.0m, ReorderQuantity = 10.0m, IsStocked = true, StorageSublocation = "Corrosives Cabinet", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // ── Users (sample — Phase 3 needs at least one user for check-in)
+        modelBuilder.Entity<User>().HasData(
+            new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000001"), Email = "admin@chemwatch.local", FullName = "System Admin", RoleId = roleAdmin.Id, IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000002"), Email = "focalpoint@chemwatch.local", FullName = "Lab Focal Point", RoleId = roleFocalPoint.Id, IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // ── UserLabs (assign sample users to PO Lab)
+        modelBuilder.Entity<UserLab>().HasData(
+            new UserLab { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), UserId = Guid.Parse("20000000-0000-0000-0000-000000000001"), LabId = labPO.Id, IsDefault = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new UserLab { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), UserId = Guid.Parse("20000000-0000-0000-0000-000000000002"), LabId = labPO.Id, IsDefault = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
     }
 }

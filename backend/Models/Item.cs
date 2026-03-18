@@ -35,4 +35,5 @@ public class Item
     public ItemCategory Category { get; set; } = null!;
     public Vendor? DefaultVendor { get; set; }
     public ICollection<ItemLabSetting> ItemLabSettings { get; set; } = new List<ItemLabSetting>();
+    public ICollection<InventoryLot> InventoryLots { get; set; } = new List<InventoryLot>();
 }
