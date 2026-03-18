@@ -117,3 +117,4 @@ C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\back
 C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ChemWatch.pdb
 C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ChemWatch.genruntimeconfig.cache
 C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ref\ChemWatch.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\EFCore.NamingConventions.dll
