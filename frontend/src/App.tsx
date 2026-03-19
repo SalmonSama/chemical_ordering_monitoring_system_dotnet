@@ -11,7 +11,7 @@ import ManualCheckInPage from './pages/ManualCheckInPage';
 import InventoryLotsPage from './pages/InventoryLotsPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
 
-function App() {
+function App(): React.JSX.Element {
   return (
     <Routes>
       <Route element={<MasterDataLayout />}>

@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties, FormEvent, ChangeEvent } from 'react';
 import apiClient from '../api/client';
+import type { TestItem } from '../types/models';
 
-function TestPage() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [newItemName, setNewItemName] = useState('');
+function TestPage(): React.JSX.Element {
+  const [items, setItems] = useState<TestItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [newItemName, setNewItemName] = useState<string>('');
 
-  const fetchItems = async () => {
+  const fetchItems = async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/testitems');
+      const response = await apiClient.get<TestItem[]>('/testitems');
       setItems(response.data);
       setError(null);
     } catch (err) {
-      setError(err.message || 'Failed to fetch items');
+      setError(err instanceof Error ? err.message : 'Failed to fetch items');
     } finally {
       setLoading(false);
     }
@@ -24,7 +26,7 @@ function TestPage() {
     fetchItems();
   }, []);
 
-  const handleAddItem = async (e) => {
+  const handleAddItem = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!newItemName.trim()) return;
 
@@ -33,7 +35,7 @@ function TestPage() {
       setNewItemName('');
       fetchItems();
     } catch (err) {
-      setError(err.message || 'Failed to add item');
+      setError(err instanceof Error ? err.message : 'Failed to add item');
     }
   };
 
@@ -49,7 +51,7 @@ function TestPage() {
           <input
             type="text"
             value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setNewItemName(e.target.value)}
             placeholder="Enter a test item name..."
             style={styles.input}
           />
@@ -99,7 +101,7 @@ function TestPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   container: {
     minHeight: '100vh',
     display: 'flex',

@@ -1,7 +1,23 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties, ChangeEvent, FormEvent } from 'react';
 import apiClient from '../api/client';
+import type {
+  Item,
+  Location,
+  Lab,
+  Vendor,
+  User,
+  ManualCheckInFormState,
+  ManualCheckInRequest,
+  ManualCheckInResponse,
+} from '../types/models';
 
-const INITIAL_FORM = {
+interface SourceReasonOption {
+  value: string;
+  label: string;
+}
+
+const INITIAL_FORM: ManualCheckInFormState = {
   itemId: '',
   labId: '',
   locationId: '',
@@ -17,31 +33,31 @@ const INITIAL_FORM = {
   performedByUserId: '',
 };
 
-const SOURCE_REASONS = [
+const SOURCE_REASONS: SourceReasonOption[] = [
   { value: 'donation', label: 'Donation' },
   { value: 'transfer', label: 'Transfer' },
   { value: 'direct_delivery', label: 'Direct Delivery' },
   { value: 'other', label: 'Other' },
 ];
 
-function ManualCheckInPage() {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [items, setItems] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [labs, setLabs] = useState([]);
-  const [vendors, setVendors] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+function ManualCheckInPage(): React.JSX.Element {
+  const [form, setForm] = useState<ManualCheckInFormState>(INITIAL_FORM);
+  const [items, setItems] = useState<Item[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [labs, setLabs] = useState<Lab[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [result, setResult] = useState<ManualCheckInResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch reference data on mount
   useEffect(() => {
     Promise.all([
-      apiClient.get('/items'),
-      apiClient.get('/locations'),
-      apiClient.get('/vendors'),
-      apiClient.get('/users'),
+      apiClient.get<Item[]>('/items'),
+      apiClient.get<Location[]>('/locations'),
+      apiClient.get<Vendor[]>('/vendors'),
+      apiClient.get<User[]>('/users'),
     ])
       .then(([itemsRes, locRes, vendorsRes, usersRes]) => {
         setItems(itemsRes.data);
@@ -49,7 +65,7 @@ function ManualCheckInPage() {
         setVendors(vendorsRes.data);
         setUsers(usersRes.data);
       })
-      .catch(err => setError('Failed to load reference data: ' + err.message));
+      .catch(err => setError('Failed to load reference data: ' + (err instanceof Error ? err.message : String(err))));
   }, []);
 
   // When location changes, compute available labs
@@ -69,17 +85,17 @@ function ManualCheckInPage() {
     }
   }, [form.itemId, items]);
 
-  const onChange = (field) => (e) => {
+  const onChange = (field: keyof ManualCheckInFormState) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     setForm(f => ({ ...f, [field]: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setSubmitting(true);
     setResult(null);
     setError(null);
 
-    const payload = {
+    const payload: ManualCheckInRequest = {
       itemId: form.itemId,
       labId: form.labId,
       locationId: form.locationId,
@@ -96,11 +112,12 @@ function ManualCheckInPage() {
     };
 
     try {
-      const res = await apiClient.post('/checkin/manual', payload);
+      const res = await apiClient.post<ManualCheckInResponse>('/checkin/manual', payload);
       setResult(res.data);
       setForm(INITIAL_FORM);
     } catch (err) {
-      const msg = err.response?.data?.error || err.message;
+      const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
+      const msg = axiosErr.response?.data?.error || axiosErr.message || 'Unknown error';
       setError('Check-in failed: ' + msg);
     } finally {
       setSubmitting(false);
@@ -240,7 +257,7 @@ function ManualCheckInPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
   subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
   form: { display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '800px' },

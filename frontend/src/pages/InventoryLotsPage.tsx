@@ -1,19 +1,26 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import apiClient from '../api/client';
+import type { InventoryLot } from '../types/models';
 
-function InventoryLotsPage() {
-  const [lots, setLots] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface StatusColor {
+  color: string;
+  bg: string;
+}
+
+function InventoryLotsPage(): React.JSX.Element {
+  const [lots, setLots] = useState<InventoryLot[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiClient.get('/inventorylots')
+    apiClient.get<InventoryLot[]>('/inventorylots')
       .then(res => { setLots(res.data); setError(null); })
-      .catch(err => setError(err.message))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
 
-  const statusColor = (status) => {
+  const statusColor = (status: string): StatusColor => {
     switch (status) {
       case 'active': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' };
       case 'expired': return { color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
@@ -24,7 +31,7 @@ function InventoryLotsPage() {
     }
   };
 
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString() : '—';
+  const fmtDate = (d: string | null): string => d ? new Date(d).toLocaleDateString() : '—';
 
   return (
     <div>
@@ -89,7 +96,7 @@ function InventoryLotsPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
   subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
   info: { color: '#94a3b8', fontStyle: 'italic' },

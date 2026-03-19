@@ -1,6 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import type { CSSProperties } from 'react';
 
-const masterDataNav = [
+interface NavItem {
+  to: string;
+  label: string;
+}
+
+const masterDataNav: NavItem[] = [
   { to: '/admin/locations', label: '📍 Locations & Labs' },
   { to: '/admin/roles', label: '👤 Roles' },
   { to: '/admin/vendors', label: '🏭 Vendors' },
@@ -9,17 +15,17 @@ const masterDataNav = [
   { to: '/admin/item-lab-settings', label: '⚙️ Item Lab Settings' },
 ];
 
-const inventoryNav = [
+const inventoryNav: NavItem[] = [
   { to: '/inventory/check-in/manual', label: '📥 Manual Check-In' },
   { to: '/inventory/lots', label: '📦 Inventory Lots' },
   { to: '/inventory/transactions', label: '📋 Stock Transactions' },
 ];
 
-const utilityNav = [
+const utilityNav: NavItem[] = [
   { to: '/', label: '🔌 Connection Test' },
 ];
 
-function MasterDataLayout() {
+function MasterDataLayout(): React.JSX.Element {
   return (
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
@@ -56,7 +62,7 @@ function MasterDataLayout() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   wrapper: {
     display: 'flex',
     minHeight: '100vh',
