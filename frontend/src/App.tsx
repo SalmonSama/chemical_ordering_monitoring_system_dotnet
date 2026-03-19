@@ -15,6 +15,7 @@ import CatalogPage from './pages/CatalogPage';
 import CartPage from './pages/CartPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ApprovalQueuePage from './pages/ApprovalQueuePage';
+import PendingDeliveryPage from './pages/PendingDeliveryPage';
 import type { CartItem } from './types/models';
 
 function App(): React.JSX.Element {
@@ -45,6 +46,9 @@ function App(): React.JSX.Element {
         <Route path="/orders/cart" element={<CartPage cart={cart} setCart={setCart} />} />
         <Route path="/orders/my-orders" element={<MyOrdersPage />} />
         <Route path="/orders/approval-queue" element={<ApprovalQueuePage />} />
+
+        {/* Phase 5 — Pending Delivery Check-In */}
+        <Route path="/inventory/check-in/pending-delivery" element={<PendingDeliveryPage />} />
       </Route>
     </Routes>
   );

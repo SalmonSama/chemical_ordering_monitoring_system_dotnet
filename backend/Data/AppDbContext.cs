@@ -296,6 +296,7 @@ public class AppDbContext : DbContext
             e.HasIndex(pri => pri.VendorId);
 
             e.Property(pri => pri.QuantityOrdered).HasColumnType("decimal(12,3)");
+            e.Property(pri => pri.QuantityReceived).HasColumnType("decimal(12,3)");
             e.Property(pri => pri.UnitPrice).HasColumnType("decimal(12,2)");
             e.Property(pri => pri.Unit).HasMaxLength(20);
             e.Property(pri => pri.Status).HasMaxLength(30);

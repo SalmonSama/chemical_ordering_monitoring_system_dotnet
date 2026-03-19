@@ -489,6 +489,7 @@ public class OrdersController : ControllerBase
             i.VendorId,
             vendorName = i.Vendor?.Name,
             i.QuantityOrdered,
+            i.QuantityReceived,
             i.Unit,
             i.UnitPrice,
             i.LineItemNotes,

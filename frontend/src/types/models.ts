@@ -257,6 +257,7 @@ export interface PurchaseRequestLineItem {
   vendorId: string | null;
   vendorName: string | null;
   quantityOrdered: number;
+  quantityReceived: number;
   unit: string;
   unitPrice: number | null;
   lineItemNotes: string | null;
@@ -312,3 +313,36 @@ export interface ApproveOrderRequest {
   approvalNotes: string | null;
 }
 
+// ─── Phase 5: Pending-Delivery Check-In Types ────────────────────
+
+export interface PendingDeliveryItem {
+  purchaseRequestItemId: string;
+  purchaseRequestId: string;
+  poNumber: string;
+  itemId: string;
+  itemName: string;
+  itemUnit: string;
+  vendorId: string | null;
+  vendorName: string | null;
+  labId: string;
+  labName: string;
+  locationId: string;
+  locationName: string;
+  requestedBy: string | null;
+  quantityOrdered: number;
+  quantityReceived: number;
+  quantityRemaining: number;
+  unit: string;
+  status: string;
+  approvedAt: string | null;
+}
+
+export interface PendingDeliveryCheckInRequest {
+  purchaseRequestItemId: string;
+  receivedQuantity: number;
+  lotNumber: string;
+  expiryDate: string | null;
+  storageSublocation: string | null;
+  notes: string | null;
+  performedByUserId: string;
+}

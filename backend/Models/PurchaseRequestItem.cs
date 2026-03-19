@@ -7,6 +7,7 @@ public class PurchaseRequestItem
     public Guid ItemId { get; set; }
     public Guid? VendorId { get; set; }
     public decimal QuantityOrdered { get; set; }
+    public decimal QuantityReceived { get; set; } = 0;
     public string Unit { get; set; } = string.Empty;
     public decimal? UnitPrice { get; set; }
     public string? LineItemNotes { get; set; }
