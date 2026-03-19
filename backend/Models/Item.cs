@@ -36,4 +36,5 @@ public class Item
     public Vendor? DefaultVendor { get; set; }
     public ICollection<ItemLabSetting> ItemLabSettings { get; set; } = new List<ItemLabSetting>();
     public ICollection<InventoryLot> InventoryLots { get; set; } = new List<InventoryLot>();
+    public ICollection<PurchaseRequestItem> PurchaseRequestItems { get; set; } = new List<PurchaseRequestItem>();
 }

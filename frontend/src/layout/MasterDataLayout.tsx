@@ -6,6 +6,17 @@ interface NavItem {
   label: string;
 }
 
+interface MasterDataLayoutProps {
+  cartCount?: number;
+}
+
+const orderNav: NavItem[] = [
+  { to: '/orders/catalog', label: '🛒 Catalog' },
+  { to: '/orders/cart', label: '📋 Cart' },
+  { to: '/orders/my-orders', label: '📄 My Orders' },
+  { to: '/orders/approval-queue', label: '✅ Approval Queue' },
+];
+
 const masterDataNav: NavItem[] = [
   { to: '/admin/locations', label: '📍 Locations & Labs' },
   { to: '/admin/roles', label: '👤 Roles' },
@@ -25,13 +36,22 @@ const utilityNav: NavItem[] = [
   { to: '/', label: '🔌 Connection Test' },
 ];
 
-function MasterDataLayout(): React.JSX.Element {
+function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.Element {
   return (
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
         <h2 style={styles.logo}>🧪 ChemWatch</h2>
-        <p style={styles.phase}>Phase 3 — Inventory Core</p>
+        <p style={styles.phase}>Phase 4 — Order Workflow</p>
         <nav style={styles.nav}>
+          {/* Orders section */}
+          <p style={styles.sectionLabel}>Orders</p>
+          {orderNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+              {label}{to === '/orders/cart' && cartCount > 0 ? ` (${cartCount})` : ''}
+            </NavLink>
+          ))}
+
+          <div style={styles.separator} />
           <p style={styles.sectionLabel}>Master Data</p>
           {masterDataNav.map(({ to, label }) => (
             <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>

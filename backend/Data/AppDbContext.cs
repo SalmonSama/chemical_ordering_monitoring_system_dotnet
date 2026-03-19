@@ -25,6 +25,11 @@ public class AppDbContext : DbContext
     public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
 
+    // Phase 4 — Order Workflow
+    public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
+    public DbSet<PurchaseRequestItem> PurchaseRequestItems => Set<PurchaseRequestItem>();
+    public DbSet<PurchaseRequestItemRevision> PurchaseRequestItemRevisions => Set<PurchaseRequestItemRevision>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -242,6 +247,97 @@ public class AppDbContext : DbContext
             e.HasOne(st => st.Item)
              .WithMany()
              .HasForeignKey(st => st.ItemId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(st => st.PurchaseRequest)
+             .WithMany(pr => pr.StockTransactions)
+             .HasForeignKey(st => st.PurchaseRequestId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── PurchaseRequest ──────────────────────────────────────────
+        modelBuilder.Entity<PurchaseRequest>(e =>
+        {
+            e.HasIndex(pr => pr.PoNumber).IsUnique();
+            e.HasIndex(pr => pr.LabId);
+            e.HasIndex(pr => pr.Status);
+            e.HasIndex(pr => pr.SubmittedAt);
+            e.HasIndex(pr => pr.RequestedBy);
+
+            e.Property(pr => pr.PoNumber).HasMaxLength(50);
+            e.Property(pr => pr.Status).HasMaxLength(30);
+
+            e.HasOne(pr => pr.Lab)
+             .WithMany()
+             .HasForeignKey(pr => pr.LabId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(pr => pr.Location)
+             .WithMany()
+             .HasForeignKey(pr => pr.LocationId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(pr => pr.RequestedByUser)
+             .WithMany(u => u.PurchaseRequests)
+             .HasForeignKey(pr => pr.RequestedBy)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(pr => pr.ApprovedByUser)
+             .WithMany(u => u.ApprovedPurchaseRequests)
+             .HasForeignKey(pr => pr.ApprovedBy)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── PurchaseRequestItem ──────────────────────────────────────
+        modelBuilder.Entity<PurchaseRequestItem>(e =>
+        {
+            e.HasIndex(pri => pri.PurchaseRequestId);
+            e.HasIndex(pri => pri.ItemId);
+            e.HasIndex(pri => pri.VendorId);
+
+            e.Property(pri => pri.QuantityOrdered).HasColumnType("decimal(12,3)");
+            e.Property(pri => pri.UnitPrice).HasColumnType("decimal(12,2)");
+            e.Property(pri => pri.Unit).HasMaxLength(20);
+            e.Property(pri => pri.Status).HasMaxLength(30);
+
+            e.HasOne(pri => pri.PurchaseRequest)
+             .WithMany(pr => pr.Items)
+             .HasForeignKey(pri => pri.PurchaseRequestId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(pri => pri.Item)
+             .WithMany(i => i.PurchaseRequestItems)
+             .HasForeignKey(pri => pri.ItemId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(pri => pri.Vendor)
+             .WithMany(v => v.PurchaseRequestItems)
+             .HasForeignKey(pri => pri.VendorId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── PurchaseRequestItemRevision ───────────────────────────────
+        modelBuilder.Entity<PurchaseRequestItemRevision>(e =>
+        {
+            e.HasIndex(r => r.PurchaseRequestId);
+            e.HasIndex(r => r.PurchaseRequestItemId);
+
+            e.Property(r => r.Action).HasMaxLength(20);
+            e.Property(r => r.FieldName).HasMaxLength(50);
+
+            e.HasOne(r => r.PurchaseRequest)
+             .WithMany(pr => pr.Revisions)
+             .HasForeignKey(r => r.PurchaseRequestId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(r => r.PurchaseRequestItem)
+             .WithMany(pri => pri.Revisions)
+             .HasForeignKey(r => r.PurchaseRequestItemId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.RevisedByUser)
+             .WithMany()
+             .HasForeignKey(r => r.RevisedBy)
              .OnDelete(DeleteBehavior.Restrict);
         });
 

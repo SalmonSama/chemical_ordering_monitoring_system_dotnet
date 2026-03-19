@@ -220,3 +220,95 @@ export interface ManualCheckInFormState {
   notes: string;
   performedByUserId: string;
 }
+
+// ─── Phase 4: Order Workflow Types ───────────────────────────────
+
+export interface PurchaseRequest {
+  id: string;
+  poNumber: string;
+  labId: string;
+  labName: string | null;
+  locationId: string;
+  locationName: string | null;
+  requestedBy: string;
+  requestedByName: string | null;
+  status: string;
+  orderNotes: string | null;
+  approvalNotes: string | null;
+  approvedBy: string | null;
+  approvedByName: string | null;
+  approvedAt: string | null;
+  rejectedReason: string | null;
+  submittedAt: string;
+  lastModifiedBy: string | null;
+  lastModifiedAt: string | null;
+  createdAt: string;
+  itemCount?: number;
+  totalQty?: number;
+  items?: PurchaseRequestLineItem[];
+  revisions?: PurchaseRequestItemRevision[];
+}
+
+export interface PurchaseRequestLineItem {
+  id: string;
+  itemId: string;
+  itemName: string | null;
+  itemUnit: string | null;
+  vendorId: string | null;
+  vendorName: string | null;
+  quantityOrdered: number;
+  unit: string;
+  unitPrice: number | null;
+  lineItemNotes: string | null;
+  status: string;
+}
+
+export interface PurchaseRequestItemRevision {
+  id: string;
+  purchaseRequestItemId: string | null;
+  action: string;
+  fieldName: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  revisedBy: string;
+  revisedByName: string | null;
+  revisedAt: string;
+  notes: string | null;
+}
+
+export interface CartItem {
+  itemId: string;
+  itemName: string;
+  unit: string;
+  vendorId: string | null;
+  vendorName: string | null;
+  quantity: number;
+  note: string;
+}
+
+export interface SubmitOrderRequest {
+  requestedBy: string;
+  labId: string;
+  locationId: string;
+  orderNotes: string | null;
+  items: { itemId: string; vendorId: string | null; quantity: number; note: string | null }[];
+}
+
+export interface ModifyLineItemRequest {
+  lineItemId: string;
+  newQuantity: number | null;
+  newVendorId: string | null;
+  remove: boolean;
+}
+
+export interface ModifyOrderRequest {
+  modifiedBy: string;
+  notes: string | null;
+  items: ModifyLineItemRequest[];
+}
+
+export interface ApproveOrderRequest {
+  approvedBy: string;
+  approvalNotes: string | null;
+}
+
