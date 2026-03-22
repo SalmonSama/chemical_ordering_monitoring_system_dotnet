@@ -22,13 +22,15 @@ public class AppDbContext : DbContext
     public DbSet<ItemLabSetting> ItemLabSettings => Set<ItemLabSetting>();
 
     // Inventory Core
-    public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
-    public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
+    public DbSet<InventoryLot> InventoryLots { get; set; }
+    public DbSet<StockTransaction> StockTransactions { get; set; }
 
     // Order Workflow
-    public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
-    public DbSet<PurchaseRequestItem> PurchaseRequestItems => Set<PurchaseRequestItem>();
-    public DbSet<PurchaseRequestItemRevision> PurchaseRequestItemRevisions => Set<PurchaseRequestItemRevision>();
+    public DbSet<PurchaseRequest> PurchaseRequests { get; set; }
+    public DbSet<PurchaseRequestItem> PurchaseRequestItems { get; set; }
+    public DbSet<PurchaseRequestItemRevision> PurchaseRequestItemRevisions { get; set; }
+    public DbSet<PeroxideTest> PeroxideTests { get; set; }
+    public DbSet<ShelfLifeExtension> ShelfLifeExtensions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -340,6 +342,48 @@ public class AppDbContext : DbContext
             e.HasOne(r => r.RevisedByUser)
              .WithMany()
              .HasForeignKey(r => r.RevisedBy)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── PeroxideTest ──────────────────────────────────────────────
+        modelBuilder.Entity<PeroxideTest>(e =>
+        {
+            e.HasIndex(pt => pt.InventoryLotId);
+            e.HasIndex(pt => pt.TestedByUserId);
+            e.HasIndex(pt => pt.TestDate);
+
+            e.Property(pt => pt.ResultText).HasMaxLength(50);
+            e.Property(pt => pt.Notes).HasMaxLength(500);
+
+            e.HasOne(pt => pt.InventoryLot)
+             .WithMany(il => il.PeroxideTests)
+             .HasForeignKey(pt => pt.InventoryLotId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(pt => pt.TestedByUser)
+             .WithMany()
+             .HasForeignKey(pt => pt.TestedByUserId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── ShelfLifeExtension ────────────────────────────────────────
+        modelBuilder.Entity<ShelfLifeExtension>(e =>
+        {
+            e.HasIndex(x => x.InventoryLotId);
+            e.HasIndex(x => x.AuthorizedByUserId);
+
+            e.Property(x => x.Reason).HasMaxLength(500);
+            e.Property(x => x.TestPerformed).HasMaxLength(200);
+            e.Property(x => x.TestResult).HasMaxLength(200);
+
+            e.HasOne(x => x.InventoryLot)
+             .WithMany(il => il.ShelfLifeExtensions)
+             .HasForeignKey(x => x.InventoryLotId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.AuthorizedByUser)
+             .WithMany()
+             .HasForeignKey(x => x.AuthorizedByUserId)
              .OnDelete(DeleteBehavior.Restrict);
         });
 

@@ -4,7 +4,7 @@ import MasterDataLayout from './layout/MasterDataLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import TestPage from './pages/TestPage';
+import DashboardPage from './pages/DashboardPage';
 import LocationsPage from './pages/LocationsPage';
 import RolesPage from './pages/RolesPage';
 import VendorsPage from './pages/VendorsPage';
@@ -23,6 +23,14 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import CreateUserPage from './pages/CreateUserPage';
 import EditUserPage from './pages/EditUserPage';
 import CheckoutPage from './pages/CheckoutPage';
+import PeroxideLotsPage from './pages/PeroxideLotsPage';
+import ExtendShelfLifePage from './pages/ExtendShelfLifePage';
+import OrderStatusPage from './pages/reports/OrderStatusPage';
+import MinStockPage from './pages/reports/MinStockPage';
+import ExpiredPage from './pages/reports/ExpiredPage';
+import PeroxideDuePage from './pages/reports/PeroxideDuePage';
+import TransactionHistoryPage from './pages/reports/TransactionHistoryPage';
+import RegulatoryReportPage from './pages/reports/RegulatoryReportPage';
 import type { CartItem } from './types/models';
 
 function App(): React.JSX.Element {
@@ -41,7 +49,7 @@ function App(): React.JSX.Element {
         </ProtectedRoute>
       }>
         {/* Phase 1 */}
-        <Route path="/" element={<TestPage />} />
+        <Route path="/" element={<DashboardPage />} />
 
         {/* Phase A — Admin User Management */}
         <Route path="/admin/users" element={
@@ -76,6 +84,20 @@ function App(): React.JSX.Element {
 
         {/* Phase 5 — Pending Delivery Check-In */}
         <Route path="/inventory/check-in/pending-delivery" element={<PendingDeliveryPage />} />
+
+        {/* Phase 7 — Peroxide Monitoring */}
+        <Route path="/monitoring/peroxide" element={<PeroxideLotsPage />} />
+
+        {/* Phase 8 — Extend Shelf Life */}
+        <Route path="/inventory/extend-shelf-life" element={<ExtendShelfLifePage />} />
+
+        {/* Phase 9 — Dashboards & Reports */}
+        <Route path="/reports/orders" element={<OrderStatusPage />} />
+        <Route path="/reports/min-stock" element={<MinStockPage />} />
+        <Route path="/reports/expired" element={<ExpiredPage />} />
+        <Route path="/reports/peroxide-due" element={<PeroxideDuePage />} />
+        <Route path="/reports/transactions" element={<TransactionHistoryPage />} />
+        <Route path="/reports/regulatory" element={<RegulatoryReportPage />} />
       </Route>
     </Routes>
   );

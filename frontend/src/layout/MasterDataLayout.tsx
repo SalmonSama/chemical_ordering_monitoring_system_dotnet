@@ -33,11 +33,24 @@ const inventoryNav: NavItem[] = [
   { to: '/inventory/check-in/manual', label: '📥 Manual Check-In' },
   { to: '/inventory/checkout', label: '📤 Checkout / Consume' },
   { to: '/inventory/lots', label: '📦 Inventory Lots' },
+  { to: '/inventory/extend-shelf-life', label: '⏳ Extend Shelf Life' },
   { to: '/inventory/transactions', label: '📋 Stock Transactions' },
 ];
 
-const utilityNav: NavItem[] = [
-  { to: '/', label: '🔌 Connection Test' },
+const monitoringNav: NavItem[] = [
+  { to: '/monitoring/peroxide', label: '⚠️ Peroxide Tracking' },
+];
+
+const utilityNav: NavItem[] = [];
+
+const reportsNav: NavItem[] = [
+  { to: '/', label: '📊 Dashboard' },
+  { to: '/reports/orders', label: '📈 Order Status' },
+  { to: '/reports/min-stock', label: '📉 Min Stock Alerts' },
+  { to: '/reports/expired', label: '⏳ Expiry Tracking' },
+  { to: '/reports/peroxide-due', label: '🧪 Peroxide Schedule' },
+  { to: '/reports/transactions', label: '📋 Audit Log' },
+  { to: '/reports/regulatory', label: '⚖️ Regulatory Report' },
 ];
 
 function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.Element {
@@ -90,11 +103,31 @@ function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.E
           ))}
 
           <div style={styles.separator} />
-          {utilityNav.map(({ to, label }) => (
+          <p style={styles.sectionLabel}>Monitoring & Safety</p>
+          {monitoringNav.map(({ to, label }) => (
             <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
               {label}
             </NavLink>
           ))}
+
+          <div style={styles.separator} />
+          <p style={styles.sectionLabel}>Dashboards & Reports</p>
+          {reportsNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+              {label}
+            </NavLink>
+          ))}
+
+          {utilityNav.length > 0 && (
+            <>
+              <div style={styles.separator} />
+              {utilityNav.map(({ to, label }) => (
+                <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
       </aside>
       <main style={styles.main}>

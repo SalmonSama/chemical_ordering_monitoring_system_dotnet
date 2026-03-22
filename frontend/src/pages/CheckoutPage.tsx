@@ -181,8 +181,8 @@ export default function CheckoutPage(): React.JSX.Element {
              </form>
           )}
 
-          {checkoutError && <div style={styles.errorBox} style={{marginTop: '1rem'}}>❌ {checkoutError}</div>}
-          {successMsg && <div style={styles.successBox} style={{marginTop: '1rem'}}>{successMsg}</div>}
+          {checkoutError && <div style={{...styles.errorBox, marginTop: '1rem'}}>❌ {checkoutError}</div>}
+          {successMsg && <div style={{...styles.successBox, marginTop: '1rem'}}>{successMsg}</div>}
         </div>
       )}
     </div>

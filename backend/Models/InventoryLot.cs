@@ -12,8 +12,14 @@ public class InventoryLot
     public decimal QuantityRemaining { get; set; }
     public string Unit { get; set; } = string.Empty;
     public DateTime? ManufactureDate { get; set; }
-    public DateTime? ExpiryDate { get; set; }
     public DateTime? OpenDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    
+    // Peroxide Tracking fields
+    public DateTime? FirstInspectDate { get; set; }
+    public DateTime? LastMonitorDate { get; set; }
+    public DateTime? NextMonitorDate { get; set; }
+    public string? PeroxideStatus { get; set; } // Normal, Warning, Quarantine
     public string? StorageSublocation { get; set; }
     public string Status { get; set; } = "active";
     public string SourceType { get; set; } = "manual";
@@ -51,4 +57,6 @@ public class InventoryLot
     public Vendor? Vendor { get; set; }
     public User CheckedInByUser { get; set; } = null!;
     public ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();
+    public ICollection<PeroxideTest> PeroxideTests { get; set; } = new List<PeroxideTest>();
+    public ICollection<ShelfLifeExtension> ShelfLifeExtensions { get; set; } = new List<ShelfLifeExtension>();
 }
