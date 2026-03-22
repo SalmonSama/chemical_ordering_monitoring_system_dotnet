@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties, ChangeEvent } from 'react';
 import apiClient from '../api/client';
 import type { PendingDeliveryItem, PendingDeliveryCheckInRequest, User } from '../types/models';
+import StatusBadge from '../components/StatusBadge';
 
 interface CheckInForm {
   lotNumber: string;
@@ -87,12 +88,6 @@ function PendingDeliveryPage(): React.JSX.Element {
     }
   };
 
-  const sc = (status: string): { color: string; bg: string } => {
-    if (status === 'partially_received') return { color: 'var(--color-warning)', bg: 'rgba(251, 191, 36, 0.1)' };
-    if (status === 'fully_received') return { color: 'var(--color-success)', bg: 'var(--color-success-bg)' };
-    return { color: 'var(--color-text-secondary)', bg: 'rgba(148, 163, 184, 0.1)' };
-  };
-
   return (
     <div>
       <h1 style={styles.title}>Pending Delivery Check-In</h1>
@@ -158,38 +153,33 @@ function PendingDeliveryPage(): React.JSX.Element {
 
       {!loading && !error && items.length > 0 && (
         <div style={styles.tableWrapper}>
-          <table style={styles.table}>
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={styles.th}>PO #</th>
-                <th style={styles.th}>Item</th>
-                <th style={styles.th}>Vendor</th>
-                <th style={styles.th}>Lab</th>
-                <th style={styles.th}>Ordered</th>
-                <th style={styles.th}>Received</th>
-                <th style={styles.th}>Remaining</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}></th>
+                <th>PO #</th>
+                <th>Item</th>
+                <th>Vendor</th>
+                <th>Lab</th>
+                <th>Ordered</th>
+                <th>Received</th>
+                <th>Remaining</th>
+                <th>Status</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {items.map(item => {
-                const { color, bg } = sc(item.status);
                 return (
                   <tr key={item.purchaseRequestItemId}>
-                    <td style={styles.td}><code style={styles.code}>{item.poNumber}</code></td>
-                    <td style={styles.td}>{item.itemName}</td>
-                    <td style={styles.td}>{item.vendorName ?? '—'}</td>
-                    <td style={styles.td}>{item.labName} / {item.locationName}</td>
-                    <td style={styles.tdNum}>{item.quantityOrdered} {item.unit}</td>
-                    <td style={styles.tdNum}>{item.quantityReceived} {item.unit}</td>
-                    <td style={styles.tdNum}>{item.quantityRemaining} {item.unit}</td>
-                    <td style={styles.td}>
-                      <span style={{ color, background: bg, padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize' }}>
-                        {item.status.replace(/_/g, ' ')}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
+                    <td><code style={styles.code}>{item.poNumber}</code></td>
+                    <td>{item.itemName}</td>
+                    <td>{item.vendorName ?? '—'}</td>
+                    <td>{item.labName} / {item.locationName}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityOrdered} {item.unit}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityReceived} {item.unit}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityRemaining} {item.unit}</td>
+                    <td><StatusBadge status={item.status} /></td>
+                    <td>
                       <button
                         onClick={() => openForm(item.purchaseRequestItemId, item.quantityRemaining)}
                         style={styles.receiveBtn}
@@ -246,10 +236,6 @@ const styles: Record<string, CSSProperties> = {
     cursor: 'pointer', alignSelf: 'flex-start',
   },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
-  tdNum: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
   code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
   receiveBtn: {
     background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',

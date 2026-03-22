@@ -273,19 +273,19 @@ function PeroxideLotsPage(): React.JSX.Element {
 
       {!loading && !error && lots.length > 0 && (
         <div style={styles.tableWrapper}>
-          <table style={styles.table}>
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Item</th>
-                <th style={styles.th}>Lot Number</th>
-                <th style={styles.th}>Lab</th>
-                <th style={styles.th}>Due In</th>
-                <th style={styles.th}>Next Monitor Due</th>
-                <th style={styles.th}>Last Monitor</th>
-                <th style={styles.th}>Open Date</th>
-                <th style={styles.th}>Class</th>
-                <th style={styles.th}></th>
+                <th>Status</th>
+                <th>Item</th>
+                <th>Lot Number</th>
+                <th>Lab</th>
+                <th>Due In</th>
+                <th>Next Monitor Due</th>
+                <th>Last Monitor</th>
+                <th>Open Date</th>
+                <th>Class</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -295,26 +295,26 @@ function PeroxideLotsPage(): React.JSX.Element {
                 
                 return (
                   <tr key={lot.id} style={isOverdue ? { background: 'var(--color-danger-bg)' } : {}}>
-                    <td style={styles.td}>
+                    <td>
                       <span style={{ color, background: bg, padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
                         {lot.peroxideStatus || 'PENDING'}
                       </span>
                     </td>
-                    <td style={styles.td}>{lot.itemName}</td>
-                    <td style={styles.td}><code style={styles.code}>{lot.lotNumber}</code></td>
-                    <td style={styles.td}>{lot.labName} / {lot.locationName}</td>
-                    <td style={styles.td}>
+                    <td>{lot.itemName}</td>
+                    <td><code style={styles.code}>{lot.lotNumber}</code></td>
+                    <td>{lot.labName} / {lot.locationName}</td>
+                    <td>
                         {lot.daysUntilDue === null ? '—' : (
                             <span style={{ color: isOverdue ? 'var(--color-danger)' : 'var(--color-text-primary)', fontWeight: isOverdue ? 'bold' : 'normal' }}>
                                 {lot.daysUntilDue} days
                             </span>
                         )}
                     </td>
-                    <td style={styles.td}>{lot.nextMonitorDate ? new Date(lot.nextMonitorDate).toLocaleDateString() : '—'}</td>
-                    <td style={styles.td}>{lot.lastMonitorDate ? new Date(lot.lastMonitorDate).toLocaleDateString() : 'Never'}</td>
-                    <td style={styles.td}>{lot.openDate ? new Date(lot.openDate).toLocaleDateString() : 'Unopened'}</td>
-                    <td style={styles.td}>{lot.peroxideClass ?? '—'}</td>
-                    <td style={styles.td}>
+                    <td>{lot.nextMonitorDate ? new Date(lot.nextMonitorDate).toLocaleDateString() : '—'}</td>
+                    <td>{lot.lastMonitorDate ? new Date(lot.lastMonitorDate).toLocaleDateString() : 'Never'}</td>
+                    <td>{lot.openDate ? new Date(lot.openDate).toLocaleDateString() : 'Unopened'}</td>
+                    <td>{lot.peroxideClass ?? '—'}</td>
+                    <td>
                       <button
                         onClick={() => openForm(lot.id)}
                         style={styles.actionBtn}
@@ -371,9 +371,6 @@ const styles: Record<string, CSSProperties> = {
     cursor: 'pointer', alignSelf: 'flex-start',
   },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
   code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
   actionBtn: {
     background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',

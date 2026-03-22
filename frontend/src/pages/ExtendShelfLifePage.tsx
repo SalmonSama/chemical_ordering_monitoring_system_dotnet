@@ -322,31 +322,31 @@ function ExtendShelfLifePage() {
         <div style={{ ...styles.panel, marginTop: '2rem' }}>
           <h3 style={styles.panelTitle}>Life Extension History</h3>
           <div style={styles.tableWrapper}>
-            <table style={styles.table}>
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th style={styles.th}>Ext #</th>
-                  <th style={styles.th}>Previous Expiry</th>
-                  <th style={styles.th}>New Expiry</th>
-                  <th style={styles.th}>Added Days</th>
-                  <th style={styles.th}>Test & Result</th>
-                  <th style={styles.th}>Authorized By</th>
-                  <th style={styles.th}>Date Extended</th>
+                  <th>Ext #</th>
+                  <th>Previous Expiry</th>
+                  <th>New Expiry</th>
+                  <th>Added Days</th>
+                  <th>Test & Result</th>
+                  <th>Authorized By</th>
+                  <th>Date Extended</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map(item => (
                   <tr key={item.id}>
-                    <td style={styles.td}><strong>{item.extensionNumber}</strong></td>
-                    <td style={styles.td}>{item.previousExpiryDate ? new Date(item.previousExpiryDate).toLocaleDateString() : '—'}</td>
-                    <td style={styles.td}><span style={{ color: 'var(--color-accent-hover)', fontWeight: 'bold' }}>{new Date(item.newExpiryDate).toLocaleDateString()}</span></td>
-                    <td style={styles.td}>+{item.extensionDays} d</td>
-                    <td style={styles.td}>
+                    <td><strong>{item.extensionNumber}</strong></td>
+                    <td>{item.previousExpiryDate ? new Date(item.previousExpiryDate).toLocaleDateString() : '—'}</td>
+                    <td><span style={{ color: 'var(--color-accent-hover)', fontWeight: 'bold' }}>{new Date(item.newExpiryDate).toLocaleDateString()}</span></td>
+                    <td>+{item.extensionDays} d</td>
+                    <td>
                       <div style={{ fontSize: '0.85rem' }}><strong>Test:</strong> {item.testPerformed}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}><strong>Result:</strong> {item.testResult}</div>
                     </td>
-                    <td style={styles.td}>{item.authorizedBy}</td>
-                    <td style={styles.td}>{new Date(item.createdAt).toLocaleDateString()}</td>
+                    <td>{item.authorizedBy}</td>
+                    <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -403,9 +403,6 @@ const styles: Record<string, CSSProperties> = {
   code: { background: 'var(--color-bg-primary)', color: 'var(--color-accent-hover)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.9rem', border: '1px solid var(--color-bg-surface)' },
   badge: { padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
 };
 
 export default ExtendShelfLifePage;

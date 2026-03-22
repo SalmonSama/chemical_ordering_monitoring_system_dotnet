@@ -189,14 +189,14 @@ function ApprovalQueuePage(): React.JSX.Element {
             {selectedOrder.orderNotes && <span>Notes: {selectedOrder.orderNotes}</span>}
           </div>
 
-          <table style={styles.table}>
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={styles.th}>Item</th>
-                <th style={styles.th}>Vendor</th>
-                <th style={styles.th}>Qty</th>
-                <th style={styles.th}>Unit</th>
-                <th style={styles.th}>Remove</th>
+                <th>Item</th>
+                <th>Vendor</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Remove</th>
               </tr>
             </thead>
             <tbody>
@@ -205,8 +205,8 @@ function ApprovalQueuePage(): React.JSX.Element {
                 if (!edit) return null;
                 return (
                   <tr key={li.id} style={edit.remove ? { opacity: 0.4 } : undefined}>
-                    <td style={styles.td}>{li.itemName}</td>
-                    <td style={styles.td}>
+                    <td>{li.itemName}</td>
+                    <td>
                       <select
                         value={edit.vendorId}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => updateEdit(li.id, 'vendorId', e.target.value)}
@@ -217,7 +217,7 @@ function ApprovalQueuePage(): React.JSX.Element {
                         {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                       </select>
                     </td>
-                    <td style={styles.td}>
+                    <td>
                       <input
                         type="number"
                         min="0.001"
@@ -228,8 +228,8 @@ function ApprovalQueuePage(): React.JSX.Element {
                         disabled={edit.remove}
                       />
                     </td>
-                    <td style={styles.td}>{li.unit}</td>
-                    <td style={styles.td}>
+                    <td>{li.unit}</td>
+                    <td>
                       <input
                         type="checkbox"
                         checked={edit.remove}
@@ -274,28 +274,28 @@ function ApprovalQueuePage(): React.JSX.Element {
 
       {!loading && !error && orders.length > 0 && !selectedOrder && (
         <div style={styles.tableWrapper}>
-          <table style={styles.table}>
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={styles.th}>PO Number</th>
-                <th style={styles.th}>Requester</th>
-                <th style={styles.th}>Lab</th>
-                <th style={styles.th}>Items</th>
-                <th style={styles.th}>Total Qty</th>
-                <th style={styles.th}>Submitted</th>
-                <th style={styles.th}></th>
+                <th>PO Number</th>
+                <th>Requester</th>
+                <th>Lab</th>
+                <th>Items</th>
+                <th>Total Qty</th>
+                <th>Submitted</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {orders.map(o => (
                 <tr key={o.id}>
-                  <td style={styles.td}><code style={styles.code}>{o.poNumber}</code></td>
-                  <td style={styles.td}>{o.requestedByName}</td>
-                  <td style={styles.td}>{o.labName}</td>
-                  <td style={styles.tdNum}>{o.itemCount ?? '—'}</td>
-                  <td style={styles.tdNum}>{o.totalQty ?? '—'}</td>
-                  <td style={styles.td}>{new Date(o.submittedAt).toLocaleDateString()}</td>
-                  <td style={styles.td}>
+                  <td><code style={styles.code}>{o.poNumber}</code></td>
+                  <td>{o.requestedByName}</td>
+                  <td>{o.labName}</td>
+                  <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.itemCount ?? '—'}</td>
+                  <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalQty ?? '—'}</td>
+                  <td>{new Date(o.submittedAt).toLocaleDateString()}</td>
+                  <td>
                     <button onClick={() => openReview(o.id)} style={styles.reviewBtn}>Review</button>
                   </td>
                 </tr>
@@ -322,10 +322,6 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-danger)', marginBottom: '1rem',
   },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
-  tdNum: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', textAlign: 'right' },
   code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
   reviewBtn: {
     background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',

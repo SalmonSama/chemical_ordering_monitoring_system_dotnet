@@ -11,6 +11,7 @@ import type {
   ManualCheckInRequest,
   ManualCheckInResponse,
 } from '../types/models';
+import StatusBadge from '../components/StatusBadge';
 
 interface SourceReasonOption {
   value: string;
@@ -139,7 +140,7 @@ function ManualCheckInPage(): React.JSX.Element {
           <p style={{ margin: '0.5rem 0 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
             Lot <strong style={{ color: 'var(--color-accent-hover)' }}>{result.inventoryLot.lotNumber}</strong> created
             — {result.inventoryLot.quantityReceived} {result.inventoryLot.unit}
-            — Status: <span style={styles.statusBadge}>{result.inventoryLot.status}</span>
+            — Status: <StatusBadge status={result.inventoryLot.status} />
           </p>
         </div>
       )}
@@ -149,7 +150,7 @@ function ManualCheckInPage(): React.JSX.Element {
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Item *</span>
-            <select value={form.itemId} onChange={onChange('itemId')} required style={styles.select}>
+            <select value={form.itemId} onChange={onChange('itemId')} required>
               <option value="">— Select item —</option>
               {items.map(i => (
                 <option key={i.id} value={i.id}>{i.itemName} ({i.unit})</option>
@@ -158,7 +159,7 @@ function ManualCheckInPage(): React.JSX.Element {
           </label>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Performed By *</span>
-            <select value={form.performedByUserId} onChange={onChange('performedByUserId')} required style={styles.select}>
+            <select value={form.performedByUserId} onChange={onChange('performedByUserId')} required>
               <option value="">— Select user —</option>
               {users.map(u => (
                 <option key={u.id} value={u.id}>{u.fullName}</option>
@@ -171,7 +172,7 @@ function ManualCheckInPage(): React.JSX.Element {
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Location *</span>
-            <select value={form.locationId} onChange={onChange('locationId')} required style={styles.select}>
+            <select value={form.locationId} onChange={onChange('locationId')} required>
               <option value="">— Select location —</option>
               {locations.map(l => (
                 <option key={l.id} value={l.id}>{l.name} ({l.code})</option>
@@ -180,7 +181,7 @@ function ManualCheckInPage(): React.JSX.Element {
           </label>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Lab *</span>
-            <select value={form.labId} onChange={onChange('labId')} required style={styles.select} disabled={!form.locationId}>
+            <select value={form.labId} onChange={onChange('labId')} required disabled={!form.locationId}>
               <option value="">— Select lab —</option>
               {labs.map(l => (
                 <option key={l.id} value={l.id}>{l.name}</option>
@@ -193,7 +194,7 @@ function ManualCheckInPage(): React.JSX.Element {
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Vendor (optional)</span>
-            <select value={form.vendorId} onChange={onChange('vendorId')} style={styles.select}>
+            <select value={form.vendorId} onChange={onChange('vendorId')}>
               <option value="">— None —</option>
               {vendors.map(v => (
                 <option key={v.id} value={v.id}>{v.name}</option>
@@ -202,7 +203,7 @@ function ManualCheckInPage(): React.JSX.Element {
           </label>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Source / Reason</span>
-            <select value={form.sourceReason} onChange={onChange('sourceReason')} style={styles.select}>
+            <select value={form.sourceReason} onChange={onChange('sourceReason')}>
               <option value="">— None —</option>
               {SOURCE_REASONS.map(r => (
                 <option key={r.value} value={r.value}>{r.label}</option>
@@ -215,15 +216,15 @@ function ManualCheckInPage(): React.JSX.Element {
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Lot Number *</span>
-            <input type="text" value={form.lotNumber} onChange={onChange('lotNumber')} required style={styles.input} placeholder="e.g. LOT-2026-001" />
+            <input type="text" value={form.lotNumber} onChange={onChange('lotNumber')} required placeholder="e.g. LOT-2026-001" />
           </label>
           <label style={{ ...styles.fieldBlock, maxWidth: '140px' }}>
             <span style={styles.label}>Quantity *</span>
-            <input type="number" min="0.001" step="any" value={form.quantity} onChange={onChange('quantity')} required style={styles.input} placeholder="0.00" />
+            <input type="number" min="0.001" step="any" value={form.quantity} onChange={onChange('quantity')} required placeholder="0.00" />
           </label>
           <label style={{ ...styles.fieldBlock, maxWidth: '100px' }}>
             <span style={styles.label}>Unit</span>
-            <input type="text" value={form.unit} onChange={onChange('unit')} style={styles.input} readOnly />
+            <input type="text" value={form.unit} onChange={onChange('unit')} readOnly />
           </label>
         </div>
 
@@ -231,25 +232,25 @@ function ManualCheckInPage(): React.JSX.Element {
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Expiry Date</span>
-            <input type="date" value={form.expiryDate} onChange={onChange('expiryDate')} style={styles.input} />
+            <input type="date" value={form.expiryDate} onChange={onChange('expiryDate')} />
           </label>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Manufacture Date</span>
-            <input type="date" value={form.manufactureDate} onChange={onChange('manufactureDate')} style={styles.input} />
+            <input type="date" value={form.manufactureDate} onChange={onChange('manufactureDate')} />
           </label>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Storage Sublocation</span>
-            <input type="text" value={form.storageSublocation} onChange={onChange('storageSublocation')} style={styles.input} placeholder="e.g. Cabinet A3" />
+            <input type="text" value={form.storageSublocation} onChange={onChange('storageSublocation')} placeholder="e.g. Cabinet A3" />
           </label>
         </div>
 
         {/* Row 6: Notes */}
         <label style={{ ...styles.fieldBlock, width: '100%' }}>
           <span style={styles.label}>Notes</span>
-          <textarea value={form.notes} onChange={onChange('notes')} style={{ ...styles.input, minHeight: '60px', resize: 'vertical' }} placeholder="Optional notes..." />
+          <textarea value={form.notes} onChange={onChange('notes')} style={{ minHeight: '60px', resize: 'vertical' }} placeholder="Optional notes..." />
         </label>
 
-        <button type="submit" disabled={submitting} style={styles.submitBtn}>
+        <button type="submit" disabled={submitting} className="btn-primary" style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
           {submitting ? '⏳ Processing...' : '📥 Submit Check-In'}
         </button>
       </form>
@@ -264,19 +265,6 @@ const styles: Record<string, CSSProperties> = {
   row: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
   fieldBlock: { display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1, minWidth: '180px' },
   label: { color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
-  input: {
-    background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
-    padding: '0.55rem 0.75rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box',
-  },
-  select: {
-    background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
-    padding: '0.55rem 0.75rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box',
-  },
-  submitBtn: {
-    background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none', borderRadius: '8px',
-    padding: '0.7rem 1.5rem', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start',
-    marginTop: '0.5rem', transition: 'opacity 0.2s ease',
-  },
   errorBox: {
     background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bg)', borderRadius: '8px',
     padding: '0.75rem 1rem', color: 'var(--color-danger)', marginBottom: '1rem', fontSize: '0.9rem',
@@ -284,10 +272,6 @@ const styles: Record<string, CSSProperties> = {
   successBox: {
     background: 'var(--color-success-bg)', border: '1px solid var(--color-success-bg)', borderRadius: '8px',
     padding: '0.75rem 1rem', color: 'var(--color-success)', marginBottom: '1rem',
-  },
-  statusBadge: {
-    background: 'var(--color-info-bg)', color: 'var(--color-accent-hover)', padding: '0.15rem 0.5rem', borderRadius: '4px',
-    fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize',
   },
 };
 
