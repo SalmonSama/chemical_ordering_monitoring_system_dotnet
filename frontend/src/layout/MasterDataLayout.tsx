@@ -31,6 +31,7 @@ const adminNav: NavItem[] = [
 const inventoryNav: NavItem[] = [
   { to: '/inventory/check-in/pending-delivery', label: '📬 Pending Delivery' },
   { to: '/inventory/check-in/manual', label: '📥 Manual Check-In' },
+  { to: '/inventory/checkout', label: '📤 Checkout / Consume' },
   { to: '/inventory/lots', label: '📦 Inventory Lots' },
   { to: '/inventory/transactions', label: '📋 Stock Transactions' },
 ];

@@ -22,6 +22,7 @@ import PendingDeliveryPage from './pages/PendingDeliveryPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import CreateUserPage from './pages/CreateUserPage';
 import EditUserPage from './pages/EditUserPage';
+import CheckoutPage from './pages/CheckoutPage';
 import type { CartItem } from './types/models';
 
 function App(): React.JSX.Element {
@@ -63,6 +64,7 @@ function App(): React.JSX.Element {
 
         {/* Phase 3 — Inventory Core */}
         <Route path="/inventory/check-in/manual" element={<ManualCheckInPage />} />
+        <Route path="/inventory/checkout" element={<CheckoutPage />} />
         <Route path="/inventory/lots" element={<InventoryLotsPage />} />
         <Route path="/inventory/transactions" element={<StockTransactionsPage />} />
 
