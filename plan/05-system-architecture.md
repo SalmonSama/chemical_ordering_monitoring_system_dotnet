@@ -42,8 +42,8 @@ The backend API is responsible for:
 
 - **RESTful API endpoints** — CRUD operations for all entities (orders, inventory, users, etc.).
 - **Business logic** — Order workflow state machine, approval routing, stock threshold calculations, peroxide schedule management.
-- **Authentication** — Validating JWT tokens from the enterprise identity provider.
-- **Authorization** — Role-based access control (RBAC) enforcement on every request. Checking user role and (Location, Lab) assignments.
+- **Authentication** — Validating credentials (email + password) and issuing JWT tokens. Passwords are stored as **bcrypt hashes**; plain-text passwords are never stored or transmitted beyond the initial login request (over HTTPS).
+- **Authorization** — Role-based access control (RBAC) enforcement on every request. Checking user role and location scope (`all` or specific locations via `user_locations`).
 - **Data validation** — Server-side validation of all inputs, ensuring data integrity.
 - **Data access** — Querying and mutating the PostgreSQL database via an ORM (e.g., Entity Framework Core or Dapper).
 - **Email dispatch** — Sending vendor notification emails and internal notification emails (via SMTP or email service integration).
@@ -83,7 +83,7 @@ Organization-wide reference data that changes infrequently:
 | Entity Group | Tables | Purpose |
 |---|---|---|
 | Organization | `locations`, `labs` | Physical hierarchy: Location → Lab |
-| Identity & Access | `users`, `roles`, `user_labs` | Who can access what |
+| Identity & Access | `users`, `roles`, `user_locations` | Who can access what. Users are admin-managed. Location scope determines data visibility. |
 | Catalog | `items`, `item_categories`, `vendors` | What can be ordered or tracked |
 | Compliance | `regulations`, `item_regulations` | Regulatory applicability (M:N) |
 | Lab Configuration | `item_location_settings`, `item_lab_settings` | Per-lab min stock, stocked flags |
@@ -171,8 +171,8 @@ Operational data scoped to specific labs, growing continuously:
 2. React sends POST /api/orders to the backend
 3. ASP.NET Core middleware validates JWT token
 4. Authorization middleware checks:
-   a. User has "Lab User" or higher role
-   b. User is assigned to the target lab
+   a. User has "User" or higher role
+   b. User's location scope includes the target lab's location
 5. Controller delegates to OrderService
 6. OrderService:
    a. Validates order data
@@ -192,7 +192,7 @@ Operational data scoped to specific labs, growing continuously:
 2. React sends PUT /api/orders/{id}/approve to the backend
 3. Auth middleware validates JWT and checks Focal Point role
 4. Authorization middleware checks:
-   a. The order belongs to a lab the Focal Point manages
+   a. The order belongs to a location within the Focal Point's scope
    b. The Focal Point is not the order requester (self-approval blocked)
 5. ApprovalService:
    a. Transitions order status from "Pending Approval" to "Approved"
@@ -211,14 +211,20 @@ Operational data scoped to specific labs, growing continuously:
 
 ### Authentication
 
+This system uses **admin-managed local accounts**. There is no SSO integration or external identity provider.
+
 | Aspect | Approach |
 |---|---|
-| Method | JWT-based authentication |
-| Identity Provider | Enterprise SSO (e.g., Azure AD, Okta, or similar) |
-| Token Flow | Frontend redirects to IdP → user authenticates → IdP returns JWT → frontend stores token → attaches token to all API requests |
-| Token Validation | Backend validates JWT signature, issuer, audience, and expiry on every request |
+| Method | Email + password authentication with JWT tokens |
+| Account creation | Admin creates all accounts. No self-registration. |
+| Password storage | Bcrypt-hashed. Plain-text passwords are **never stored**. |
+| Token flow | User enters email + password → backend validates credentials → backend issues JWT → frontend stores token → attaches token to all API requests |
+| Token validation | Backend validates JWT signature, issuer, audience, and expiry on every request |
+| Login page | Standalone page (no sidebar/header): email field, password field, forgot password link |
+| Forgot password (MVP) | Displays message: *"Please contact your system administrator to reset your password."* No automated email reset in MVP. |
+| Password reset | Admin-initiated only: Admin sets a new password for the user from the admin area. |
 
-> **Open Question:** Which enterprise identity provider will be used? (See `09-open-questions.md`)
+> **Note:** A future enhancement may add email-based self-service password reset. For MVP, admin-managed reset is sufficient.
 
 ### Authorization
 
@@ -227,8 +233,10 @@ Authorization is enforced at **three levels**:
 | Level | Mechanism | Description |
 |---|---|---|
 | **Role check** | Middleware attribute | Verifies the user has the required role for the endpoint (e.g., `[Authorize(Roles = "Admin, FocalPoint")]`) |
-| **Scope check** | Custom authorization handler | Verifies the user's assigned (Location, Lab) pairs include the resource's location/lab |
-| **Business rule check** | Service logic | Enforces rules like "cannot approve own order" or "cannot checkout from another lab's inventory" |
+| **Location scope check** | Custom authorization handler | Verifies the resource's location is within the user's scope. For `all` scope users: always passes. For `specific` scope users: checks the user's `user_locations` entries. |
+| **Business rule check** | Service logic | Enforces rules like "cannot approve own order" or "cannot checkout from a location outside scope" |
+
+> **Important:** The frontend shows/hides UI elements based on role and scope, but the **backend is the sole authority** for access decisions. The frontend never decides access by itself.
 
 ### Authorization Data Flow
 
@@ -247,7 +255,9 @@ Incoming Request
         │ Yes
         ▼
 ┌─────────────────┐
-│ Scope Check      │  → Is the resource within the user's (Location, Lab) scope?
+│ Location Scope   │  → Is the resource within the user's location scope?
+│ Check            │     all → always passes
+│                  │     specific → check user_locations
 └───────┬─────────┘
         │ Yes
         ▼

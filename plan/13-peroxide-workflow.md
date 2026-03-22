@@ -52,20 +52,72 @@ Each peroxide-monitored lot tracks the following dates:
 
 ---
 
-## Peroxide Classification Groups
+## Peroxide Classification Groups (Expanded)
 
-Peroxide-forming chemicals are classified into groups that determine monitoring intervals:
+The stakeholder spreadsheet (Peroxide_Related and Peroxide requirement_1st talk sheets) defines **9 distinct peroxide sub-types** with type-specific monitoring, testing, and disposal rules. This replaces the earlier simplified 3-class system.
 
-| Group | Description | Example Chemicals | Monitoring Interval |
-|---|---|---|---|
-| **Class A** | Severe hazard — form peroxides readily without concentration | Diisopropyl ether, Potassium amide | 3 months |
-| **Class B** | Concentration hazard — hazardous on concentration (e.g., distillation) | Tetrahydrofuran (THF), Diethyl ether | 6 months |
-| **Class C** | Low hazard — can autopolymerize with peroxide initiation | Styrene, Methyl methacrylate | 12 months |
+### Type Reference Table
 
-> **Note:** Exact intervals are configurable in the admin settings. The above are recommended defaults. See `09-open-questions.md`, OQ-21 and OQ-53 for stakeholder confirmation.
+| Sub-Type | Label | Unopened Shelf Life | Opened Shelf Life | Periodic Test Interval | Test Triggers | Disposal Rule |
+|---|---|---|---|---|---|---|
+| `Peroxide_TS` | Time Sensitive | 12 months after check-in | 12 months after check-in | 6 months (visual inspection) | Visual inspection every 6 months | 12 months after check-in |
+| `Peroxide_CRF` | Chloroform | 24 months after check-in | 18 months after open | None | None (if sealed) | 18 months after open OR 24 months after check-in |
+| `Peroxide_A` | Class A | 18 months after check-in | 3 months after open | None (test at open) | **Test at open date** (PPM test) | 3 months after open OR 18 months after check-in |
+| `Peroxide_B` | Class B | 24 months after check-in | 12 months after open | 6 months after open | **Test every 6 months after open; test before distillation/concentration** | 12 months after open OR 24 months after check-in |
+| `Peroxide_C1` | Class C1 (w/ Inhibitor) | 12 months after check-in | N/A (no open tracking) | None | **Test before distillation/concentration** | 12 months after check-in (or manufacturer expiry) |
+| `Peroxide_C2` | Class C2 (w/o Inhibitor) | N/A | **24 hours** after open | None | **Test before distillation/concentration** | 24 hours after opening |
+| `Peroxide_D` | Class D (General) | 36 months after check-in | 24 months after open | None | **Test before distillation/concentration** | 24 months after open OR 36 months after check-in |
+| `Peroxide_D1` | Class D1 (Chemical) | 36 months after check-in | 24 months after open | 6 months after check-in | **Test every 6 months; test before disposal** | 24 months after open |
+| `Peroxide_D2` | Class D2 (Retain Sample) | 36 months after check-in | 36 months after open | As-needed | **Test before use (if >6 months since check-in); test before disposal (if opened)** | 36 months after open |
 
-**Reduced intervals on Warning:**
-When a lot receives a Warning classification (≥ 25 ppm), the next monitoring interval is **halved** (e.g., Class B 6 months → 3 months) to increase monitoring frequency.
+### Test Type Clarifications
+
+| Test Method | Types That Use It | Result |
+|---|---|---|
+| **Visual Inspection** (pass/fail) | Peroxide_TS | Pass → continue storage; Fail → Quarantine |
+| **PPM Test** (peroxide strip/titration) | Peroxide_A, B, C1, C2, D, D1, D2 | <25 ppm → Normal; ≥25 ppm → Warning; >100 ppm → Quarantine |
+| **No Test Required** | Peroxide_CRF (when sealed) | N/A |
+
+### Before-Use Test Trigger
+
+Several peroxide types require testing **before distillation, evaporation, or concentration**. This is a context-specific trigger distinct from periodic monitoring:
+
+| Sub-Type | Before-Use Test Required? |
+|---|---|
+| Peroxide_B | Yes — before distillation/evaporation/concentration |
+| Peroxide_C1 | Yes — before distillation/evaporation/concentration |
+| Peroxide_C2 | Yes — before distillation/evaporation/concentration |
+| Peroxide_D | Yes — before distillation/evaporation/concentration |
+| Peroxide_D1 | No (periodic testing covers this) |
+| Peroxide_D2 | Yes — before any use (if >6 months old) |
+
+> **Note:** The system should prompt users to log a before-use test when checking out affected items for purposes that involve distillation, concentration, or evaporation. The checkout workflow should present this prompt based on the item's peroxide sub-type and the checkout purpose.
+
+### Disposal Timeline Summary
+
+| Sub-Type | Max Unopened Life | Max Opened Life |
+|---|---|---|
+| Peroxide_TS | 12 months from check-in | 12 months from check-in |
+| Peroxide_CRF | 24 months from check-in | 18 months from open |
+| Peroxide_A | 18 months from check-in | 3 months from open |
+| Peroxide_B | 24 months from check-in | 12 months from open |
+| Peroxide_C1 | 12 months from check-in | Per manufacturer expiry |
+| Peroxide_C2 | N/A | 24 hours from open |
+| Peroxide_D | 36 months from check-in | 24 months from open |
+| Peroxide_D1 | 36 months from check-in | 24 months from open |
+| Peroxide_D2 | 36 months from check-in | 36 months from open |
+
+> **Note:** When opened shelf life expires, the system should auto-transition the lot to `expired` status regardless of the unopened shelf life calculation. The shorter of the two timelines always applies.
+
+### Peroxide_D2 Special Rules
+
+Retained samples (Peroxide_D2) have unique conditional logic:
+- If **not opened**: no testing required during storage; no test needed at disposal.
+- If **opened and >6 months old**: must test before every use.
+- If **opened**: must test before disposal.
+- Disposal deadline: 36 months after opening.
+
+> **Note:** Monitoring intervals and detailed rules are confirmed from the stakeholder spreadsheet. The earlier simplified A/B/C system did not capture the full complexity. The `peroxide_class` enum must support all 9 values.
 
 ---
 

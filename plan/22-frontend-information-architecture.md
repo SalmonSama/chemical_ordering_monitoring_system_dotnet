@@ -42,14 +42,15 @@ The header is a persistent horizontal bar across all pages. It contains:
 | **Location / Lab Selector** | Center-left | Dropdown or chip showing the user's currently active (Location, Lab) context. Users with multiple lab assignments can switch context here. |
 | **Notification Bell** | Right | Badge count of unread notifications. Opens a notification drawer on click. |
 | **Theme Toggle** | Right | Light/dark mode toggle (sun/moon icon). Persists preference to localStorage. |
-| **User Profile** | Far right | Avatar/initials + name. Dropdown menu: My Profile, My Activity, Sign Out. |
+| **User Profile** | Far right | Avatar/initials + name. Dropdown menu: My Profile, Change Password, Sign Out. |
 
 ### Lab Context Behavior
 
-- On login, the user's **default lab** (from `user_labs.is_default`) is set as the active context.
+- On login, the user's default lab (based on their location scope) is set as the active context.
 - All data queries, dashboards, and forms are scoped to the active (Location, Lab).
 - Switching lab context refreshes the current page's data.
-- Admins can select "All Locations / All Labs" to see org-wide data.
+- Admins (who always have `all` scope) can select "All Locations / All Labs" to see org-wide data.
+- Users with `specific` scope only see their assigned locations in the selector.
 - The selected context is stored in session state (React context) and persists across page navigation within the session.
 
 ---
@@ -93,20 +94,20 @@ The sidebar is a persistent vertical navigation panel. It supports **section gro
 
 ### Role-Based Visibility
 
-| Section | Admin | Focal Point | Lab User | Viewer |
-|---|---|---|---|---|
-| Dashboard | ✅ | ✅ | ✅ | ✅ |
-| Orders — Catalog & Cart | ✅ | ✅ | ✅ | ❌ |
-| Orders — My Orders | ✅ | ✅ | ✅ | ✅ (read) |
-| Orders — Approval Queue | ✅ | ✅ | ❌ | ❌ |
-| Inventory — Check-In | ✅ | ✅ | ✅ | ❌ |
-| Inventory — Checkout | ✅ | ✅ | ✅ | ❌ |
-| Inventory — Stock Overview | ✅ | ✅ | ✅ | ✅ (read) |
-| Monitoring — Peroxide List | ✅ | ✅ | ✅ | ✅ (read) |
-| Monitoring — Extend Shelf Life | ✅ | ✅ | ❌ | ❌ |
-| Monitoring — Expired Items | ✅ | ✅ | ✅ | ✅ (read) |
-| Reports & History | ✅ | ✅ | ✅ (own) | ✅ (read) |
-| Admin | ✅ | ❌ | ❌ | ❌ |
+| Section | Admin | Focal Point | User |
+|---|---|---|---|
+| Dashboard | ✅ | ✅ | ✅ |
+| Orders — Catalog & Cart | ✅ | ✅ | ✅ |
+| Orders — My Orders | ✅ | ✅ | ✅ |
+| Orders — Approval Queue | ✅ | ✅ | ❌ |
+| Inventory — Check-In | ✅ | ✅ | ✅ |
+| Inventory — Checkout | ✅ | ✅ | ✅ |
+| Inventory — Stock Overview | ✅ | ✅ | ✅ |
+| Monitoring — Peroxide List | ✅ | ✅ | ✅ |
+| Monitoring — Extend Shelf Life | ✅ | ✅ | ❌ |
+| Monitoring — Expired Items | ✅ | ✅ | ✅ |
+| Reports & History | ✅ | ✅ | ✅ (own) |
+| Admin | ✅ | ❌ | ❌ |
 
 ### Sidebar Behavior
 

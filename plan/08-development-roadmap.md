@@ -16,19 +16,19 @@ Development is organized into **four phases**, ordered by business value, risk r
 
 | # | Deliverable | Description |
 |---|---|---|
-| 1.1 | **Database schema** | Design and create all core tables. Master data: `locations`, `labs`, `users`, `roles`, `user_labs`, `vendors`, `item_categories`, `items`, `item_location_settings`, `item_lab_settings`, `regulations`, `item_regulations`. Transactional: `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions`, `vendor_email_logs`, `inventory_lots`, `stock_transactions`, `peroxide_tests`, `shelf_life_extensions`, `label_print_logs`. Audit: `audit_logs`. See `18-entity-list-and-field-planning.md` for field-level detail. |
-| 1.2 | **Authentication integration** | JWT-based auth with enterprise identity provider; login/logout flow in React |
-| 1.3 | **Authorization middleware** | Role-based access control (RBAC) with (Location, Lab) scope enforcement in ASP.NET Core |
-| 1.4 | **User management** | Admin UI to create users, assign roles, assign lab access, deactivate users |
+| 1.1 | **Database schema** | Design and create all core tables. Master data: `locations`, `labs`, `users`, `roles`, `user_locations`, `vendors`, `item_categories`, `items`, `item_location_settings`, `item_lab_settings`, `regulations`, `item_regulations`, `po_number_mappings`. Transactional: `purchase_requests`, `purchase_request_items`, `purchase_request_item_revisions`, `vendor_email_logs`, `inventory_lots`, `stock_transactions`, `peroxide_tests`, `shelf_life_extensions`, `label_print_logs`. Audit: `audit_logs`. See `18-entity-list-and-field-planning.md` for field-level detail. |
+| 1.2 | **Authentication** | Admin-managed login: login page (email + password), bcrypt password hashing, JWT token issuance, logout flow, forgot password page (MVP: "contact admin" message). No SSO or self-registration. |
+| 1.3 | **Authorization middleware** | Role-based access control (RBAC) with location scope enforcement (`all` vs `specific` locations) in ASP.NET Core |
+| 1.4 | **User management** | Admin UI to create users (email, name, password, role, location scope), edit users (role, scope, active status), reset passwords, view user directory |
 | 1.5 | **Master data management** | Admin UI for managing locations, labs, chemicals catalog, vendors, categories, and units |
-| 1.6 | **App shell and navigation** | React app with `AppShell` layout (sidebar + header + content), React Router routing (33 routes), role-based sidebar visibility, lab context selector, theme toggle. See `22-frontend-information-architecture.md`, `23-page-and-route-planning.md`, `25-design-system-and-theme-planning.md`. |
+| 1.6 | **App shell and navigation** | React app with `AppShell` layout (sidebar + header + content), React Router routing, role-based sidebar visibility, lab context selector, theme toggle. See `22-frontend-information-architecture.md`, `23-page-and-route-planning.md`, `25-design-system-and-theme-planning.md`. |
 | 1.7 | **Dashboard home** | Dashboard page with role-aware summary cards (`DashboardCard` component), "View All" drill-down pattern, responsive grid. See `24-dashboard-ui-planning.md`, `26-component-and-state-planning.md`. |
 
 ### Dependencies
 - None (this is the foundation).
 
 ### Risks
-- SSO/IdP integration complexity may extend timeline.
+- Password security policy needs to be defined (minimum length, complexity rules).
 - Master data volume (chemical catalog) may require bulk import tooling.
 
 ---
@@ -160,11 +160,11 @@ Phase 4 (monitoring, compliance, advanced reporting) is critical but can be depl
 
 ### Phase 1 (sequential dependencies)
 1. Database schema (must come first).
-2. Authentication integration (needed for all API calls).
-3. Authorization middleware (needed for all protected endpoints).
+2. Authentication: login page, password hashing, JWT issuance, forgot password page (needed for all subsequent access).
+3. Authorization middleware: role check + location scope enforcement (needed for all protected endpoints).
 4. App shell + routing (needed for UI).
-5. Master data management (catalog must exist before orders).
-6. User management (users must exist before they can interact).
+5. User management: create/edit/deactivate users, assign roles, assign location scope (users must exist before they can interact).
+6. Master data management (catalog must exist before orders).
 7. Dashboard placeholder.
 
 ### Phase 2 (after Phase 1)
