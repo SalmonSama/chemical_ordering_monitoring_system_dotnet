@@ -10,6 +10,7 @@ Organization
 │   ├── EOU Lab
 │   ├── PG Lab
 │   ├── POL Lab
+│   ├── RIGID Lab
 │   ├── SE Lab
 │   └── Shared
 │
@@ -34,11 +35,11 @@ Organization
 
 | Location | Labs | Count |
 |---|---|---|
-| AIE | PO Lab, EOU Lab, PG Lab, POL Lab, SE Lab, Shared | 6 |
+| AIE | PO Lab, EOU Lab, PG Lab, POL Lab, RIGID Lab, SE Lab, Shared | 7 |
 | MTP | EBSM Lab, PS Lab, Latex Lab, PU Lab, FM Lab, EFF Lab, PE Lab, Shared | 8 |
 | CT | CT Lab | 1 |
 | ATC | ATC Lab | 1 |
-| **Total** | | **16** |
+| **Total** | | **17** |
 
 ---
 

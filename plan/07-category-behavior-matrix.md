@@ -66,12 +66,13 @@ Order → Approve → Vendor Email → Receive → Check-In → Inventory
 - Full ordering and approval workflow.
 - Lot-level check-in with manufacture date, expiry date, and storage location.
 - Checkout with quantity reduction and purpose/reason logging.
-- Peroxide monitoring applies only to chemicals flagged as peroxide-forming. Not all chemicals in this category undergo peroxide testing.
+- Peroxide monitoring applies only to chemicals flagged as peroxide-forming. Not all chemicals in this category undergo peroxide testing. The spreadsheet identifies **9** peroxide sub-types (see Peroxide Sub-Type Reference below).
 - Shelf-life extension is available for qualifying lots.
 - All transactions are logged and available for regulatory reporting.
 - Min-stock thresholds trigger dashboard alerts.
 - Expiry monitoring surfaces items approaching or past expiry.
 - QR codes generated at check-in for fast checkout scanning.
+- Regulatory flags include: `VoOrOrKo7`, `FACCHEM`, `Munition` (from stakeholder spreadsheet). These determine regulatory reporting requirements.
 
 ---
 
@@ -137,6 +138,40 @@ In the MVP, material and consumable management is limited to **ordering for sele
 - **No peroxide monitoring** — not applicable.
 - **No notifications** beyond ordering-related notifications.
 - Future phases may add bulk inventory tracking and reorder automation.
+
+---
+
+## Peroxide Sub-Type Reference
+
+The stakeholder spreadsheet (Database_Info_Draft, MaterialList and Peroxide_Related sheets) reveals **9 distinct peroxide sub-types**, expanding the original 3-class system:
+
+| Peroxide Sub-Type | Full Label | Description | Monitoring Notes |
+|---|---|---|---|
+| `Peroxide_TS` | Peroxide — Time Sensitive | Chemical with time-sensitive peroxide risk | Visual inspection every 6 months after check-in. Dispose 12 months after check-in. |
+| `Peroxide_CRF` | Peroxide — Chloroform | Chloroform (stabilized with ethanol) | No periodic testing required if sealed. Dispose 18 months after open or 24 months after check-in. |
+| `Peroxide_A` | Class A | Severe hazard — forms peroxides readily | Test before use (at open date). Dispose 3 months after open or 18 months after check-in. |
+| `Peroxide_B` | Class B | Concentration hazard — hazardous on concentration | Test every 6 months after open and before distillation/concentration. Dispose 12 months after open or 24 months after check-in. |
+| `Peroxide_C1` | Class C1 — With Inhibitor | Monomer with inhibitor | Test before distillation/concentration. Dispose 12 months after check-in (or per manufacturer expiry). |
+| `Peroxide_C2` | Class C2 — Without Inhibitor | Monomer without inhibitor | Test before distillation/concentration. Dispose within 24 hours of opening. |
+| `Peroxide_D` | Class D (General) | Polyether/glycol — general | Test before distillation/concentration. Dispose 24 months after open or 36 months after check-in. |
+| `Peroxide_D1` | Class D1 — Chemical | Polyether/glycol — chemical usage | Test every 6 months after check-in. Dispose 24 months after open. |
+| `Peroxide_D2` | Class D2 — Retain Sample | Polyether/glycol — retained sample | Test before use if > 6 months old; test before disposal (if opened). Dispose 36 months after open. |
+
+> **Note:** This replaces the earlier simplified 3-class system (A/B/C). The `peroxide_class` field on items must accommodate all 9 sub-types. See `13-peroxide-workflow.md` for detailed rules per sub-type.
+
+---
+
+## Regulatory Type Reference
+
+The spreadsheet's MaterialList `Regulatory` column identifies the following regulatory tags:
+
+| Regulatory Tag | Description |
+|---|---|
+| `VoOrOrKo7` | Thai regulatory control (วอ.อร.คร.7 — Precursor chemical control) |
+| `FACCHEM` | Factory chemical registration requirement |
+| `Munition` | Munitions / dual-use chemical control |
+
+Items may have **multiple regulatory tags** (e.g., "VoOrOrKo7, FACCHEM"). The data model should support a many-to-many relationship between items and regulations.
 
 ---
 

@@ -95,6 +95,7 @@ A positive deficit means the stock is below threshold.
 | Total Quantity | `SUM(inventory_lots.quantity_remaining)` where status = 'active' |
 | Unit | `items.unit` |
 | Min Stock | `item_lab_settings.min_stock` |
+| Max Stock | `item_lab_settings.max_stock` |
 | Deficit | `min_stock - total_quantity` |
 | Long Lead Time | `items.lead_time_days > threshold` (e.g., > 14 days) |
 | Last Order Date | `MAX(purchase_requests.submitted_at)` for this item + lab |
@@ -226,7 +227,11 @@ Next Monitor Due = inventory_lots.open_date + monitoring_interval
 Monitor Due In  = Next Monitor Due - CURRENT_DATE
 ```
 
-Where `monitoring_interval` is determined by the item's `peroxide_class` (A = 90 days, B = 180 days, C = 365 days).
+Where monitoring intervals are determined by the item's `peroxide_class` (9 sub-types). Key intervals:
+- `Peroxide_TS`: 6 months (visual inspection)
+- `Peroxide_B`: 6 months after open
+- `Peroxide_D1`: 6 months after check-in
+- Other types: event-driven (before-use, at-open, etc.) — see `13-peroxide-workflow.md`.
 
 ### Key Calculation: Due Condition
 

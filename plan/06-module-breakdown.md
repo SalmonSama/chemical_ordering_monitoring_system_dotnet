@@ -308,20 +308,73 @@ This document describes the purpose, scope, and key capabilities of each major m
 
 ---
 
-## 13. User / Admin Management Module
+## 13. Authentication & User Management Module
 
-**Purpose:** Manage user accounts, role assignments, and lab access within the system.
+**Purpose:** Provide admin-managed user accounts, login/logout, password management, role assignment, and location scope control.
+
+This module has five sub-modules:
+
+### 13a. Authentication Sub-Module
+
+**Purpose:** Handle login, logout, and session management.
 
 **Key Capabilities:**
-- **User Provisioning** — Create user accounts (or sync from enterprise directory).
-- **Role Assignment** — Assign one of the four defined roles to each user.
-- **Lab Access Assignment** — Assign one or more (Location, Lab) pairs to each user.
-- **User Deactivation** — Deactivate users without deleting historical data.
-- **User Directory** — View all users with their roles and lab assignments.
-- **Profile Management** — Users can view and edit limited aspects of their own profile.
-- **Activity Log** — View a user's recent actions (orders, check-ins, checkouts).
+- **Login page** — Standalone page (no sidebar/header) with email and password fields, plus a "Forgot Password" link.
+- **Credential validation** — Backend validates email + bcrypt-hashed password; issues a JWT token on success.
+- **Session management** — JWT token stored in memory (or httpOnly cookie) and attached to all API requests.
+- **Logout** — Clear token and redirect to login page.
+- **No self-registration** — There is no public sign-up page. All accounts are created by Admin.
 
-**User Access:** Admin only (full management). Focal Point (view users in their labs). Users (own profile).
+**Dependencies:** Users and Roles must exist (from master data seeding).
+
+### 13b. User Management Sub-Module
+
+**Purpose:** Allow Admin to create, edit, and deactivate user accounts.
+
+**Key Capabilities:**
+- **Create user** — Admin enters email, full name, password, role, and location scope type.
+- **Edit user** — Admin can change role, location scope, active/inactive status, and full name.
+- **Reset password** — Admin sets a new password for any user.
+- **Deactivate user** — Soft-deactivate; user cannot log in but historical data remains.
+- **User directory** — Searchable, filterable list of all users with role and location scope.
+- **User detail page** — View and edit a user's profile, role, location scope, and location assignments.
+
+**User Access:** Admin only (full management). Focal Point (view users within their scope). Users (own profile, change own password).
+
+### 13c. Role Management Sub-Module
+
+**Purpose:** Define and assign the three system roles (Admin, Focal Point, User).
+
+**Key Capabilities:**
+- **Role assignment** — Admin assigns one role to each user.
+- **Role display** — Role-based indicators throughout the UI (badges, filters).
+- **Role change** — Effective immediately; logged in audit trail.
+
+> **Note:** Roles are fixed reference data (seeded). There is no UI for creating new roles. The three roles cover all use cases.
+
+### 13d. Location Scope Management Sub-Module
+
+**Purpose:** Configure each user's data visibility scope.
+
+**Key Capabilities:**
+- **Scope type selector** — Admin selects `All Locations` or `Specific Locations` for each user.
+- **Location assignment** — If `Specific`, Admin selects one or more locations (AIE, MTP, CT, ATC) to grant access.
+- **Scope enforcement** — The backend filters all data queries by the user's location scope. The frontend hides out-of-scope navigation but backend is the authority.
+- **Admin constraint** — Admin users always have `All Locations` scope (system-enforced).
+
+### 13e. Forgot Password Sub-Module
+
+**Purpose:** Handle password recovery requests.
+
+**MVP Approach (contact admin):**
+- User clicks "Forgot Password" on the login page.
+- A standalone page is shown with a message: *"Please contact your system administrator to reset your password."*
+- Optionally displays an admin contact email or link.
+- No automated email-based reset flow in MVP.
+
+**Future Enhancement:** Email-based password reset link flow (planned for post-MVP).
+
+**User Access:** Public (accessible without login).
 
 ---
 

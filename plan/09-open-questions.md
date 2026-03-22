@@ -8,9 +8,14 @@ This document lists unresolved questions that require stakeholder input before o
 
 | # | Question | Context | Impact |
 |---|---|---|---|
-| OQ-01 | **Which enterprise identity provider (IdP) will be used?** (e.g., Azure AD, Okta, LDAP, custom) | The authentication integration approach depends entirely on the IdP. JWT token structure, claims, and login flow differ by provider. | Blocks Phase 1: Authentication integration. |
-| OQ-02 | **Should users be provisioned manually by Admin, or synced from the enterprise directory?** | If synced, the system needs a directory sync mechanism. If manual, the Admin UI handles all user creation. | Affects User Management module design. |
-| OQ-03 | **Is multi-factor authentication (MFA) required?** | If yes, MFA must be configured at the IdP level or integrated into the login flow. | Affects authentication configuration. |
+| OQ-01 | **~~Which enterprise identity provider (IdP) will be used?~~** | **RESOLVED:** The system uses admin-managed local accounts with email + password. No external IdP. JWT tokens are issued by the backend. | Resolved. |
+| OQ-02 | **~~Should users be provisioned manually by Admin, or synced from the enterprise directory?~~** | **RESOLVED:** Users are created manually by Admin. No directory sync. | Resolved. |
+| OQ-03 | **~~Is multi-factor authentication (MFA) required?~~** | **DEFERRED:** Not in MVP scope. Can be added later if needed. | Deferred. |
+| OQ-81 | **What is the minimum password policy?** | Options: (a) minimum 8 characters, (b) minimum 8 characters + uppercase + number + special, (c) configurable by Admin. Needs a decision before implementing user creation. | Affects user creation validation. Must resolve before Phase 1. |
+| OQ-82 | **What should the JWT token expiry duration be?** | Options: (a) 1 hour with refresh token, (b) 8 hours (one work shift), (c) 24 hours. Longer durations are less secure but more convenient for lab environments. | Affects session management. Must resolve before Phase 1. |
+| OQ-83 | **Should the forgot password flow in MVP show a specific admin contact email/phone, or just a generic message?** | The current plan says "contact your system administrator". Should the page show an actual contact (e.g., admin@company.com), or should this be configurable? | Affects forgot password page design. Low priority. |
+| OQ-84 | **Can a user with `specific` location scope be assigned to multiple locations?** | The current plan supports multiple location assignments. Confirm this is the desired behavior (e.g., a Focal Point assigned to both AIE and CT). | Affects `user_locations` data model and scope checking. |
+| OQ-85 | **Should Focal Point access be tied to location only, or also to specific labs within a location?** | The current plan derives lab access from location: if you have access to AIE, you access all labs in AIE. An alternative is lab-level assignment (more granular but more complex). The stakeholder spreadsheet assigns users to locations, not labs. | Affects access control granularity. Should resolve before Phase 1. |
 
 ---
 
@@ -198,12 +203,52 @@ The following questions emerged during the detailed workflow analysis (documents
 
 ---
 
+## Spreadsheet-Sourced Questions (Database_Info_Draft_20032026)
+
+The following questions emerged from analyzing the stakeholder spreadsheet:
+
+### Location & Lab
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-67 | **What location does "SM Lab" belong to?** | SM Lab appears in the POnumber sheet (Chemical & Reagent PO: 45182740SM for Chemex; Gas PO: 45182061222 for BIG) but is **not listed** in the Location&Users sheet. It may be EBSM Lab (MTP), a renamed lab, or a separate lab not yet documented. | Affects location/lab seed data and PO number mapping. Must resolve before Phase 2. |
+| OQ-68 | **Are there labs that operate under "Shared" but appear with specific names in PO number mappings?** | Most MaterialList items are assigned to "Shared" lab, but PO numbers are assigned to specific labs (PG Lab, EOU Lab, etc.). Should items assigned to "Shared" use the PO number from the specific lab that orders them? | Affects PO number lookup logic and item-to-lab assignment. |
+
+### PO Numbers
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-69 | **What should happen when a user creates an order for a (category, lab, vendor) combination that has no pre-assigned PO number mapping?** | Not all combinations are covered. Options: (1) block the order, (2) allow with a warning and let Admin assign later, (3) generate a temporary placeholder. | Affects order validation workflow. Must resolve before Phase 2. |
+| OQ-70 | **Why does PE Lab (Gas, BIG) have three separate PO number mappings (45182061225, 45182061226, 45182061227)?** | Multiple PO numbers for the same (category, lab, vendor) triple violates the simple lookup pattern. Is this for different gas types, different contract periods, or data entry duplication? | Affects data model constraint design: should the PO number mapping allow multiple entries per triple? |
+| OQ-71 | **Should the system generate an internal sequential reference number (e.g., `REQ-2026-0001`) for each purchase request, separate from the vendor-facing PO number?** | Pre-assigned PO numbers are vendor-facing references. Internal tracking may still need a unique sequential identifier. Currently proposed in `18-entity-list-and-field-planning.md`. | Affects `purchase_requests` schema. Must resolve before Phase 2. |
+| OQ-72 | **The spreadsheet shows PO number `4518209POL` for POL Lab and `4518209RIG` for RIGID Lab — are these intentionally sharing the same prefix `4518209`?** | The prefix pattern differs from other labs (e.g., PG Lab uses `45182095PG`). Confirm whether the truncated prefix is intentional or a data entry error. | Affects PO number seed data accuracy. |
+
+### Peroxide Classification
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-73 | **What is the relationship between `Peroxide_D` (general) and `Peroxide_D1`/`Peroxide_D2`?** | Peroxide_Related sheet defines D, D1, and D2 separately. The "Peroxide requirement_1st talk" sheet only lists D1 and D2 explicitly. Is `Peroxide_D` a parent category, or does it apply to specific items distinct from D1/D2? No items in MaterialList use `Peroxide_D` directly. | Affects peroxide classification enum and monitoring rule implementation. |
+| OQ-74 | **For before-use testing (before distillation/concentration), how should the system trigger the test prompt?** | The checkout workflow could prompt users based on target purpose, but the system cannot know if a chemical is being used for distillation unless the user selects a specific purpose. Should a new checkout purpose be added (e.g., "Distillation/Concentration")? | Affects checkout workflow and purpose dropdown values. |
+| OQ-75 | **Should Peroxide_CRF items require testing after opening, or only within 18 months?** | The Peroxide_Related sheet shows no test is required for CRF when sealed. The 1st talk sheet simply says "dispose 18 months after open or 24 months after check-in." Confirm whether any monitoring is needed for CRF after opening. | Affects monitoring schedule for Chloroform items. |
+| OQ-76 | **The Peroxide_Related sheet shows `Peroxide_TS` uses "visual inspection (pass/fail)" rather than PPM testing. What constitutes a visual inspection failure?** | Examples: discoloration, precipitate formation, unusual viscosity. Need a defined checklist or criteria for fail conditions. | Affects test logging form and quarantine trigger logic. |
+
+### Item Master & Stock
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-77 | **The MaterialList "Lot" column shows "NA" for all shared items. Does this mean lot tracking is not used for incoming items, or that the lot number is assigned at check-in?** | If "NA" means no vendor lot numbers exist, the system should auto-generate internal lot identifiers at check-in. | Affects check-in workflow and lot number generation. |
+| OQ-78 | **Should `max_stock` trigger any system behavior (e.g., warnings when stock exceeds maximum)?** | The spreadsheet provides max stock per location, but it is unclear whether exceeding max stock should: (1) block check-in, (2) show a warning, or (3) have no effect beyond reporting. | Affects check-in validation and dashboard logic. |
+| OQ-79 | **The spreadsheet shows some items (e.g., Propylene Glycol Retained Sample, Hach reagents) assigned to specific labs (PG, EOU) rather than "Shared." Should these items have lab-restricted ordering, or can any lab order them?** | If lab-restricted, the catalog and ordering UI must filter items by the user's lab. If not, the lab assignment in the spreadsheet only indicates where the item is primarily consumed. | Affects catalog filtering logic and item_lab_settings seed data. |
+| OQ-80 | **Some items in MaterialList have `#VALUE!` in the Size column (rows with part numbers ending in periods like `188050.0010.`). What is the correct size for these items?** | Likely a spreadsheet formula error. Need correct values before seeding. | Affects item master seed data. |
+
+---
+
 ## Priority Classification
 
 | Priority | Questions | Rationale |
 |---|---|---|
-| **Must resolve before Phase 1** | OQ-01, OQ-02, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41, OQ-61, OQ-65, OQ-66 | Foundation decisions that affect schema, auth, initial data, and PO numbering |
-| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47, OQ-56, OQ-57, OQ-62 | Ordering, approval workflow design, cart behavior, and vendor soft-delete |
-| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51, OQ-60, OQ-63, OQ-64 | Inventory management, check-in/checkout, Verify STD validation, and concurrency |
-| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55, OQ-58, OQ-59 | Monitoring, notifications, reporting, shelf-life extension, and peroxide result authority |
-| **Can be deferred** | OQ-03, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44 | Enhancements or post-MVP concerns |
+| **Must resolve before Phase 1** | ~~OQ-01~~, ~~OQ-02~~, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41, OQ-61, OQ-65, **OQ-81, OQ-82, OQ-84, OQ-85** | Foundation decisions that affect schema, auth, password policy, and scope model |
+| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47, OQ-56, OQ-57, OQ-62, OQ-66, OQ-67, OQ-69, OQ-70, OQ-71, OQ-72 | Ordering, approval workflow, PO number design, cart behavior, vendor soft-delete |
+| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51, OQ-60, OQ-63, OQ-64, OQ-68, OQ-77, OQ-78, OQ-79, OQ-80 | Inventory management, check-in/checkout, item master seeding, max stock |
+| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55, OQ-58, OQ-59, OQ-73, OQ-74, OQ-75, OQ-76 | Monitoring, notifications, reporting, peroxide sub-type rules |
+| **Can be deferred** | ~~OQ-03~~, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44, OQ-83 | Enhancements or post-MVP concerns |

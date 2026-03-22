@@ -103,20 +103,27 @@ Used on `peroxide_tests.result_type`. See `13-peroxide-workflow.md`.
 |---|---|---|
 | `numeric` | Numeric (ppm) | PPM value measured; system auto-calculates classification |
 | `textual` | Textual | Descriptive result (e.g., "Negative"); user selects classification manually |
+| `visual_inspection` | Visual Inspection | Pass/fail visual inspection (used for Peroxide_TS type); user selects classification manually |
 
 ---
 
 ## 6. Peroxide Classification Groups
 
-Used on `items.peroxide_class`. See `13-peroxide-workflow.md`.
+Used on `items.peroxide_class`. See `13-peroxide-workflow.md` for detailed per-type rules.
 
-| Value (DB) | Display Label | Description | Default Monitoring Interval |
-|---|---|---|---|
-| `A` | Class A | Severe hazard — form peroxides readily | 3 months |
-| `B` | Class B | Concentration hazard — hazardous on concentration | 6 months |
-| `C` | Class C | Low hazard — autopolymerize with peroxide initiation | 12 months |
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `Peroxide_TS` | Time Sensitive | Time-sensitive peroxide risk; visual inspection every 6 months |
+| `Peroxide_CRF` | Chloroform | Chloroform (stabilized); no periodic testing if sealed |
+| `Peroxide_A` | Class A | Severe hazard — test at open date |
+| `Peroxide_B` | Class B | Concentration hazard — test every 6 months after open and before distillation |
+| `Peroxide_C1` | Class C1 (w/ Inhibitor) | Monomer with inhibitor — test before distillation |
+| `Peroxide_C2` | Class C2 (w/o Inhibitor) | Monomer without inhibitor — dispose within 24 hours of opening |
+| `Peroxide_D` | Class D (General) | Polyether/glycol — test before distillation |
+| `Peroxide_D1` | Class D1 (Chemical) | Polyether/glycol for chemical use — test every 6 months |
+| `Peroxide_D2` | Class D2 (Retain Sample) | Polyether/glycol retained sample — conditional testing |
 
-> **Note:** Monitoring intervals are configurable. These are recommended defaults. On a Warning classification, the interval is halved.
+> **Note:** This replaces the earlier 3-class (A/B/C) system. See `07-category-behavior-matrix.md` for the sub-type reference table and `13-peroxide-workflow.md` for full monitoring and disposal rules per type.
 
 ---
 
@@ -195,14 +202,42 @@ Used on `audit_logs.action`.
 
 ## 12. User Roles
 
-Used on `roles.name`. See `02-business-rules-and-scope.md`, `04-rbac-and-permissions.md`.
+Used on `roles.name`. See `04-user-roles-and-permissions.md`.
 
 | Value (DB) | Display Label | Description |
 |---|---|---|
-| `admin` | Admin | Full system access across all locations and labs |
-| `focal_point` | Focal Point | Lab manager; approves orders, manages inventory for assigned labs |
-| `lab_user` | Lab User | Standard user; submits orders, performs checkout, logs peroxide tests |
-| `viewer` | Viewer / Auditor | Read-only access for audit and compliance purposes |
+| `admin` | Admin | Full system access across all locations and labs. Creates and manages users. |
+| `focal_point` | Focal Point | Manages operations for assigned locations; approves orders, manages inventory, corrects peroxide tests |
+| `user` | User | Standard operational user; submits orders, performs checkout, logs peroxide tests |
+
+> **Note:** The "Viewer / Auditor" role has been removed from MVP scope. If read-only audit access is needed, it can be added as a fourth role later.
+
+---
+
+## 12a. Location Scope Types
+
+Used on `users.location_scope_type`. See `04-user-roles-and-permissions.md`.
+
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `all` | All Locations | User can access data across all locations and their labs |
+| `specific` | Specific Locations | User can only access data from their assigned locations (stored in `user_locations`) |
+
+**Rules:**
+- Admin users always have `all`.
+- Focal Point and User roles can have either value.
+- If `specific`, at least one `user_locations` entry is required.
+
+---
+
+## 12b. User Active Status
+
+Used on `users.is_active`.
+
+| Value | Display Label | Description |
+|---|---|---|
+| `true` | Active | User can log in and use the system |
+| `false` | Inactive | User cannot log in. Historical data (transactions, approvals) remains intact. |
 
 ---
 
@@ -264,10 +299,13 @@ The following reference tables must be seeded with initial data before the appli
 
 | Table | Seed Data | Notes |
 |---|---|---|
-| `roles` | admin, focal_point, lab_user, viewer | Fixed set; changes require application update |
+| `roles` | admin, focal_point, user | Fixed set of 3 roles; changes require application update |
 | `item_categories` | CHEM, GAS, MAT, STD | Rarely changed; Admin can add more |
 | `locations` | AIE, MTP, CT, ATC | Based on current org structure |
-| `labs` | Per-location labs (from stakeholder input) | See `09-open-questions.md`, OQ-28 |
-| `regulations` | Per regulatory landscape | Requires stakeholder input |
+| `labs` | Per-location labs (from stakeholder input) | 17 labs total. See `03-locations-and-labs-structure.md` |
+| `vendors` | Chemex, Hach, 3M, Sigma-Aldrich, Alfa Aesar, Ametek Brookfield, Labscan, Loba, Labsupply, BIG, Linde, S&T, ThreeBond, TBS | From MaterialList and POnumber sheets |
+| `regulations` | VoOrOrKo7, FACCHEM, Munition | From MaterialList Regulatory column |
+| `po_number_mappings` | 25 pre-assigned PO number mappings | From POnumber sheet. See `10-order-workflow.md` |
+| `users` | Initial admin account(s) | At least one admin user must be seeded with a bcrypt-hashed password so the system can be bootstrapped. Additional users are created via the admin UI. |
 
-All other enum-like values (statuses, transaction types, source types) are **application-defined constants** validated in the API layer, not separate database tables.
+All other enum-like values (statuses, transaction types, source types, location scope types) are **application-defined constants** validated in the API layer, not separate database tables.
