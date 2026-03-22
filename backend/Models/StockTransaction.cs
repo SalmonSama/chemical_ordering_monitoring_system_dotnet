@@ -23,5 +23,6 @@ public class StockTransaction
     public Lab? Lab { get; set; }
     public Location? Location { get; set; }
     public InventoryLot? InventoryLot { get; set; }
+    public PurchaseRequest? PurchaseRequest { get; set; }
     public Item? Item { get; set; }
 }

@@ -3,6 +3,7 @@ using System;
 using ChemWatch.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ChemWatch.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319170617_Phase4_OrderWorkflow")]
+    partial class Phase4_OrderWorkflow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1058,10 +1061,6 @@ namespace ChemWatch.Migrations
                     b.Property<decimal>("QuantityOrdered")
                         .HasColumnType("decimal(12,3)")
                         .HasColumnName("quantity_ordered");
-
-                    b.Property<decimal>("QuantityReceived")
-                        .HasColumnType("decimal(12,3)")
-                        .HasColumnName("quantity_received");
 
                     b.Property<string>("Status")
                         .IsRequired()

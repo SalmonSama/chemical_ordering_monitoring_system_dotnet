@@ -13,9 +13,11 @@ public class PurchaseRequestItem
     public string? LineItemNotes { get; set; }
     public string Status { get; set; } = "pending";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
     // Navigation
     public PurchaseRequest PurchaseRequest { get; set; } = null!;
     public Item Item { get; set; } = null!;
     public Vendor? Vendor { get; set; }
+    public ICollection<PurchaseRequestItemRevision> Revisions { get; set; } = new List<PurchaseRequestItemRevision>();
 }

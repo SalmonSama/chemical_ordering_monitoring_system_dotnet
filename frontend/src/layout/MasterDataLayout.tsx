@@ -1,6 +1,23 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import type { CSSProperties } from 'react';
 
-const masterDataNav = [
+interface NavItem {
+  to: string;
+  label: string;
+}
+
+interface MasterDataLayoutProps {
+  cartCount?: number;
+}
+
+const orderNav: NavItem[] = [
+  { to: '/orders/catalog', label: '🛒 Catalog' },
+  { to: '/orders/cart', label: '📋 Cart' },
+  { to: '/orders/my-orders', label: '📄 My Orders' },
+  { to: '/orders/approval-queue', label: '✅ Approval Queue' },
+];
+
+const masterDataNav: NavItem[] = [
   { to: '/admin/locations', label: '📍 Locations & Labs' },
   { to: '/admin/roles', label: '👤 Roles' },
   { to: '/admin/vendors', label: '🏭 Vendors' },
@@ -9,23 +26,33 @@ const masterDataNav = [
   { to: '/admin/item-lab-settings', label: '⚙️ Item Lab Settings' },
 ];
 
-const inventoryNav = [
+const inventoryNav: NavItem[] = [
+  { to: '/inventory/check-in/pending-delivery', label: '📬 Pending Delivery' },
   { to: '/inventory/check-in/manual', label: '📥 Manual Check-In' },
   { to: '/inventory/lots', label: '📦 Inventory Lots' },
   { to: '/inventory/transactions', label: '📋 Stock Transactions' },
 ];
 
-const utilityNav = [
+const utilityNav: NavItem[] = [
   { to: '/', label: '🔌 Connection Test' },
 ];
 
-function MasterDataLayout() {
+function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.Element {
   return (
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
         <h2 style={styles.logo}>🧪 ChemWatch</h2>
-        <p style={styles.phase}>Phase 3 — Inventory Core</p>
+        <p style={styles.phase}>Phase 4 — Order Workflow</p>
         <nav style={styles.nav}>
+          {/* Orders section */}
+          <p style={styles.sectionLabel}>Orders</p>
+          {orderNav.map(({ to, label }) => (
+            <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
+              {label}{to === '/orders/cart' && cartCount > 0 ? ` (${cartCount})` : ''}
+            </NavLink>
+          ))}
+
+          <div style={styles.separator} />
           <p style={styles.sectionLabel}>Master Data</p>
           {masterDataNav.map(({ to, label }) => (
             <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
@@ -56,7 +83,7 @@ function MasterDataLayout() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   wrapper: {
     display: 'flex',
     minHeight: '100vh',

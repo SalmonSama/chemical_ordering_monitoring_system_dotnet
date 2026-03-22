@@ -1,24 +1,54 @@
+# ------------------------------
+# Visual Studio
+# ------------------------------
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.wsuo
+*.vsidx
+
+# Visual Studio workspace/cache
+DocumentLayout.json
+VSWorkspaceState.json
+*.sqlite
+
+# ------------------------------
+# .NET build output
+# ------------------------------
+[Bb]in/
+[Oo]bj/
+
 # Logs
-logs
 *.log
+logs/
+
+# ------------------------------
+# Node / React / Next.js
+# ------------------------------
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Package manager logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ------------------------------
+# Environment files
+# ------------------------------
+.env
+.env.*
+!.env.example
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ------------------------------
+# OS / Editor junk
+# ------------------------------
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db

@@ -17,4 +17,5 @@ public class Vendor
     // Navigation
     public ICollection<Item> Items { get; set; } = new List<Item>();
     public ICollection<InventoryLot> InventoryLots { get; set; } = new List<InventoryLot>();
+    public ICollection<PurchaseRequestItem> PurchaseRequestItems { get; set; } = new List<PurchaseRequestItem>();
 }

@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import apiClient from '../api/client';
+import type { StockTransaction } from '../types/models';
 
-const TYPE_LABELS = {
+interface TypeColor {
+  color: string;
+  bg: string;
+}
+
+const TYPE_LABELS: Record<string, string> = {
   manual_check_in: 'Manual Check-In',
   check_in: 'Check-In (PO)',
   checkout: 'Checkout',
@@ -9,19 +16,19 @@ const TYPE_LABELS = {
   disposal: 'Disposal',
 };
 
-function StockTransactionsPage() {
-  const [txns, setTxns] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function StockTransactionsPage(): React.JSX.Element {
+  const [txns, setTxns] = useState<StockTransaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiClient.get('/stocktransactions')
+    apiClient.get<StockTransaction[]>('/stocktransactions')
       .then(res => { setTxns(res.data); setError(null); })
-      .catch(err => setError(err.message))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
 
-  const typeColor = (type) => {
+  const typeColor = (type: string): TypeColor => {
     switch (type) {
       case 'manual_check_in':
       case 'check_in': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' };
@@ -93,7 +100,7 @@ function StockTransactionsPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
   subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
   info: { color: '#94a3b8', fontStyle: 'italic' },

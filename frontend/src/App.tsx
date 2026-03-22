@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MasterDataLayout from './layout/MasterDataLayout';
 import TestPage from './pages/TestPage';
@@ -10,11 +11,20 @@ import ItemLabSettingsPage from './pages/ItemLabSettingsPage';
 import ManualCheckInPage from './pages/ManualCheckInPage';
 import InventoryLotsPage from './pages/InventoryLotsPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
+import CatalogPage from './pages/CatalogPage';
+import CartPage from './pages/CartPage';
+import MyOrdersPage from './pages/MyOrdersPage';
+import ApprovalQueuePage from './pages/ApprovalQueuePage';
+import PendingDeliveryPage from './pages/PendingDeliveryPage';
+import type { CartItem } from './types/models';
 
-function App() {
+function App(): React.JSX.Element {
+  // Cart state lives here so it's shared between CatalogPage and CartPage
+  const [cart, setCart] = useState<CartItem[]>([]);
+
   return (
     <Routes>
-      <Route element={<MasterDataLayout />}>
+      <Route element={<MasterDataLayout cartCount={cart.length} />}>
         {/* Phase 1 */}
         <Route path="/" element={<TestPage />} />
 
@@ -30,6 +40,15 @@ function App() {
         <Route path="/inventory/check-in/manual" element={<ManualCheckInPage />} />
         <Route path="/inventory/lots" element={<InventoryLotsPage />} />
         <Route path="/inventory/transactions" element={<StockTransactionsPage />} />
+
+        {/* Phase 4 — Order Workflow */}
+        <Route path="/orders/catalog" element={<CatalogPage cart={cart} setCart={setCart} />} />
+        <Route path="/orders/cart" element={<CartPage cart={cart} setCart={setCart} />} />
+        <Route path="/orders/my-orders" element={<MyOrdersPage />} />
+        <Route path="/orders/approval-queue" element={<ApprovalQueuePage />} />
+
+        {/* Phase 5 — Pending Delivery Check-In */}
+        <Route path="/inventory/check-in/pending-delivery" element={<PendingDeliveryPage />} />
       </Route>
     </Routes>
   );

@@ -13,16 +13,18 @@ public class PurchaseRequest
     public Guid? ApprovedBy { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public string? RejectedReason { get; set; }
-    public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    public DateTime SubmittedAt { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
     // Navigation
     public Lab Lab { get; set; } = null!;
     public Location Location { get; set; } = null!;
-    public User Requester { get; set; } = null!;
-    public User? Approver { get; set; }
+    public User RequestedByUser { get; set; } = null!;
+    public User? ApprovedByUser { get; set; }
     public ICollection<PurchaseRequestItem> Items { get; set; } = new List<PurchaseRequestItem>();
     public ICollection<PurchaseRequestItemRevision> Revisions { get; set; } = new List<PurchaseRequestItemRevision>();
+    public ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();
 }

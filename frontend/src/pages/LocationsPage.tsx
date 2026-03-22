@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import apiClient from '../api/client';
+import type { Location } from '../types/models';
 
-function LocationsPage() {
-  const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function LocationsPage(): React.JSX.Element {
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiClient.get('/locations')
+    apiClient.get<Location[]>('/locations')
       .then(res => { setLocations(res.data); setError(null); })
-      .catch(err => setError(err.message))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div>
-      <h1 style={styles.title}>Locations & Labs</h1>
+      <h1 style={styles.title}>Locations &amp; Labs</h1>
       <p style={styles.subtitle}>Organization hierarchy — each location contains one or more labs.</p>
 
       {loading && <p style={styles.info}>Loading...</p>}
@@ -59,7 +61,7 @@ function LocationsPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
   subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
   info: { color: '#94a3b8', fontStyle: 'italic' },
