@@ -96,40 +96,40 @@ export default function OrderStatusPage() {
           <div style={{ color: 'var(--color-text-secondary)' }}>Loading orders...</div>
         ) : (
           <div style={styles.tableWrapper}>
-            <table style={styles.table}>
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th style={styles.th}>PO Number</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Items</th>
-                  <th style={styles.th}>Total Qty</th>
-                  <th style={styles.th}>Vendor</th>
-                  <th style={styles.th}>Destination</th>
-                  <th style={styles.th}>Requester</th>
-                  <th style={styles.th}>Entry Date</th>
+                  <th >PO Number</th>
+                  <th >Status</th>
+                  <th >Items</th>
+                  <th >Total Qty</th>
+                  <th >Vendor</th>
+                  <th >Destination</th>
+                  <th >Requester</th>
+                  <th >Entry Date</th>
                 </tr>
               </thead>
               <tbody>
                 {(filterStatus === 'SHOW_ALL' ? data : filteredData).map(row => (
                   <tr key={row.id}>
-                    <td style={styles.td}><strong style={{ color: 'var(--color-accent-hover)' }}>{row.poNumber}</strong></td>
-                    <td style={styles.td}>
+                    <td ><strong style={{ color: 'var(--color-accent-hover)' }}>{row.poNumber}</strong></td>
+                    <td >
                       <span style={{...styles.badge, ...getStatusStyle(row.status)}}>
                         {row.status.replace('_', ' ').toUpperCase()}
                       </span>
                     </td>
-                    <td style={styles.td}>
+                    <td >
                       <div>{row.itemSummary}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.category}</div>
                     </td>
-                    <td style={styles.td}>{row.totalQty}</td>
-                    <td style={styles.td}>{row.vendor}</td>
-                    <td style={styles.td}>
+                    <td >{row.totalQty}</td>
+                    <td >{row.vendor}</td>
+                    <td >
                       <div>{row.labName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.locationName}</div>
                     </td>
-                    <td style={styles.td}>{row.requester}</td>
-                    <td style={styles.td}>{new Date(row.entryDate).toLocaleDateString()}</td>
+                    <td >{row.requester}</td>
+                    <td >{new Date(row.entryDate).toLocaleDateString()}</td>
                   </tr>
                 ))}
                 {filteredData.length === 0 && filterStatus !== 'SHOW_ALL' && data.length > 0 && (
@@ -173,8 +173,5 @@ const styles: Record<string, CSSProperties> = {
   select: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '0.4rem', fontSize: '0.9rem' },
   panel: { background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '1rem', overflow: 'hidden' },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
   badge: { padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em', whiteSpace: 'nowrap' }
 };

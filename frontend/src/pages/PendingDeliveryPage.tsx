@@ -3,6 +3,7 @@ import type { CSSProperties, ChangeEvent } from 'react';
 import apiClient from '../api/client';
 import type { PendingDeliveryItem, PendingDeliveryCheckInRequest, User } from '../types/models';
 import StatusBadge from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 
 interface CheckInForm {
   lotNumber: string;
@@ -24,6 +25,7 @@ function PendingDeliveryPage(): React.JSX.Element {
   const [form, setForm] = useState<CheckInForm>(emptyForm);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const fetchData = (): void => {
     setLoading(true);
@@ -32,7 +34,12 @@ function PendingDeliveryPage(): React.JSX.Element {
       apiClient.get<User[]>('/users'),
     ])
       .then(([itemsRes, usersRes]) => {
-        setItems(itemsRes.data);
+        let filtered = itemsRes.data;
+        if (user && user.locationScopeType === 'specific') {
+          const allowedSet = new Set(user.locations.map(l => l.id));
+          filtered = filtered.filter(item => allowedSet.has(item.locationId));
+        }
+        setItems(filtered);
         setUsers(usersRes.data);
         setError(null);
       })

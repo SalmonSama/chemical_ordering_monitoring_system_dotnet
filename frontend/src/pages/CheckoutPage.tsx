@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CSSProperties, ChangeEvent, FormEvent } from 'react';
 import apiClient from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 export default function CheckoutPage(): React.JSX.Element {
   const [lotNumber, setLotNumber] = useState('');
@@ -13,6 +14,7 @@ export default function CheckoutPage(): React.JSX.Element {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const handleLookup = async (e: FormEvent) => {
     e.preventDefault();
@@ -50,21 +52,17 @@ export default function CheckoutPage(): React.JSX.Element {
     setCheckoutError(null);
     setSuccessMsg(null);
 
-    // Get performing user ID from token
-    const token = localStorage.getItem('chemwatch_token');
-    let userId = '';
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            userId = payload.sub || payload.nameid || '';
-        } catch(err) {}
+    if (!user || !user.id) {
+       setCheckoutError('User session invalid. Please log in again.');
+       setCheckoutLoading(false);
+       return;
     }
 
     try {
       const resp = await apiClient.post('/checkout/confirm', {
         inventoryLotId: lot.id,
         quantity: qty,
-        performedByUserId: userId,
+        performedByUserId: user.id,
         notes: notes
       });
       

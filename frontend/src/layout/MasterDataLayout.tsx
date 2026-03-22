@@ -53,7 +53,8 @@ function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.E
 
           <div style={styles.separator} />
           <p style={styles.sectionLabel}>Orders</p>
-          <NavLink to="/orders/catalog" end style={navLinkStyle}>🛒 Catalog &amp; Cart{cartCount > 0 ? ` (${cartCount})` : ''}</NavLink>
+          <NavLink to="/orders/catalog" end style={navLinkStyle}>🛒 Catalog</NavLink>
+          <NavLink to="/orders/cart" end style={navLinkStyle}>📦 Cart{cartCount > 0 ? ` (${cartCount})` : ''}</NavLink>
           <NavLink to="/orders/my-orders" end style={navLinkStyle}>📄 My Orders</NavLink>
           {canApprove && (
             <NavLink to="/orders/approval-queue" end style={navLinkStyle}>✅ Approval Queue</NavLink>

@@ -3,15 +3,25 @@ import type { CSSProperties } from 'react';
 import apiClient from '../api/client';
 import type { InventoryLot } from '../types/models';
 import StatusBadge from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 
 function InventoryLotsPage(): React.JSX.Element {
   const [lots, setLots] = useState<InventoryLot[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     apiClient.get<InventoryLot[]>('/inventorylots')
-      .then(res => { setLots(res.data); setError(null); })
+      .then(res => { 
+        let filtered = res.data;
+        if (user && user.locationScopeType === 'specific') {
+          const allowedSet = new Set(user.locations.map(l => l.id));
+          filtered = filtered.filter(lot => allowedSet.has(lot.locationId));
+        }
+        setLots(filtered); 
+        setError(null); 
+      })
       .catch(err => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);

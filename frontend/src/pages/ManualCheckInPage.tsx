@@ -12,6 +12,7 @@ import type {
   ManualCheckInResponse,
 } from '../types/models';
 import StatusBadge from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 
 interface SourceReasonOption {
   value: string;
@@ -51,6 +52,7 @@ function ManualCheckInPage(): React.JSX.Element {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [result, setResult] = useState<ManualCheckInResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Fetch reference data on mount
   useEffect(() => {
@@ -61,8 +63,13 @@ function ManualCheckInPage(): React.JSX.Element {
       apiClient.get<User[]>('/users'),
     ])
       .then(([itemsRes, locRes, vendorsRes, usersRes]) => {
+        let filteredLocs = locRes.data;
+        if (user && user.locationScopeType === 'specific') {
+          const allowedSet = new Set(user.locations.map(l => l.id));
+          filteredLocs = filteredLocs.filter(l => allowedSet.has(l.id));
+        }
         setItems(itemsRes.data);
-        setLocations(locRes.data);
+        setLocations(filteredLocs);
         setVendors(vendorsRes.data);
         setUsers(usersRes.data);
       })

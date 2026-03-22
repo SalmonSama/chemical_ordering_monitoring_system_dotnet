@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace ChemWatch.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/reports")]
 [Authorize]
 public class ReportController : ControllerBase
 {

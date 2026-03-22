@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ChangeEvent } from 'react';
 import apiClient from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import type { CartItem, Location, Lab, User, SubmitOrderRequest } from '../types/models';
 
 interface CartPageProps {
@@ -14,7 +15,8 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
   const [users, setUsers] = useState<User[]>([]);
   const [locationId, setLocationId] = useState<string>('');
   const [labId, setLabId] = useState<string>('');
-  const [userId, setUserId] = useState<string>('');
+  const { user } = useAuth();
+  const [userId, setUserId] = useState<string>(user?.id || '');
   const [orderNotes, setOrderNotes] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -38,6 +40,13 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
     setLabs(loc?.labs ?? []);
     setLabId('');
   }, [locationId, locations]);
+
+  // Pre-select user
+  useEffect(() => {
+    if (user && !userId) {
+      setUserId(user.id);
+    }
+  }, [user, userId]);
 
   const updateQty = (itemId: string, qty: number): void => {
     if (qty <= 0) {

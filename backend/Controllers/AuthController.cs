@@ -61,6 +61,25 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpGet("debug-hash")]
+    public ActionResult<string> DebugHash(string password)
+    {
+        return Ok(BCrypt.Net.BCrypt.HashPassword(password));
+    }
+
+    [HttpGet("reset-admin")]
+    public async Task<ActionResult> ResetAdmin()
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == "admin@chemwatch.local");
+        if (user != null)
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+            await _db.SaveChangesAsync();
+            return Ok("Admin password reset.");
+        }
+        return NotFound("Admin not found.");
+    }
+
     /// <summary>
     /// POST /api/auth/forgot-password — MVP: returns "contact admin" message.
     /// </summary>

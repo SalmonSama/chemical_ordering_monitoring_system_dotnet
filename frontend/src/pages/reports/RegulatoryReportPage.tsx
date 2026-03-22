@@ -68,34 +68,34 @@ export default function RegulatoryReportPage() {
           <div style={{ color: 'var(--color-text-secondary)' }}>Loading regulatory aggregates...</div>
         ) : (
           <div style={styles.tableWrapper}>
-            <table style={styles.table}>
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th style={styles.th}>Item / Code</th>
-                  <th style={styles.th}>CAS Number</th>
-                  <th style={styles.th}>Category</th>
-                  <th style={styles.th}>Lab & Location</th>
-                  <th style={styles.th}>Bottle Count</th>
-                  <th style={styles.th}>Total Quantity</th>
+                  <th >Item / Code</th>
+                  <th >CAS Number</th>
+                  <th >Category</th>
+                  <th >Lab & Location</th>
+                  <th >Bottle Count</th>
+                  <th >Total Quantity</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((row, idx) => (
                   <tr key={idx}>
-                    <td style={styles.td}>
+                    <td >
                       <strong>{row.itemName}</strong>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
                         Ref: {row.itemCode}
                       </div>
                     </td>
-                    <td style={styles.td}><code style={styles.code}>{row.casNo}</code></td>
-                    <td style={styles.td}>{row.category}</td>
-                    <td style={styles.td}>
+                    <td ><code style={styles.code}>{row.casNo}</code></td>
+                    <td >{row.category}</td>
+                    <td >
                       <div>{row.labName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.locationName}</div>
                     </td>
-                    <td style={styles.td}>{row.bottleCount}</td>
-                    <td style={styles.td}>
+                    <td >{row.bottleCount}</td>
+                    <td >
                       <strong style={{ color: 'var(--color-accent-hover)' }}>{row.totalQuantity} {row.unit}</strong>
                     </td>
                   </tr>
@@ -121,8 +121,5 @@ const styles: Record<string, CSSProperties> = {
   },
   panel: { background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '1rem', overflow: 'hidden' },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
   code: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.85rem' }
 };

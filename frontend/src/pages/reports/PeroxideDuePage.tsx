@@ -92,51 +92,51 @@ export default function PeroxideDuePage() {
           <div style={{ color: 'var(--color-text-secondary)' }}>Loading peroxide schedules...</div>
         ) : (
           <div style={styles.tableWrapper}>
-            <table style={styles.table}>
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Item & Lot</th>
-                  <th style={styles.th}>Lab & Location</th>
-                  <th style={styles.th}>Next Monitor Date</th>
-                  <th style={styles.th}>Due In</th>
-                  <th style={styles.th}>Last Test</th>
-                  <th style={styles.th}>Last Result</th>
-                  <th style={styles.th}>Actions</th>
+                  <th >Status</th>
+                  <th >Item & Lot</th>
+                  <th >Lab & Location</th>
+                  <th >Next Monitor Date</th>
+                  <th >Due In</th>
+                  <th >Last Test</th>
+                  <th >Last Result</th>
+                  <th >Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map(row => (
                   <tr key={row.id}>
-                    <td style={styles.td}>
+                    <td >
                       <span style={{...styles.badge, ...getStatusBadgeStyle(row.statusIndicator)}}>
                         {row.statusIndicator.replace('_', ' ').toUpperCase()}
                       </span>
                     </td>
-                    <td style={styles.td}>
+                    <td >
                       <strong>{row.itemName}</strong>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-accent-hover)', marginTop: '0.2rem' }}>
                         <code style={styles.code}>{row.lotNumber}</code>
                       </div>
                     </td>
-                    <td style={styles.td}>
+                    <td >
                       <div>{row.labName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.locationName}</div>
                     </td>
-                    <td style={styles.td}>{new Date(row.monitorDate).toLocaleDateString()}</td>
-                    <td style={styles.td}>
+                    <td >{new Date(row.monitorDate).toLocaleDateString()}</td>
+                    <td >
                       <strong style={{ color: row.monitorDueIn < 0 ? 'var(--color-danger)' : (row.monitorDueIn <= 7 ? 'var(--color-warning)' : 'var(--color-text-primary)') }}>
                         {row.monitorDueIn} days
                       </strong>
                     </td>
-                    <td style={styles.td}>{row.lastMonitorDate ? new Date(row.lastMonitorDate).toLocaleDateString() : 'Never'}</td>
-                    <td style={styles.td}>
+                    <td >{row.lastMonitorDate ? new Date(row.lastMonitorDate).toLocaleDateString() : 'Never'}</td>
+                    <td >
                       <div>{row.lastPpmResult}</div>
                       {row.lastClassification !== '—' && (
                         <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>({row.lastClassification})</div>
                       )}
                     </td>
-                    <td style={styles.td}>
+                    <td >
                       <button 
                         style={styles.actionLink}
                         onClick={() => navigate('/monitoring/peroxide')}
@@ -184,9 +184,6 @@ const styles: Record<string, CSSProperties> = {
   select: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '0.4rem', fontSize: '0.9rem' },
   panel: { background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '1rem', overflow: 'hidden' },
   tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
   badge: { padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap' },
   code: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.85rem' },
   actionLink: { background: 'none', border: 'none', color: 'var(--color-accent-hover)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem', padding: 0 }

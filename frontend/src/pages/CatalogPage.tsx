@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import apiClient from '../api/client';
+import { Link } from 'react-router-dom';
 import type { Item, CartItem } from '../types/models';
 
 interface CatalogPageProps {
@@ -64,7 +65,15 @@ function CatalogPage({ cart, setCart }: CatalogPageProps): React.JSX.Element {
   return (
     <div>
       <h1 style={styles.title}>Catalog</h1>
-      <p style={styles.subtitle}>Browse items and add them to your cart. Cart: {cart.length} item(s).</p>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <p style={{ ...styles.subtitle, marginBottom: 0 }}>Browse items and add them to your cart. Cart: {cart.length} item(s).</p>
+        {cart.length > 0 && (
+          <Link to="/orders/cart" style={styles.viewCartBtn}>
+            View Cart ({cart.length}) ➔
+          </Link>
+        )}
+      </div>
 
       <input
         type="text"
@@ -124,6 +133,10 @@ function CatalogPage({ cart, setCart }: CatalogPageProps): React.JSX.Element {
 const styles: Record<string, CSSProperties> = {
   title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
   subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' },
+  viewCartBtn: {
+    background: 'var(--color-accent)', color: '#fff', textDecoration: 'none', padding: '0.5rem 1rem',
+    borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600, display: 'inline-block'
+  },
   info: { color: 'var(--color-text-secondary)', fontStyle: 'italic' },
   error: { color: 'var(--color-danger)' },
   search: {
