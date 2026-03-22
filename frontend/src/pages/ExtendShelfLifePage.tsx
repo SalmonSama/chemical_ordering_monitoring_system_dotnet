@@ -215,8 +215,8 @@ function ExtendShelfLifePage() {
                 <span style={styles.detailValue}>
                   <span style={{
                     ...styles.badge, 
-                    background: lot.status === 'expired' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(52, 211, 153, 0.2)',
-                    color: lot.status === 'expired' ? '#f87171' : '#34d399'
+                    background: lot.status === 'expired' ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
+                    color: lot.status === 'expired' ? 'var(--color-danger)' : 'var(--color-success)'
                   }}>
                     {lot.status.toUpperCase()}
                   </span>
@@ -230,7 +230,7 @@ function ExtendShelfLifePage() {
               </div>
               <div style={styles.detailItem}>
                 <span style={styles.detailLabel}>Days to Expiry</span>
-                <span style={{ ...styles.detailValue, color: (lot.daysToExpiry ?? 0) < 0 ? '#f87171' : '#e2e8f0', fontWeight: 'bold' }}>
+                <span style={{ ...styles.detailValue, color: (lot.daysToExpiry ?? 0) < 0 ? 'var(--color-danger)' : 'var(--color-text-primary)', fontWeight: 'bold' }}>
                   {lot.daysToExpiry !== null ? lot.daysToExpiry : '—'}
                 </span>
               </div>
@@ -243,7 +243,7 @@ function ExtendShelfLifePage() {
 
           {/* Extend Form Panel */}
           <div style={{ ...styles.panel, flex: 1, minWidth: '400px' }}>
-            <h3 style={{ ...styles.panelTitle, color: '#60a5fa' }}>Execute Extension</h3>
+            <h3 style={{ ...styles.panelTitle, color: 'var(--color-accent-hover)' }}>Execute Extension</h3>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -257,7 +257,7 @@ function ExtendShelfLifePage() {
                     style={styles.input} 
                   />
                   {lot.expiryDate && (
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
                       Must be strictly after {new Date(lot.expiryDate).toLocaleDateString()}
                     </span>
                   )}
@@ -339,11 +339,11 @@ function ExtendShelfLifePage() {
                   <tr key={item.id}>
                     <td style={styles.td}><strong>{item.extensionNumber}</strong></td>
                     <td style={styles.td}>{item.previousExpiryDate ? new Date(item.previousExpiryDate).toLocaleDateString() : '—'}</td>
-                    <td style={styles.td}><span style={{ color: '#60a5fa', fontWeight: 'bold' }}>{new Date(item.newExpiryDate).toLocaleDateString()}</span></td>
+                    <td style={styles.td}><span style={{ color: 'var(--color-accent-hover)', fontWeight: 'bold' }}>{new Date(item.newExpiryDate).toLocaleDateString()}</span></td>
                     <td style={styles.td}>+{item.extensionDays} d</td>
                     <td style={styles.td}>
                       <div style={{ fontSize: '0.85rem' }}><strong>Test:</strong> {item.testPerformed}</div>
-                      <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}><strong>Result:</strong> {item.testResult}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}><strong>Result:</strong> {item.testResult}</div>
                     </td>
                     <td style={styles.td}>{item.authorizedBy}</td>
                     <td style={styles.td}>{new Date(item.createdAt).toLocaleDateString()}</td>
@@ -359,27 +359,27 @@ function ExtendShelfLifePage() {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '1rem', marginBottom: '1.5rem' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '1rem', marginBottom: '1.5rem' },
   panel: {
-    background: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
+    background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1.5rem', marginBottom: '1rem'
   },
-  panelTitle: { color: '#f1f5f9', fontSize: '1.1rem', margin: '0 0 1rem 0' },
+  panelTitle: { color: 'var(--color-text-primary)', fontSize: '1.1rem', margin: '0 0 1rem 0' },
   formField: { display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 },
-  label: { color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' },
+  label: { color: 'var(--color-text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' },
   input: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '8px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
     padding: '0.6rem 0.75rem', fontSize: '0.95rem', outline: 'none', width: '100%', boxSizing: 'border-box',
     fontFamily: 'inherit'
   },
-  inlineLabel: { color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  inlineLabel: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' },
   selectInline: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '6px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '6px',
     padding: '0.35rem 0.5rem', fontSize: '0.9rem', outline: 'none'
   },
   primaryBtn: {
-    background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', color: '#fff', border: 'none',
+    background: 'linear-gradient(135deg, var(--color-accent), #4f46e5)', color: '#fff', border: 'none',
     borderRadius: '8px', padding: '0.65rem 1.2rem', fontSize: '0.95rem', fontWeight: 600,
     cursor: 'pointer', whiteSpace: 'nowrap', alignSelf: 'flex-end', height: '42px',
   },
@@ -389,23 +389,23 @@ const styles: Record<string, CSSProperties> = {
     cursor: 'pointer', marginTop: '0.5rem'
   },
   successBox: {
-    background: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#34d399', marginBottom: '1rem', fontWeight: 500,
+    background: 'var(--color-success-bg)', border: '1px solid var(--color-success-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-success)', marginBottom: '1rem', fontWeight: 500,
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#f87171', marginBottom: '1rem',
+    background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-danger)', marginBottom: '1rem',
   },
   detailGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' },
   detailItem: { display: 'flex', flexDirection: 'column', gap: '0.2rem' },
-  detailLabel: { fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  detailValue: { fontSize: '1rem', color: '#e2e8f0' },
-  code: { background: '#0f172a', color: '#60a5fa', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.9rem', border: '1px solid #1e293b' },
+  detailLabel: { fontSize: '0.75rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  detailValue: { fontSize: '1rem', color: 'var(--color-text-primary)' },
+  code: { background: 'var(--color-bg-primary)', color: 'var(--color-accent-hover)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.9rem', border: '1px solid var(--color-bg-surface)' },
   badge: { padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: '#e2e8f0', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
+  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'middle' },
 };
 
 export default ExtendShelfLifePage;

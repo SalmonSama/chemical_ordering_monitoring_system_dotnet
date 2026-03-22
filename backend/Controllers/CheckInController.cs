@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ChemWatch.Data;
@@ -8,6 +9,7 @@ namespace ChemWatch.Controllers;
 
 [ApiController]
 [Route("api/checkin")]
+[Authorize]
 public class CheckInController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -15,6 +17,7 @@ public class CheckInController : ControllerBase
     public CheckInController(AppDbContext db) => _db = db;
 
     [HttpPost("manual")]
+    [Authorize(Roles = "admin,focal_point")]
     public async Task<IActionResult> ManualCheckIn([FromBody] ManualCheckInRequest request)
     {
         // ── Validate references ──────────────────────────────────────

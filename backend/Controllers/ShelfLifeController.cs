@@ -9,6 +9,7 @@ namespace ChemWatch.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ShelfLifeController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -20,7 +21,6 @@ public class ShelfLifeController : ControllerBase
 
     // GET: api/shelflife/lookup/{lotNumber}
     [HttpGet("lookup/{lotNumber}")]
-    [Authorize(Roles = "admin,focal_point,user")]
     public async Task<IActionResult> LookupLot(string lotNumber)
     {
         var lot = await _db.InventoryLots
@@ -69,7 +69,6 @@ public class ShelfLifeController : ControllerBase
 
     // GET: api/shelflife/history/{lotId}
     [HttpGet("history/{lotId}")]
-    [Authorize(Roles = "admin,focal_point,user")]
     public async Task<IActionResult> GetHistory(Guid lotId)
     {
         var history = await _db.ShelfLifeExtensions

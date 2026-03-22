@@ -129,7 +129,7 @@ export default function CheckoutPage(): React.JSX.Element {
             </div>
             <div>
               <div style={styles.label}>Status</div>
-              <div style={{...styles.value, color: lot.status === 'consumed' ? '#f87171' : '#34d399', textTransform: 'capitalize'}}>
+              <div style={{...styles.value, color: lot.status === 'consumed' ? 'var(--color-danger)' : 'var(--color-success)', textTransform: 'capitalize'}}>
                   {lot.status}
               </div>
             </div>
@@ -190,29 +190,29 @@ export default function CheckoutPage(): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' },
   panel: {
-    background: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
+    background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem',
   },
-  panelTitle: { color: '#f1f5f9', margin: '0 0 0.5rem 0', fontSize: '1.1rem' },
+  panelTitle: { color: 'var(--color-text-primary)', margin: '0 0 0.5rem 0', fontSize: '1.1rem' },
   lookupForm: { display: 'flex', gap: '1rem' },
   input: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '8px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
     padding: '0.6rem 0.75rem', fontSize: '0.95rem', outline: 'none', width: '100%', boxSizing: 'border-box',
   },
   lookupBtn: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', border: 'none',
+    background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',
     borderRadius: '8px', padding: '0.6rem 1.5rem', fontSize: '0.95rem', fontWeight: 600,
     cursor: 'pointer', minWidth: '120px',
   },
   detailsGrid: {
     display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem'
   },
-  label: { color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' },
-  value: { color: '#e2e8f0', fontSize: '1rem' },
-  divider: { height: '1px', background: '#334155', margin: '0.5rem 0' },
+  label: { color: 'var(--color-text-secondary)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' },
+  value: { color: 'var(--color-text-primary)', fontSize: '1rem' },
+  divider: { height: '1px', background: 'var(--color-border)', margin: '0.5rem 0' },
   checkoutForm: { display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px' },
   formField: { display: 'flex', flexDirection: 'column', gap: '0.3rem' },
   checkoutBtn: {
@@ -221,15 +221,15 @@ const styles: Record<string, CSSProperties> = {
     cursor: 'pointer', marginTop: '0.5rem'
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#f87171', fontWeight: 500,
+    background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-danger)', fontWeight: 500,
   },
   successBox: {
-    background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#34d399', fontWeight: 600,
+    background: 'var(--color-success-bg)', border: '1px solid var(--color-success-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-success)', fontWeight: 600,
   },
   infoBox: {
-    background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#60a5fa', fontWeight: 500,
+    background: 'var(--color-info-bg)', border: '1px solid var(--color-info-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-accent-hover)', fontWeight: 500,
   }
 };

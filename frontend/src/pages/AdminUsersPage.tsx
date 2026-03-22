@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getUsers, resetPassword } from '../api/usersApi';
 import type { UserResponse } from '../types/auth';
+import LoadingState from '../components/LoadingState';
+import EmptyState from '../components/EmptyState';
+import StatusBadge from '../components/StatusBadge';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserResponse[]>([]);
@@ -15,10 +18,11 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await getUsers();
       setUsers(data);
     } catch {
-      setError('Failed to load users.');
+      setError('Failed to load users. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -41,89 +45,101 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <div style={styles.loading}>Loading users...</div>;
-  if (error) return <div style={styles.error}>{error}</div>;
+  if (loading) return <LoadingState message="Loading users…" />;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>User Management</h1>
+    <div>
+      <div style={styles.pageHeader}>
+        <div>
+          <h1 style={styles.pageTitle}>User Management</h1>
+          <p style={styles.pageSubtitle}>Manage accounts, roles, and location access.</p>
+        </div>
         <button onClick={() => navigate('/admin/users/create')} style={styles.createBtn}>
           + Create User
         </button>
       </div>
 
-      <div style={styles.tableWrapper}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Email</th>
-              <th style={styles.th}>Role</th>
-              <th style={styles.th}>Location Scope</th>
-              <th style={styles.th}>Locations</th>
-              <th style={styles.th}>Status</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} style={styles.tr}>
-                <td style={styles.td}>{user.fullName}</td>
-                <td style={styles.td}>{user.email}</td>
-                <td style={styles.td}>
-                  <span style={styles.badge}>{user.roleDisplayName}</span>
-                </td>
-                <td style={styles.td}>
-                  <span style={{
-                    ...styles.scopeBadge,
-                    background: user.locationScopeType === 'all' ? '#dbeafe' : '#fef3c7',
-                    color: user.locationScopeType === 'all' ? '#1e40af' : '#92400e',
-                  }}>
-                    {user.locationScopeType.toUpperCase()}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  {user.locationScopeType === 'all'
-                    ? 'All Locations'
-                    : user.locations.map(l => l.code).join(', ') || '—'}
-                </td>
-                <td style={styles.td}>
-                  <span style={{
-                    ...styles.statusBadge,
-                    background: user.isActive ? '#dcfce7' : '#fee2e2',
-                    color: user.isActive ? '#166534' : '#dc2626',
-                  }}>
-                    {user.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  <div style={styles.actions}>
-                    <Link to={`/admin/users/${user.id}/edit`} style={styles.actionLink}>Edit</Link>
-                    <button
-                      onClick={() => { setResetUserId(user.id); setResetMsg(''); }}
-                      style={styles.actionBtn}
-                    >
-                      Reset PW
-                    </button>
-                  </div>
-                </td>
+      {error && <div className="error-banner">{error}</div>}
+
+      {users.length === 0 && !error ? (
+        <EmptyState
+          icon="👥"
+          title="No Users Found"
+          message="No user accounts have been created yet."
+        />
+      ) : (
+        <div style={styles.tableWrapper}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Scope</th>
+                <th>Locations</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td style={{ fontWeight: 500, color: 'var(--color-text-primary)' }}>{user.fullName}</td>
+                  <td style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>{user.email}</td>
+                  <td>
+                    <span style={styles.roleBadge}>{user.roleDisplayName}</span>
+                  </td>
+                  <td>
+                    <span style={{
+                      ...styles.scopeBadge,
+                      background: user.locationScopeType === 'all' ? 'var(--color-info-bg)' : 'var(--color-warning-bg)',
+                      color: user.locationScopeType === 'all' ? 'var(--color-info)' : 'var(--color-warning)',
+                    }}>
+                      {user.locationScopeType === 'all' ? 'ALL' : 'SPECIFIC'}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                    {user.locationScopeType === 'all'
+                      ? 'All Locations'
+                      : user.locations.map(l => l.code).join(', ') || '—'}
+                  </td>
+                  <td>
+                    <StatusBadge status={user.isActive ? 'active' : 'inactive'} />
+                  </td>
+                  <td>
+                    <div style={styles.actions}>
+                      <Link to={`/admin/users/${user.id}/edit`} style={styles.actionLink}>Edit</Link>
+                      <button
+                        onClick={() => { setResetUserId(user.id); setResetMsg(''); }}
+                        style={styles.resetBtn}
+                      >
+                        Reset PW
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Reset Password Modal */}
       {resetUserId && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
-            <h3 style={{ margin: '0 0 1rem' }}>Reset Password</h3>
-            <p style={{ fontSize: '0.9rem', color: '#666', margin: '0 0 1rem' }}>
-              Enter new password for: <strong>{users.find(u => u.id === resetUserId)?.fullName}</strong>
+            <h3 style={{ margin: '0 0 0.75rem', color: 'var(--color-text-primary)', fontSize: '1rem' }}>
+              Reset Password
+            </h3>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: '0 0 1rem' }}>
+              Setting new password for: <strong>{users.find(u => u.id === resetUserId)?.fullName}</strong>
             </p>
             {resetMsg && (
-              <div style={{ ...styles.inlineMsg, color: resetMsg.includes('Failed') ? '#dc2626' : '#166534' }}>
+              <div style={{
+                ...styles.inlineMsg,
+                color: resetMsg.includes('Failed') ? 'var(--color-danger)' : 'var(--color-success)',
+                background: resetMsg.includes('Failed') ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
+              }}>
                 {resetMsg}
               </div>
             )}
@@ -132,7 +148,7 @@ export default function AdminUsersPage() {
               value={resetNewPassword}
               onChange={(e) => setResetNewPassword(e.target.value)}
               placeholder="New password"
-              style={styles.input}
+              style={{ marginBottom: '1rem' }}
             />
             <div style={styles.modalActions}>
               <button onClick={handleResetPassword} style={styles.createBtn}>Reset</button>
@@ -146,57 +162,100 @@ export default function AdminUsersPage() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: { padding: '1.5rem' },
-  loading: { padding: '2rem', textAlign: 'center', color: '#666' },
-  error: { padding: '1rem', color: '#dc2626', background: '#fee2e2', borderRadius: '8px', margin: '1rem' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
-  title: { fontSize: '1.5rem', fontWeight: 700, color: '#1a1a2e', margin: 0 },
+  pageHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '1.5rem',
+  },
+  pageTitle: {
+    fontSize: 'var(--text-xl)',
+    fontWeight: 700,
+    color: 'var(--color-text-primary)',
+    margin: 0,
+  },
+  pageSubtitle: {
+    fontSize: 'var(--text-sm)',
+    color: 'var(--color-text-secondary)',
+    marginTop: '4px',
+  },
   createBtn: {
-    padding: '0.6rem 1.25rem', borderRadius: '8px', border: 'none',
-    background: '#0f3460', color: '#fff', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer',
+    background: 'var(--color-accent)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '8px 16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: 'var(--text-base)',
+    whiteSpace: 'nowrap',
   },
   cancelBtn: {
-    padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid #ddd',
-    background: '#fff', color: '#333', fontSize: '0.9rem', cursor: 'pointer',
+    background: 'transparent',
+    color: 'var(--color-text-secondary)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    padding: '8px 16px',
+    cursor: 'pointer',
+    fontSize: 'var(--text-base)',
   },
-  tableWrapper: { overflowX: 'auto' as const },
-  table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.9rem' },
-  th: {
-    padding: '0.75rem 1rem', textAlign: 'left' as const, fontWeight: 600,
-    color: '#555', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' as const,
-  },
-  tr: { borderBottom: '1px solid #f3f4f6' },
-  td: { padding: '0.75rem 1rem', verticalAlign: 'middle' as const },
-  badge: {
-    display: 'inline-block', padding: '0.25rem 0.6rem', borderRadius: '6px',
-    background: '#ede9fe', color: '#5b21b6', fontSize: '0.8rem', fontWeight: 500,
+  tableWrapper: { overflowX: 'auto' },
+  roleBadge: {
+    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: '9999px',
+    background: 'var(--color-accent-soft)',
+    color: 'var(--color-accent)',
+    fontSize: 'var(--text-xs)',
+    fontWeight: 600,
   },
   scopeBadge: {
-    display: 'inline-block', padding: '0.25rem 0.6rem', borderRadius: '6px',
-    fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.5px',
-  },
-  statusBadge: {
-    display: 'inline-block', padding: '0.25rem 0.6rem', borderRadius: '6px',
-    fontSize: '0.8rem', fontWeight: 500,
+    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: '9999px',
+    fontSize: 'var(--text-xs)',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
   },
   actions: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
   actionLink: {
-    color: '#0f3460', textDecoration: 'none', fontWeight: 500, fontSize: '0.85rem',
+    color: 'var(--color-accent)',
+    textDecoration: 'none',
+    fontWeight: 500,
+    fontSize: 'var(--text-sm)',
   },
-  actionBtn: {
-    background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '0.3rem 0.6rem',
-    fontSize: '0.8rem', color: '#666', cursor: 'pointer',
+  resetBtn: {
+    background: 'transparent',
+    border: '1px solid var(--color-border)',
+    borderRadius: '6px',
+    padding: '4px 10px',
+    fontSize: 'var(--text-xs)',
+    color: 'var(--color-text-secondary)',
+    cursor: 'pointer',
   },
   modalOverlay: {
-    position: 'fixed' as const, top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 1000,
   },
-  modal: { background: '#fff', borderRadius: '12px', padding: '2rem', width: '360px' },
-  input: {
-    width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1.5px solid #ddd',
-    fontSize: '0.9rem', boxSizing: 'border-box' as const, marginBottom: '1rem',
+  modal: {
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
+    padding: '1.75rem',
+    width: '380px',
+    boxShadow: 'var(--shadow-md)',
   },
   modalActions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
-  inlineMsg: { fontSize: '0.85rem', marginBottom: '0.75rem', fontWeight: 500 },
+  inlineMsg: {
+    fontSize: 'var(--text-sm)',
+    marginBottom: '0.75rem',
+    fontWeight: 500,
+    padding: '8px 12px',
+    borderRadius: '6px',
+  },
 };

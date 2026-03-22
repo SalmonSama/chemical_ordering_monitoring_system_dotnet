@@ -82,7 +82,7 @@ export default function TransactionHistoryPage() {
 
       <div style={styles.panel}>
         {loading ? (
-          <div style={{ color: '#94a3b8' }}>Loading sequence...</div>
+          <div style={{ color: 'var(--color-text-secondary)' }}>Loading sequence...</div>
         ) : (
           <div style={styles.tableWrapper}>
             <table style={styles.table}>
@@ -102,14 +102,14 @@ export default function TransactionHistoryPage() {
                   <tr key={row.id}>
                     <td style={styles.td}>
                       <div style={{ whiteSpace: 'nowrap' }}>{new Date(row.timestamp).toLocaleDateString()}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{new Date(row.timestamp).toLocaleTimeString()}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{new Date(row.timestamp).toLocaleTimeString()}</div>
                     </td>
                     <td style={styles.td}>
                       <span style={styles.badge}>{row.type}</span>
                     </td>
                     <td style={styles.td}>
                       <strong>{row.itemName}</strong>
-                      <div style={{ fontSize: '0.8rem', color: '#60a5fa', marginTop: '0.2rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-accent-hover)', marginTop: '0.2rem' }}>
                         <code style={styles.code}>{row.lotNumber}</code>
                       </div>
                     </td>
@@ -117,18 +117,18 @@ export default function TransactionHistoryPage() {
                       <div>{row.labName}</div>
                     </td>
                     <td style={styles.td}>
-                      <strong style={{ color: row.quantity > 0 ? '#34d399' : (row.quantity < 0 ? '#f87171' : '#94a3b8') }}>
+                      <strong style={{ color: row.quantity > 0 ? 'var(--color-success)' : (row.quantity < 0 ? 'var(--color-danger)' : 'var(--color-text-secondary)') }}>
                         {row.quantity > 0 ? `+${row.quantity}` : row.quantity}
                       </strong>
                     </td>
                     <td style={styles.td}>{row.userName}</td>
-                    <td style={{...styles.td, color: '#94a3b8', fontSize: '0.85rem', maxWidth: '300px' }}>
+                    <td style={{...styles.td, color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>
                       {row.details || '—'}
                     </td>
                   </tr>
                 ))}
                 {filteredData.length === 0 && (
-                   <tr><td colSpan={7} style={{...styles.td, textAlign: 'center', color: '#94a3b8'}}>No transactions found.</td></tr>
+                   <tr><td colSpan={7} style={{...styles.td, textAlign: 'center', color: 'var(--color-text-secondary)'}}>No transactions found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -140,20 +140,20 @@ export default function TransactionHistoryPage() {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.75rem', fontWeight: 800, margin: 0 },
-  subtitle: { color: '#94a3b8', fontSize: '1rem', marginTop: '0.25rem' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.75rem', fontWeight: 800, margin: 0 },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '1rem', marginTop: '0.25rem' },
   exportBtn: {
-    background: '#334155', color: '#f1f5f9', border: '1px solid #475569',
+    background: 'var(--color-border)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)',
     borderRadius: '6px', padding: '0.5rem 1rem', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer'
   },
-  filterBar: { display: 'flex', gap: '1rem', marginBottom: '1rem', background: '#1e293b', padding: '1rem', borderRadius: '8px', border: '1px solid #334155' },
-  filterLabel: { color: '#94a3b8', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 },
-  select: { background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '4px', padding: '0.4rem', fontSize: '0.9rem' },
-  panel: { background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', padding: '1rem', overflow: 'hidden' },
+  filterBar: { display: 'flex', gap: '1rem', marginBottom: '1rem', background: 'var(--color-bg-surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--color-border)' },
+  filterLabel: { color: 'var(--color-text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 },
+  select: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '0.4rem', fontSize: '0.9rem' },
+  panel: { background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)', padding: '1rem', overflow: 'hidden' },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.75rem', color: '#e2e8f0', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'top' },
-  badge: { padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap', background: '#334155', color: '#e2e8f0' },
-  code: { background: '#0f172a', color: '#e2e8f0', padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid #334155', fontSize: '0.85rem' }
+  th: { textAlign: 'left', padding: '0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  td: { padding: '0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', borderBottom: '1px solid rgba(51, 65, 85, 0.5)', verticalAlign: 'top' },
+  badge: { padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap', background: 'var(--color-border)', color: 'var(--color-text-primary)' },
+  code: { background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', padding: '0.1rem 0.3rem', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.85rem' }
 };

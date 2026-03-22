@@ -122,36 +122,36 @@ function CatalogPage({ cart, setCart }: CatalogPageProps): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' },
-  info: { color: '#94a3b8', fontStyle: 'italic' },
-  error: { color: '#f87171' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' },
+  info: { color: 'var(--color-text-secondary)', fontStyle: 'italic' },
+  error: { color: 'var(--color-danger)' },
   search: {
-    width: '100%', maxWidth: '500px', background: '#1e293b', color: '#e2e8f0',
-    border: '1px solid #334155', borderRadius: '8px', padding: '0.6rem 1rem',
+    width: '100%', maxWidth: '500px', background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)',
+    border: '1px solid var(--color-border)', borderRadius: '8px', padding: '0.6rem 1rem',
     fontSize: '0.9rem', marginBottom: '1.5rem', outline: 'none', boxSizing: 'border-box',
   },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' },
   card: {
-    background: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
+    background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem',
   },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' },
-  itemName: { color: '#f1f5f9', fontWeight: 600, fontSize: '0.95rem' },
+  itemName: { color: 'var(--color-text-primary)', fontWeight: 600, fontSize: '0.95rem' },
   categoryBadge: {
     color: '#a78bfa', background: 'rgba(167, 139, 250, 0.15)', padding: '0.15rem 0.5rem',
     borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0,
   },
   details: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 1rem' },
-  detail: { color: '#94a3b8', fontSize: '0.82rem' },
-  code: { color: '#60a5fa', background: '#0f172a', padding: '0.1rem 0.3rem', borderRadius: '3px', fontSize: '0.8rem' },
+  detail: { color: 'var(--color-text-secondary)', fontSize: '0.82rem' },
+  code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.1rem 0.3rem', borderRadius: '3px', fontSize: '0.8rem' },
   cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem' },
   inCartBadge: {
-    color: '#34d399', background: 'rgba(52, 211, 153, 0.1)', padding: '0.2rem 0.6rem',
+    color: 'var(--color-success)', background: 'var(--color-success-bg)', padding: '0.2rem 0.6rem',
     borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600,
   },
   addBtn: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', border: 'none',
+    background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',
     borderRadius: '6px', padding: '0.4rem 0.9rem', fontSize: '0.85rem', fontWeight: 600,
     cursor: 'pointer', transition: 'opacity 0.2s ease', marginLeft: 'auto',
   },

@@ -176,7 +176,7 @@ function ApprovalQueuePage(): React.JSX.Element {
       {selectedOrder && (
         <div style={styles.panel}>
           <div style={styles.panelHeader}>
-            <h3 style={{ color: '#f1f5f9', margin: 0 }}>
+            <h3 style={{ color: 'var(--color-text-primary)', margin: 0 }}>
               Review: <code style={styles.code}>{selectedOrder.poNumber}</code>
             </h3>
             <button onClick={() => setSelectedOrder(null)} style={styles.closeBtn}>✕ Close</button>
@@ -309,50 +309,50 @@ function ApprovalQueuePage(): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' },
-  info: { color: '#94a3b8', fontStyle: 'italic' },
-  error: { color: '#f87171' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' },
+  info: { color: 'var(--color-text-secondary)', fontStyle: 'italic' },
+  error: { color: 'var(--color-danger)' },
   successBox: {
-    background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#34d399', marginBottom: '1rem', fontWeight: 600,
+    background: 'var(--color-success-bg)', border: '1px solid var(--color-success-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-success)', marginBottom: '1rem', fontWeight: 600,
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '8px', padding: '0.75rem 1rem', color: '#f87171', marginBottom: '1rem',
+    background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bg)',
+    borderRadius: '8px', padding: '0.75rem 1rem', color: 'var(--color-danger)', marginBottom: '1rem',
   },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  td: { padding: '0.5rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', whiteSpace: 'nowrap' },
-  tdNum: { padding: '0.5rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', textAlign: 'right' },
-  code: { color: '#60a5fa', background: '#0f172a', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
+  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  td: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
+  tdNum: { padding: '0.5rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', textAlign: 'right' },
+  code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
   reviewBtn: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', border: 'none',
+    background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none',
     borderRadius: '6px', padding: '0.35rem 0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
   },
   panel: {
-    background: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
+    background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1.25rem', marginBottom: '1.5rem',
   },
   panelHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' },
-  closeBtn: { background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', border: 'none', borderRadius: '6px', padding: '0.3rem 0.7rem', cursor: 'pointer' },
+  closeBtn: { background: 'rgba(148, 163, 184, 0.15)', color: 'var(--color-text-secondary)', border: 'none', borderRadius: '6px', padding: '0.3rem 0.7rem', cursor: 'pointer' },
   meta: { display: 'flex', flexWrap: 'wrap', gap: '0.3rem 1.2rem', color: '#cbd5e1', fontSize: '0.88rem', marginBottom: '1rem' },
-  inlineLabel: { color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  inlineLabel: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' },
   selectInline: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '6px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '6px',
     padding: '0.3rem 0.5rem', fontSize: '0.85rem',
   },
   inlineSelect: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '6px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '6px',
     padding: '0.3rem 0.5rem', fontSize: '0.85rem', width: '140px',
   },
   qtyInput: {
-    width: '70px', background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155',
+    width: '70px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)',
     borderRadius: '6px', padding: '0.3rem 0.5rem', fontSize: '0.9rem', textAlign: 'right',
   },
   noteInput: {
-    background: '#0f172a', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '6px',
+    background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '6px',
     padding: '0.3rem 0.5rem', fontSize: '0.85rem', minWidth: '200px',
   },
   actionRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap', gap: '0.5rem' },

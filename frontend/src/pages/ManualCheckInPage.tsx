@@ -136,8 +136,8 @@ function ManualCheckInPage(): React.JSX.Element {
       {result && (
         <div style={styles.successBox}>
           <p style={{ margin: 0, fontWeight: 600 }}>✅ Check-in completed successfully</p>
-          <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-            Lot <strong style={{ color: '#60a5fa' }}>{result.inventoryLot.lotNumber}</strong> created
+          <p style={{ margin: '0.5rem 0 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+            Lot <strong style={{ color: 'var(--color-accent-hover)' }}>{result.inventoryLot.lotNumber}</strong> created
             — {result.inventoryLot.quantityReceived} {result.inventoryLot.unit}
             — Status: <span style={styles.statusBadge}>{result.inventoryLot.status}</span>
           </p>
@@ -258,35 +258,35 @@ function ManualCheckInPage(): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' },
   form: { display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '800px' },
   row: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
   fieldBlock: { display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1, minWidth: '180px' },
-  label: { color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
+  label: { color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
   input: {
-    background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '8px',
+    background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
     padding: '0.55rem 0.75rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box',
   },
   select: {
-    background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155', borderRadius: '8px',
+    background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', borderRadius: '8px',
     padding: '0.55rem 0.75rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box',
   },
   submitBtn: {
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', border: 'none', borderRadius: '8px',
+    background: 'linear-gradient(135deg, var(--color-accent), #6366f1)', color: '#fff', border: 'none', borderRadius: '8px',
     padding: '0.7rem 1.5rem', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start',
     marginTop: '0.5rem', transition: 'opacity 0.2s ease',
   },
   errorBox: {
-    background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px',
-    padding: '0.75rem 1rem', color: '#f87171', marginBottom: '1rem', fontSize: '0.9rem',
+    background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-bg)', borderRadius: '8px',
+    padding: '0.75rem 1rem', color: 'var(--color-danger)', marginBottom: '1rem', fontSize: '0.9rem',
   },
   successBox: {
-    background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', borderRadius: '8px',
-    padding: '0.75rem 1rem', color: '#34d399', marginBottom: '1rem',
+    background: 'var(--color-success-bg)', border: '1px solid var(--color-success-bg)', borderRadius: '8px',
+    padding: '0.75rem 1rem', color: 'var(--color-success)', marginBottom: '1rem',
   },
   statusBadge: {
-    background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: '0.15rem 0.5rem', borderRadius: '4px',
+    background: 'var(--color-info-bg)', color: 'var(--color-accent-hover)', padding: '0.15rem 0.5rem', borderRadius: '4px',
     fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize',
   },
 };

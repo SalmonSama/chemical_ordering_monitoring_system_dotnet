@@ -31,11 +31,11 @@ function StockTransactionsPage(): React.JSX.Element {
   const typeColor = (type: string): TypeColor => {
     switch (type) {
       case 'manual_check_in':
-      case 'check_in': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' };
-      case 'checkout': return { color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)' };
-      case 'adjustment': return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' };
-      case 'disposal': return { color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
-      default: return { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
+      case 'check_in': return { color: 'var(--color-success)', bg: 'var(--color-success-bg)' };
+      case 'checkout': return { color: 'var(--color-accent-hover)', bg: 'rgba(96, 165, 250, 0.1)' };
+      case 'adjustment': return { color: 'var(--color-warning)', bg: 'rgba(251, 191, 36, 0.1)' };
+      case 'disposal': return { color: 'var(--color-danger)', bg: 'rgba(248, 113, 113, 0.1)' };
+      default: return { color: 'var(--color-text-secondary)', bg: 'rgba(148, 163, 184, 0.1)' };
     }
   };
 
@@ -101,17 +101,17 @@ function StockTransactionsPage(): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
-  info: { color: '#94a3b8', fontStyle: 'italic' },
-  error: { color: '#f87171' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  info: { color: 'var(--color-text-secondary)', fontStyle: 'italic' },
+  error: { color: 'var(--color-danger)' },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '900px' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  tr: { borderBottom: '1px solid #1e293b' },
-  td: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', whiteSpace: 'nowrap' },
-  tdNum: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-  code: { color: '#60a5fa', background: '#0f172a', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
+  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  tr: { borderBottom: '1px solid var(--color-bg-surface)' },
+  td: { padding: '0.6rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
+  tdNum: { padding: '0.6rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+  code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
 };
 
 export default StockTransactionsPage;

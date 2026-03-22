@@ -87,7 +87,7 @@ export default function DashboardPage() {
       <p style={styles.subtitle}>Here is your live operational overview.</p>
 
       {loading ? (
-        <div style={{ color: '#94a3b8' }}>Loading metrics...</div>
+        <div style={{ color: 'var(--color-text-secondary)' }}>Loading metrics...</div>
       ) : (
         <div style={styles.grid}>
           {widgets.map((w, idx) => (
@@ -100,7 +100,7 @@ export default function DashboardPage() {
                 <span style={styles.icon}>{w.icon}</span>
                 <span style={styles.cardTitle}>{w.title}</span>
               </div>
-              <div style={{...styles.count, color: w.urgent ? '#f87171' : '#f1f5f9'}}>
+              <div style={{...styles.count, color: w.urgent ? 'var(--color-danger)' : 'var(--color-text-primary)'}}>
                 {w.count}
               </div>
               <div style={styles.desc}>{w.desc}</div>
@@ -125,40 +125,40 @@ export default function DashboardPage() {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '1rem', marginBottom: '2rem' },
+  title: { color: 'var(--color-text-primary)', fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '1rem', marginBottom: '2rem' },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
     gap: '1.5rem'
   },
   card: {
-    background: '#1e293b', border: '1px solid #334155', borderRadius: '12px',
+    background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: '12px',
     padding: '1.5rem', cursor: 'pointer', display: 'flex', flexDirection: 'column',
     transition: 'transform 0.2s, box-shadow 0.2s',
   },
   urgentCard: {
-    border: '1px solid rgba(239, 68, 68, 0.4)',
-    boxShadow: '0 4px 20px rgba(239, 68, 68, 0.1)'
+    border: '1px solid var(--color-danger-bg)',
+    boxShadow: '0 4px 20px var(--color-danger-bg)'
   },
   cardHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' },
   icon: { fontSize: '1.5rem' },
-  cardTitle: { color: '#e2e8f0', fontSize: '1.1rem', fontWeight: 600 },
+  cardTitle: { color: 'var(--color-text-primary)', fontSize: '1.1rem', fontWeight: 600 },
   count: { fontSize: '3rem', fontWeight: 800, lineHeight: 1, marginBottom: '0.5rem' },
-  desc: { color: '#94a3b8', fontSize: '0.85rem', flex: 1, marginBottom: '1rem' },
-  action: { color: '#60a5fa', fontSize: '0.85rem', fontWeight: 600, alignSelf: 'flex-start' },
+  desc: { color: 'var(--color-text-secondary)', fontSize: '0.85rem', flex: 1, marginBottom: '1rem' },
+  action: { color: 'var(--color-accent-hover)', fontSize: '0.85rem', fontWeight: 600, alignSelf: 'flex-start' },
   panel: {
-    background: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
+    background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1.5rem', marginBottom: '1rem'
   },
-  panelTitle: { color: '#f1f5f9', fontSize: '1.1rem', margin: '0 0 1.5rem 0' },
+  panelTitle: { color: 'var(--color-text-primary)', fontSize: '1.1rem', margin: '0 0 1.5rem 0' },
   btn: {
-    background: 'linear-gradient(135deg, #3b82f6, #4f46e5)', color: '#fff', border: 'none',
+    background: 'linear-gradient(135deg, var(--color-accent), #4f46e5)', color: '#fff', border: 'none',
     borderRadius: '8px', padding: '0.75rem 1.25rem', fontSize: '0.95rem', fontWeight: 600,
     cursor: 'pointer'
   },
   btnAlt: {
-    background: '#334155', color: '#f1f5f9', border: 'none',
+    background: 'var(--color-border)', color: 'var(--color-text-primary)', border: 'none',
     borderRadius: '8px', padding: '0.75rem 1.25rem', fontSize: '0.95rem', fontWeight: 600,
     cursor: 'pointer'
   }

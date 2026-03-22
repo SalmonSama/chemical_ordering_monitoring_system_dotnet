@@ -22,12 +22,12 @@ function InventoryLotsPage(): React.JSX.Element {
 
   const statusColor = (status: string): StatusColor => {
     switch (status) {
-      case 'active': return { color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)' };
-      case 'expired': return { color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
-      case 'depleted': return { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
-      case 'quarantined': return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' };
-      case 'disposed': return { color: '#64748b', bg: 'rgba(100, 116, 139, 0.1)' };
-      default: return { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
+      case 'active': return { color: 'var(--color-success)', bg: 'var(--color-success-bg)' };
+      case 'expired': return { color: 'var(--color-danger)', bg: 'rgba(248, 113, 113, 0.1)' };
+      case 'depleted': return { color: 'var(--color-text-secondary)', bg: 'rgba(148, 163, 184, 0.1)' };
+      case 'quarantined': return { color: 'var(--color-warning)', bg: 'rgba(251, 191, 36, 0.1)' };
+      case 'disposed': return { color: 'var(--color-text-tertiary)', bg: 'rgba(100, 116, 139, 0.1)' };
+      default: return { color: 'var(--color-text-secondary)', bg: 'rgba(148, 163, 184, 0.1)' };
     }
   };
 
@@ -97,17 +97,17 @@ function InventoryLotsPage(): React.JSX.Element {
 }
 
 const styles: Record<string, CSSProperties> = {
-  title: { color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
-  subtitle: { color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' },
-  info: { color: '#94a3b8', fontStyle: 'italic' },
-  error: { color: '#f87171' },
+  title: { color: 'var(--color-text-primary)', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' },
+  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' },
+  info: { color: 'var(--color-text-secondary)', fontStyle: 'italic' },
+  error: { color: 'var(--color-danger)' },
   tableWrapper: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '1000px' },
-  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: '#64748b', borderBottom: '1px solid #334155', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  tr: { borderBottom: '1px solid #1e293b' },
-  td: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', whiteSpace: 'nowrap' },
-  tdNum: { padding: '0.6rem 0.75rem', color: '#e2e8f0', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
-  code: { color: '#60a5fa', background: '#0f172a', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
+  th: { textAlign: 'left', padding: '0.6rem 0.75rem', color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
+  tr: { borderBottom: '1px solid var(--color-bg-surface)' },
+  td: { padding: '0.6rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', whiteSpace: 'nowrap' },
+  tdNum: { padding: '0.6rem 0.75rem', color: 'var(--color-text-primary)', fontSize: '0.9rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+  code: { color: 'var(--color-accent-hover)', background: 'var(--color-bg-primary)', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.85rem' },
   sourceTag: { color: '#a78bfa', background: 'rgba(167, 139, 250, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize' },
 };
 

@@ -29,27 +29,34 @@ export default function LoginPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>ChemWatch</h1>
-          <p style={styles.subtitle}>Lab Inventory & Chemical Ordering System</p>
+        {/* Logo / branding */}
+        <div style={styles.brand}>
+          <div style={styles.brandIcon}>⚗️</div>
+          <h1 style={styles.brandName}>ChemWatch</h1>
+          <p style={styles.brandSub}>Lab Inventory &amp; Chemical Ordering System</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} style={styles.form} noValidate>
           <h2 style={styles.formTitle}>Sign In</h2>
 
-          {error && <div style={styles.error}>{error}</div>}
+          {error && (
+            <div style={styles.errorBox} role="alert">
+              <span>⚠️</span> {error}
+            </div>
+          )}
 
           <div style={styles.field}>
-            <label htmlFor="email" style={styles.label}>Email</label>
+            <label htmlFor="email" style={styles.label}>Email address</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               required
-              style={styles.input}
               autoComplete="email"
+              autoFocus
+              style={styles.input}
             />
           </div>
 
@@ -62,8 +69,8 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              style={styles.input}
               autoComplete="current-password"
+              style={styles.input}
             />
           </div>
 
@@ -76,12 +83,12 @@ export default function LoginPage() {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? '⏳ Signing in…' : 'Sign In →'}
           </button>
 
           <div style={styles.links}>
             <Link to="/forgot-password" style={styles.link}>
-              Forgot Password?
+              Forgot your password?
             </Link>
           </div>
         </form>
@@ -96,86 +103,95 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+    background: 'var(--color-bg-primary)',
+    fontFamily: 'var(--font-family-sans)',
+    padding: '24px',
   },
   card: {
-    background: '#fff',
+    background: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
     borderRadius: '16px',
-    padding: '3rem',
+    padding: '2.5rem',
     width: '100%',
-    maxWidth: '420px',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    maxWidth: '400px',
+    boxShadow: 'var(--shadow-md)',
   },
-  header: {
-    textAlign: 'center' as const,
+  brand: {
+    textAlign: 'center',
     marginBottom: '2rem',
   },
-  title: {
-    fontSize: '1.8rem',
-    fontWeight: 700,
-    color: '#1a1a2e',
-    margin: 0,
-    letterSpacing: '-0.5px',
+  brandIcon: {
+    fontSize: '2.5rem',
+    marginBottom: '0.5rem',
   },
-  subtitle: {
-    fontSize: '0.85rem',
-    color: '#666',
-    margin: '0.5rem 0 0',
+  brandName: {
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    color: 'var(--color-text-primary)',
+    margin: '0 0 0.25rem',
+    letterSpacing: '-0.3px',
+  },
+  brandSub: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-tertiary)',
+    margin: 0,
   },
   form: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1.25rem',
+    flexDirection: 'column',
+    gap: '1.125rem',
   },
   formTitle: {
-    fontSize: '1.1rem',
+    fontSize: '1.0625rem',
     fontWeight: 600,
-    color: '#333',
+    color: 'var(--color-text-primary)',
     margin: 0,
   },
-  error: {
-    background: '#fee2e2',
-    color: '#dc2626',
-    padding: '0.75rem 1rem',
+  errorBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'var(--color-danger-bg)',
+    color: 'var(--color-danger)',
+    border: '1px solid var(--color-danger)',
+    padding: '10px 14px',
     borderRadius: '8px',
     fontSize: '0.875rem',
-    border: '1px solid #fecaca',
   },
   field: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.4rem',
+    flexDirection: 'column',
+    gap: '5px',
   },
   label: {
-    fontSize: '0.85rem',
+    fontSize: '0.8125rem',
     fontWeight: 500,
-    color: '#555',
+    color: 'var(--color-text-secondary)',
   },
   input: {
-    padding: '0.7rem 0.9rem',
+    // Base styles come from index.css; override only what's needed
+    padding: '9px 12px',
     borderRadius: '8px',
-    border: '1.5px solid #ddd',
-    fontSize: '0.95rem',
-    outline: 'none',
-    transition: 'border-color 0.2s',
+    fontSize: '0.9375rem',
   },
   button: {
-    padding: '0.8rem',
-    borderRadius: '8px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #0f3460, #1a1a2e)',
+    background: 'var(--color-accent)',
     color: '#fff',
-    fontSize: '1rem',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '11px 16px',
+    fontSize: '0.9375rem',
     fontWeight: 600,
-    marginTop: '0.5rem',
+    marginTop: '4px',
+    width: '100%',
+    justifyContent: 'center',
   },
   links: {
-    textAlign: 'center' as const,
+    textAlign: 'center',
   },
   link: {
-    color: '#0f3460',
-    fontSize: '0.875rem',
+    color: 'var(--color-accent)',
+    fontSize: '0.8125rem',
     textDecoration: 'none',
   },
 };

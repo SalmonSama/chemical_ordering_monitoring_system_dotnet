@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ChemWatch.Data;
@@ -50,6 +51,7 @@ public record ApproveOrderRequest
 
 [ApiController]
 [Route("api/orders")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -229,6 +231,7 @@ public class OrdersController : ControllerBase
 
     // ── PUT /api/orders/{id}/modify — Focal point modify ──────────────
     [HttpPut("{id:guid}/modify")]
+    [Authorize(Roles = "admin,focal_point")]
     public async Task<IActionResult> ModifyOrder(Guid id, [FromBody] ModifyOrderRequest request)
     {
         var order = await _db.PurchaseRequests
@@ -382,6 +385,7 @@ public class OrdersController : ControllerBase
 
     // ── PUT /api/orders/{id}/approve — Approve order ──────────────────
     [HttpPut("{id:guid}/approve")]
+    [Authorize(Roles = "admin,focal_point")]
     public async Task<IActionResult> ApproveOrder(Guid id, [FromBody] ApproveOrderRequest request)
     {
         var order = await _db.PurchaseRequests

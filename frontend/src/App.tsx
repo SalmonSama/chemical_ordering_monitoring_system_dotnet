@@ -31,6 +31,7 @@ import ExpiredPage from './pages/reports/ExpiredPage';
 import PeroxideDuePage from './pages/reports/PeroxideDuePage';
 import TransactionHistoryPage from './pages/reports/TransactionHistoryPage';
 import RegulatoryReportPage from './pages/reports/RegulatoryReportPage';
+import UnauthorizedPage from './pages/UnauthorizedPage';
 import type { CartItem } from './types/models';
 
 function App(): React.JSX.Element {
@@ -41,6 +42,7 @@ function App(): React.JSX.Element {
       {/* Public routes — no auth required */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* Protected routes — require authentication */}
       <Route element={
@@ -51,7 +53,7 @@ function App(): React.JSX.Element {
         {/* Phase 1 */}
         <Route path="/" element={<DashboardPage />} />
 
-        {/* Phase A — Admin User Management */}
+        {/* Phase A — Admin User Management (admin only) */}
         <Route path="/admin/users" element={
           <ProtectedRoute requiredRole="admin"><AdminUsersPage /></ProtectedRoute>
         } />
@@ -62,36 +64,54 @@ function App(): React.JSX.Element {
           <ProtectedRoute requiredRole="admin"><EditUserPage /></ProtectedRoute>
         } />
 
-        {/* Phase 2 — Master Data */}
-        <Route path="/admin/locations" element={<LocationsPage />} />
-        <Route path="/admin/roles" element={<RolesPage />} />
-        <Route path="/admin/vendors" element={<VendorsPage />} />
-        <Route path="/admin/categories" element={<ItemCategoriesPage />} />
-        <Route path="/admin/items" element={<ItemsPage />} />
-        <Route path="/admin/item-lab-settings" element={<ItemLabSettingsPage />} />
+        {/* Phase 2 — Master Data (admin only) */}
+        <Route path="/admin/locations" element={
+          <ProtectedRoute requiredRole="admin"><LocationsPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/roles" element={
+          <ProtectedRoute requiredRole="admin"><RolesPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/vendors" element={
+          <ProtectedRoute requiredRole="admin"><VendorsPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/categories" element={
+          <ProtectedRoute requiredRole="admin"><ItemCategoriesPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/items" element={
+          <ProtectedRoute requiredRole="admin"><ItemsPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/item-lab-settings" element={
+          <ProtectedRoute requiredRole="admin"><ItemLabSettingsPage /></ProtectedRoute>
+        } />
 
-        {/* Phase 3 — Inventory Core */}
-        <Route path="/inventory/check-in/manual" element={<ManualCheckInPage />} />
+        {/* Phase 3 — Inventory Core (all authenticated) */}
+        <Route path="/inventory/check-in/manual" element={
+          <ProtectedRoute requiredRoles={['admin', 'focal_point']}><ManualCheckInPage /></ProtectedRoute>
+        } />
         <Route path="/inventory/checkout" element={<CheckoutPage />} />
         <Route path="/inventory/lots" element={<InventoryLotsPage />} />
         <Route path="/inventory/transactions" element={<StockTransactionsPage />} />
 
-        {/* Phase 4 — Order Workflow */}
+        {/* Phase 4 — Order Workflow (all authenticated) */}
         <Route path="/orders/catalog" element={<CatalogPage cart={cart} setCart={setCart} />} />
         <Route path="/orders/cart" element={<CartPage cart={cart} setCart={setCart} />} />
         <Route path="/orders/my-orders" element={<MyOrdersPage />} />
-        <Route path="/orders/approval-queue" element={<ApprovalQueuePage />} />
+        <Route path="/orders/approval-queue" element={
+          <ProtectedRoute requiredRoles={['admin', 'focal_point']}><ApprovalQueuePage /></ProtectedRoute>
+        } />
 
-        {/* Phase 5 — Pending Delivery Check-In */}
+        {/* Phase 5 — Pending Delivery Check-In (all authenticated) */}
         <Route path="/inventory/check-in/pending-delivery" element={<PendingDeliveryPage />} />
 
-        {/* Phase 7 — Peroxide Monitoring */}
+        {/* Phase 7 — Peroxide Monitoring (all authenticated) */}
         <Route path="/monitoring/peroxide" element={<PeroxideLotsPage />} />
 
-        {/* Phase 8 — Extend Shelf Life */}
-        <Route path="/inventory/extend-shelf-life" element={<ExtendShelfLifePage />} />
+        {/* Phase 8 — Extend Shelf Life (admin + focal_point only) */}
+        <Route path="/inventory/extend-shelf-life" element={
+          <ProtectedRoute requiredRoles={['admin', 'focal_point']}><ExtendShelfLifePage /></ProtectedRoute>
+        } />
 
-        {/* Phase 9 — Dashboards & Reports */}
+        {/* Phase 9 — Dashboards & Reports (all authenticated) */}
         <Route path="/reports/orders" element={<OrderStatusPage />} />
         <Route path="/reports/min-stock" element={<MinStockPage />} />
         <Route path="/reports/expired" element={<ExpiredPage />} />
