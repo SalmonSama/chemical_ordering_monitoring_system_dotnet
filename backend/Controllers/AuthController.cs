@@ -126,12 +126,3 @@ public class AuthController : ControllerBase
         };
     }
 }
-
-// Simple DTO for forgot-password endpoint
-namespace ChemWatch.Models.DTOs
-{
-    public class ForgotPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-    }
-}

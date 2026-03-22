@@ -493,14 +493,16 @@ public class AppDbContext : DbContext
         );
 
         // ── Users (seed admin with bcrypt password) ───────────────────
-        // Password: Admin123! — hashed with BCrypt
+        // Password: Admin123!
+        // Static pre-computed hash (bcrypt) — do NOT use dynamic HashPassword() in seed data
+        // as it generates a different hash each build, breaking EF migration snapshots.
         modelBuilder.Entity<User>().HasData(
             new User
             {
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 Email = "admin@chemwatch.local",
                 FullName = "System Admin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
                 RoleId = roleAdmin.Id,
                 LocationScopeType = "all",
                 IsActive = true,

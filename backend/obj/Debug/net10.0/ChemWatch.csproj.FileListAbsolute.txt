@@ -238,3 +238,12 @@ C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backe
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ChemWatch.pdb
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ChemWatch.genruntimeconfig.cache
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\obj\Debug\net10.0\ref\ChemWatch.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
