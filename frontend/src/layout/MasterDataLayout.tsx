@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import type { CSSProperties } from 'react';
 
 interface NavItem {
@@ -17,7 +18,8 @@ const orderNav: NavItem[] = [
   { to: '/orders/approval-queue', label: '✅ Approval Queue' },
 ];
 
-const masterDataNav: NavItem[] = [
+const adminNav: NavItem[] = [
+  { to: '/admin/users', label: '👥 Users' },
   { to: '/admin/locations', label: '📍 Locations & Labs' },
   { to: '/admin/roles', label: '👤 Roles' },
   { to: '/admin/vendors', label: '🏭 Vendors' },
@@ -38,11 +40,23 @@ const utilityNav: NavItem[] = [
 ];
 
 function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.Element {
+  const { user, logout, hasRole } = useAuth();
+
   return (
     <div style={styles.wrapper}>
       <aside style={styles.sidebar}>
         <h2 style={styles.logo}>🧪 ChemWatch</h2>
-        <p style={styles.phase}>Phase 4 — Order Workflow</p>
+        <p style={styles.phase}>Lab Inventory & Ordering System</p>
+
+        {/* User info */}
+        {user && (
+          <div style={styles.userBox}>
+            <div style={styles.userName}>{user.fullName}</div>
+            <div style={styles.userRole}>{user.roleDisplayName}</div>
+            <button onClick={logout} style={styles.logoutBtn}>Sign Out</button>
+          </div>
+        )}
+
         <nav style={styles.nav}>
           {/* Orders section */}
           <p style={styles.sectionLabel}>Orders</p>
@@ -53,8 +67,14 @@ function MasterDataLayout({ cartCount = 0 }: MasterDataLayoutProps): React.JSX.E
           ))}
 
           <div style={styles.separator} />
-          <p style={styles.sectionLabel}>Master Data</p>
-          {masterDataNav.map(({ to, label }) => (
+          <p style={styles.sectionLabel}>Admin</p>
+          {adminNav
+            .filter(item => {
+              // Only show Users link to admin users
+              if (item.to === '/admin/users') return hasRole('admin');
+              return true;
+            })
+            .map(({ to, label }) => (
             <NavLink key={to} to={to} end style={({ isActive }) => ({ ...styles.link, ...(isActive ? styles.activeLink : {}) })}>
               {label}
             </NavLink>
@@ -110,9 +130,35 @@ const styles: Record<string, CSSProperties> = {
     fontSize: '0.75rem',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
-    marginBottom: '1.25rem',
-    paddingBottom: '1rem',
+    marginBottom: '0.75rem',
+    paddingBottom: '0.75rem',
     borderBottom: '1px solid #334155',
+  },
+  userBox: {
+    background: '#0f172a',
+    borderRadius: '8px',
+    padding: '0.75rem',
+    marginBottom: '1rem',
+  },
+  userName: {
+    color: '#f1f5f9',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+  },
+  userRole: {
+    color: '#94a3b8',
+    fontSize: '0.75rem',
+    marginBottom: '0.5rem',
+  },
+  logoutBtn: {
+    background: 'none',
+    border: '1px solid #475569',
+    borderRadius: '6px',
+    color: '#94a3b8',
+    fontSize: '0.75rem',
+    padding: '0.3rem 0.6rem',
+    cursor: 'pointer',
+    width: '100%',
   },
   nav: {
     display: 'flex',

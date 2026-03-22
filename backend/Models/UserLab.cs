@@ -1,3 +1,7 @@
+// This file is deprecated. Use UserLocation.cs instead.
+// Kept temporarily to avoid compilation errors in existing migrations.
+// Do not use this class in new code.
+
 namespace ChemWatch.Models;
 
 public class UserLab
@@ -8,8 +12,4 @@ public class UserLab
     public bool IsDefault { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-
-    // Navigation
-    public User User { get; set; } = null!;
-    public Lab Lab { get; set; } = null!;
 }

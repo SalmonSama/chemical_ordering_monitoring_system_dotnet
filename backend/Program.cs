@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ChemWatch.Data;
 
 // Npgsql 6+ requires DateTime values to have Kind=Utc for timestamptz columns.
@@ -21,6 +24,31 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
            .UseSnakeCaseNamingConvention());
 
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? "ChemWatch-Default-Dev-Secret-Key-Min-32-Characters!";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "ChemWatch",
+        ValidAudience = jwtSettings["Audience"] ?? "ChemWatch",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+});
+
+builder.Services.AddAuthorization();
+
 // CORS – allow the Vite React dev server
 builder.Services.AddCors(options =>
 {
@@ -38,6 +66,7 @@ var app = builder.Build();
 
 app.UseCors("AllowFrontendDev");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

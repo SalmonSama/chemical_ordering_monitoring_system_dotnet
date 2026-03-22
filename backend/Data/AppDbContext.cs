@@ -10,22 +10,22 @@ public class AppDbContext : DbContext
     // Phase 1
     public DbSet<TestItem> TestItems => Set<TestItem>();
 
-    // Phase 2 — Master Data
+    // Master Data
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Lab> Labs => Set<Lab>();
     public DbSet<User> Users => Set<User>();
-    public DbSet<UserLab> UserLabs => Set<UserLab>();
+    public DbSet<UserLocation> UserLocations => Set<UserLocation>();
     public DbSet<Vendor> Vendors => Set<Vendor>();
     public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<ItemLabSetting> ItemLabSettings => Set<ItemLabSetting>();
 
-    // Phase 3 — Inventory Core
+    // Inventory Core
     public DbSet<InventoryLot> InventoryLots => Set<InventoryLot>();
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
 
-    // Phase 4 — Order Workflow
+    // Order Workflow
     public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
     public DbSet<PurchaseRequestItem> PurchaseRequestItems => Set<PurchaseRequestItem>();
     public DbSet<PurchaseRequestItemRevision> PurchaseRequestItemRevisions => Set<PurchaseRequestItemRevision>();
@@ -69,7 +69,8 @@ public class AppDbContext : DbContext
             e.HasIndex(u => u.Email).IsUnique();
             e.Property(u => u.Email).HasMaxLength(255);
             e.Property(u => u.FullName).HasMaxLength(200);
-            e.Property(u => u.ExternalId).HasMaxLength(255);
+            e.Property(u => u.PasswordHash).HasMaxLength(255);
+            e.Property(u => u.LocationScopeType).HasMaxLength(20);
 
             e.HasOne(u => u.Role)
              .WithMany(r => r.Users)
@@ -77,19 +78,19 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ── UserLab ───────────────────────────────────────────────────
-        modelBuilder.Entity<UserLab>(e =>
+        // ── UserLocation ─────────────────────────────────────────────
+        modelBuilder.Entity<UserLocation>(e =>
         {
-            e.HasIndex(ul => new { ul.UserId, ul.LabId }).IsUnique();
+            e.HasIndex(ul => new { ul.UserId, ul.LocationId }).IsUnique();
 
             e.HasOne(ul => ul.User)
-             .WithMany(u => u.UserLabs)
+             .WithMany(u => u.UserLocations)
              .HasForeignKey(ul => ul.UserId)
              .OnDelete(DeleteBehavior.Cascade);
 
-            e.HasOne(ul => ul.Lab)
-             .WithMany(l => l.UserLabs)
-             .HasForeignKey(ul => ul.LabId)
+            e.HasOne(ul => ul.Location)
+             .WithMany()
+             .HasForeignKey(ul => ul.LocationId)
              .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -225,7 +226,7 @@ public class AppDbContext : DbContext
             e.Property(st => st.Quantity).HasColumnType("decimal(12,3)");
 
             e.HasOne(st => st.User)
-             .WithMany(u => u.StockTransactions)
+             .WithMany()
              .HasForeignKey(st => st.UserId)
              .OnDelete(DeleteBehavior.Restrict);
 
@@ -278,12 +279,12 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(pr => pr.RequestedByUser)
-             .WithMany(u => u.PurchaseRequests)
+             .WithMany()
              .HasForeignKey(pr => pr.RequestedBy)
              .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(pr => pr.ApprovedByUser)
-             .WithMany(u => u.ApprovedPurchaseRequests)
+             .WithMany()
              .HasForeignKey(pr => pr.ApprovedBy)
              .OnDelete(DeleteBehavior.Restrict);
         });
@@ -342,19 +343,21 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // ── Ignore deprecated UserLab (kept only for migration compatibility)
+        modelBuilder.Ignore<UserLab>();
+
         // ── Seed Data ─────────────────────────────────────────────────
         SeedData(modelBuilder);
     }
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
-        // ── Roles ─────────────────────────────────────────────────────
+        // ── Roles (plan doc 20: admin, focal_point, user) ──────────────
         var roleAdmin = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000001"), Name = "admin", DisplayName = "Admin", Description = "Full system access across all locations and labs", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
-        var roleFocalPoint = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000002"), Name = "focal_point", DisplayName = "Focal Point / Lab Manager", Description = "Manages operations for assigned labs. Approves orders, monitors inventory.", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
-        var roleLabUser = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000003"), Name = "lab_user", DisplayName = "Lab User", Description = "Day-to-day operational user. Creates orders, checks out chemicals.", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
-        var roleViewer = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000004"), Name = "viewer", DisplayName = "Viewer / Auditor", Description = "Read-only access for compliance review and audit purposes.", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
+        var roleFocalPoint = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000002"), Name = "focal_point", DisplayName = "Focal Point", Description = "Manages operations for assigned locations. Approves orders, manages inventory.", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
+        var roleUser = new Role { Id = Guid.Parse("a0000000-0000-0000-0000-000000000003"), Name = "user", DisplayName = "User", Description = "Day-to-day operational user. Creates orders, checks out chemicals.", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
 
-        modelBuilder.Entity<Role>().HasData(roleAdmin, roleFocalPoint, roleLabUser, roleViewer);
+        modelBuilder.Entity<Role>().HasData(roleAdmin, roleFocalPoint, roleUser);
 
         // ── Locations ─────────────────────────────────────────────────
         var locAIE = new Location { Id = Guid.Parse("b0000000-0000-0000-0000-000000000001"), Name = "AIE", Code = "AIE", IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
@@ -408,7 +411,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Vendor>().HasData(vendorSigma, vendorFisher, vendorMerck);
 
         // ── Items (sample) ────────────────────────────────────────────
-        // Chemical & Reagent — full lifecycle flags
         var itemAcetone = new Item
         {
             Id = Guid.Parse("f0000000-0000-0000-0000-000000000001"),
@@ -445,7 +447,6 @@ public class AppDbContext : DbContext
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
 
-        // Gas — ordering only (MVP)
         var itemNitrogen = new Item
         {
             Id = Guid.Parse("f0000000-0000-0000-0000-000000000004"),
@@ -458,7 +459,6 @@ public class AppDbContext : DbContext
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
 
-        // Material & Consumable — selective ordering
         var itemGloves = new Item
         {
             Id = Guid.Parse("f0000000-0000-0000-0000-000000000005"),
@@ -471,7 +471,6 @@ public class AppDbContext : DbContext
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
 
-        // Verify STD — not ordered, manual check-in
         var itemUSPStd = new Item
         {
             Id = Guid.Parse("f0000000-0000-0000-0000-000000000006"),
@@ -493,16 +492,20 @@ public class AppDbContext : DbContext
             new ItemLabSetting { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), ItemId = itemHCl.Id, LabId = labCT.Id, MinStock = 5.0m, ReorderQuantity = 10.0m, IsStocked = true, StorageSublocation = "Corrosives Cabinet", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
 
-        // ── Users (sample — Phase 3 needs at least one user for check-in)
+        // ── Users (seed admin with bcrypt password) ───────────────────
+        // Password: Admin123! — hashed with BCrypt
         modelBuilder.Entity<User>().HasData(
-            new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000001"), Email = "admin@chemwatch.local", FullName = "System Admin", RoleId = roleAdmin.Id, IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000002"), Email = "focalpoint@chemwatch.local", FullName = "Lab Focal Point", RoleId = roleFocalPoint.Id, IsActive = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
-        );
-
-        // ── UserLabs (assign sample users to PO Lab)
-        modelBuilder.Entity<UserLab>().HasData(
-            new UserLab { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), UserId = Guid.Parse("20000000-0000-0000-0000-000000000001"), LabId = labPO.Id, IsDefault = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new UserLab { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), UserId = Guid.Parse("20000000-0000-0000-0000-000000000002"), LabId = labPO.Id, IsDefault = true, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            new User
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
+                Email = "admin@chemwatch.local",
+                FullName = "System Admin",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                RoleId = roleAdmin.Id,
+                LocationScopeType = "all",
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
         );
     }
 }

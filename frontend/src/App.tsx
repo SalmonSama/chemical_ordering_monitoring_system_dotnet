@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import MasterDataLayout from './layout/MasterDataLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import TestPage from './pages/TestPage';
 import LocationsPage from './pages/LocationsPage';
 import RolesPage from './pages/RolesPage';
@@ -16,17 +19,39 @@ import CartPage from './pages/CartPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ApprovalQueuePage from './pages/ApprovalQueuePage';
 import PendingDeliveryPage from './pages/PendingDeliveryPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import CreateUserPage from './pages/CreateUserPage';
+import EditUserPage from './pages/EditUserPage';
 import type { CartItem } from './types/models';
 
 function App(): React.JSX.Element {
-  // Cart state lives here so it's shared between CatalogPage and CartPage
   const [cart, setCart] = useState<CartItem[]>([]);
 
   return (
     <Routes>
-      <Route element={<MasterDataLayout cartCount={cart.length} />}>
+      {/* Public routes — no auth required */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+      {/* Protected routes — require authentication */}
+      <Route element={
+        <ProtectedRoute>
+          <MasterDataLayout cartCount={cart.length} />
+        </ProtectedRoute>
+      }>
         {/* Phase 1 */}
         <Route path="/" element={<TestPage />} />
+
+        {/* Phase A — Admin User Management */}
+        <Route path="/admin/users" element={
+          <ProtectedRoute requiredRole="admin"><AdminUsersPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/users/create" element={
+          <ProtectedRoute requiredRole="admin"><CreateUserPage /></ProtectedRoute>
+        } />
+        <Route path="/admin/users/:id/edit" element={
+          <ProtectedRoute requiredRole="admin"><EditUserPage /></ProtectedRoute>
+        } />
 
         {/* Phase 2 — Master Data */}
         <Route path="/admin/locations" element={<LocationsPage />} />
