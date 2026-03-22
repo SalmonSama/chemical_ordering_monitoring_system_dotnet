@@ -26,7 +26,8 @@ The schema is conceptually organized into three layers:
 │                  (Shared, Stable)                         │
 │                                                           │
 │  locations ─→ labs                                        │
-│  users ─→ roles ─→ user_labs                              │
+│  users (─→ roles, location_scope_type)                    │
+│  user_locations (for specific-scope users)                 │
 │  vendors                                                  │
 │  item_categories                                          │
 │  items ─→ item_location_settings ─→ item_lab_settings     │
@@ -76,7 +77,7 @@ Master data represents the **organizational reference information** that is defi
 | Entity Group | Tables | Why Shared |
 |---|---|---|
 | **Organization structure** | `locations`, `labs` | Locations and labs are organizational units, not inventory concepts. A lab in AIE and a lab in MTP share the same structural model. |
-| **Identity & Access** | `users`, `roles`, `user_labs` | Users are organization-wide. A user can be assigned to multiple labs across locations. Roles are system-wide definitions. |
+| **Identity & Access** | `users`, `roles`, `user_locations` | Users are admin-managed (email + bcrypt password). Each user has a role and a location_scope_type (`all` or `specific`). Users with `specific` scope have entries in `user_locations` mapping them to accessible locations. |
 | **Catalog** | `items`, `item_categories`, `vendors` | The item master list is a shared product catalog. "Acetone" is defined once, not once per lab. Vendors supply across all locations. |
 | **Compliance** | `regulations`, `item_regulations` | Regulatory requirements apply to items regardless of where they are stocked. |
 | **Lab-specific configuration** | `item_location_settings`, `item_lab_settings` | While the item definition is shared, lab-specific details (min stock, stocked flag) are normalized into junction tables keyed by (item, lab). |
@@ -109,7 +110,7 @@ Lab-level scoping reflects the real-world operating model:
 - **Inventory lots** are physically stored in a specific lab. A bottle of Acetone in PO Lab at AIE is not the same as a bottle in EOU Lab at MTP.
 - **Purchase requests** are submitted for a specific lab's needs.
 - **Peroxide tests** are performed on a specific lot in a specific lab.
-- **Access control** is enforced at the lab level — a Lab User in PO Lab should not see or modify EOU Lab's inventory.
+- **Access control** is enforced at the lab level — a User in PO Lab should not see or modify EOU Lab's inventory.
 
 Every transactional table carries a `lab_id` foreign key (and often `location_id` for query convenience), ensuring that:
 1. Row-level security can be applied based on the user's lab assignments.
@@ -161,17 +162,23 @@ locations ──┐
              │ 1:M
              ▼
            labs ──────────────────────────────────┐
-             │ 1:M          1:M          1:M      │
-             ▼              ▼             ▼       │
-         user_labs    item_lab_settings  inventory_lots
+             │               1:M          1:M     │
+             │                ▼             ▼     │
+             │         item_lab_settings  inventory_lots
              │                                │
-             ▼                                │ 1:M
-           users                              ▼
+             │                                │ 1:M
+             │                                ▼
              │                         stock_transactions
              │                         peroxide_tests
              │                         shelf_life_extensions
+             │
+             │ M:N (via user_locations, for specific-scope users)
              ▼
-           roles
+           users ──→ roles
+             │
+             ├── location_scope_type (all / specific)
+             └── password_hash (bcrypt)
+```
 
 items ──────────────────────────────────────┐
    │ 1:M              M:N                  │

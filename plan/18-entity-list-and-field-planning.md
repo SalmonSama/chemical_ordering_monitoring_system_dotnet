@@ -56,8 +56,8 @@ System-wide role definitions.
 | Column | Type | Nullable | Description |
 |---|---|---|---|
 | `id` | UUID PK | No | |
-| `name` | VARCHAR(50) | No | Role name: `admin`, `focal_point`, `lab_user`, `viewer` |
-| `display_name` | VARCHAR(100) | No | Human-readable: "Admin", "Focal Point", "Lab User", "Viewer / Auditor" |
+| `name` | VARCHAR(50) | No | Role name: `admin`, `focal_point`, `user` |
+| `display_name` | VARCHAR(100) | No | Human-readable: "Admin", "Focal Point", "User" |
 | `description` | TEXT | Yes | |
 | `is_active` | BOOLEAN | No | Default `true` |
 
@@ -67,34 +67,38 @@ System-wide role definitions.
 
 ### 4. `users`
 
-All system users. Authentication is handled externally (JWT/SSO); this table stores profile and role assignment.
+All system users. Accounts are **admin-managed** — there is no self-registration. Authentication uses email + hashed password; the system issues JWT tokens.
 
 | Column | Type | Nullable | Description |
 |---|---|---|---|
 | `id` | UUID PK | No | |
-| `external_id` | VARCHAR(255) | Yes | ID from the external identity provider (e.g., Azure AD object ID) |
-| `email` | VARCHAR(255) | No | Primary email, unique |
+| `email` | VARCHAR(255) | No | Primary email, unique. Used as the login identifier. |
+| `password_hash` | VARCHAR(255) | No | Bcrypt-hashed password. Plain-text passwords are **never stored**. |
 | `full_name` | VARCHAR(200) | No | |
 | `role_id` | UUID FK → roles | No | User's system role |
+| `location_scope_type` | VARCHAR(20) | No | `all` or `specific`. Admins always `all`. Default `specific`. |
 | `is_active` | BOOLEAN | No | Default `true`. Deactivated users cannot log in. |
 | `last_login_at` | TIMESTAMPTZ | Yes | Last successful login timestamp |
 
-**Unique:** `email`, `external_id` (if not null)
+**Unique:** `email`
+
+> **Note:** `external_id` has been removed. This system does not integrate with an external identity provider. Authentication is fully managed by the backend.
 
 ---
 
-### 5. `user_labs`
+### 5. `user_locations`
 
-Junction table mapping users to the labs they can access. A user may be assigned to multiple labs across multiple locations.
+Junction table mapping users to the **locations** they can access. Only populated when `users.location_scope_type = 'specific'`. Users with `all` scope do not need entries here — they have implicit access to all locations.
+
+Lab access is **derived from location access**: if a user has access to a location, they can access all labs within that location.
 
 | Column | Type | Nullable | Description |
 |---|---|---|---|
 | `id` | UUID PK | No | |
 | `user_id` | UUID FK → users | No | |
-| `lab_id` | UUID FK → labs | No | |
-| `is_default` | BOOLEAN | No | If `true`, this is the user's default lab context on login. Exactly one per user. Default `false` |
+| `location_id` | UUID FK → locations | No | |
 
-**Unique:** `(user_id, lab_id)`
+**Unique:** `(user_id, location_id)`
 
 ---
 
@@ -507,7 +511,7 @@ Tracks **master data changes** (as opposed to `stock_transactions` which tracks 
 
 | Layer | Entities | Count |
 |---|---|---|
-| Master Data | locations, labs, roles, users, user_labs, vendors, item_categories, items, item_location_settings, item_lab_settings, regulations, item_regulations | 12 |
+| Master Data | locations, labs, roles, users, user_locations, vendors, item_categories, items, item_location_settings, item_lab_settings, regulations, item_regulations, po_number_mappings | 13 |
 | Transactional | purchase_requests, purchase_request_items, purchase_request_item_revisions, vendor_email_logs, inventory_lots, stock_transactions, peroxide_tests, shelf_life_extensions, label_print_logs | 9 |
 | Reporting & Audit | audit_logs | 1 |
-| **Total** | | **22** |
+| **Total** | | **23** |

@@ -55,14 +55,14 @@ Persistent horizontal bar.
 ---
 
 ### `LabContextSelector`
-Dropdown showing the user's assigned labs. Selecting a lab updates the global lab context.
+Dropdown showing the user's accessible labs (based on their location scope). Selecting a lab updates the global lab context.
 
 | Concern | Detail |
 |---|---|
-| Data source | `user_labs` from auth state (loaded on login) |
+| Data source | Locations from `user_locations` (for `specific` scope) or all locations (for `all` scope). Labs derived from selected location. |
 | Display | "Location / Lab" format |
 | On change | Update lab context → re-fetch current page data |
-| Admin override | Option for "All Locations / All Labs" |
+| Admin / all-scope override | Option for "All Locations / All Labs" |
 
 ---
 
@@ -259,16 +259,18 @@ Provided via `AuthContext` at the app root:
 
 ```
 AuthContext:
-  user: { id, email, fullName, role, labAssignments[] }
+  user: { id, email, fullName, role, locationScopeType, locationAssignments[] }
   isAuthenticated: boolean
   isLoading: boolean
-  login(): void → redirect to SSO
-  logout(): void → clear token, redirect to login
+  login(email, password): void → POST /api/auth/login → receive JWT
+  logout(): void → clear token, redirect to /login
+  changePassword(oldPassword, newPassword): void
   hasRole(role): boolean
-  hasLabAccess(labId): boolean
+  hasLocationAccess(locationId): boolean
+  isAllScope: boolean   (location_scope_type === 'all')
 ```
 
-Populated from JWT token claims on login. Lab assignments fetched from `/api/users/me/labs`.
+Populated from JWT token claims on login. Location assignments fetched from `/api/users/me/locations`.
 
 ---
 

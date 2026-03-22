@@ -8,9 +8,14 @@ This document lists unresolved questions that require stakeholder input before o
 
 | # | Question | Context | Impact |
 |---|---|---|---|
-| OQ-01 | **Which enterprise identity provider (IdP) will be used?** (e.g., Azure AD, Okta, LDAP, custom) | The authentication integration approach depends entirely on the IdP. JWT token structure, claims, and login flow differ by provider. | Blocks Phase 1: Authentication integration. |
-| OQ-02 | **Should users be provisioned manually by Admin, or synced from the enterprise directory?** | If synced, the system needs a directory sync mechanism. If manual, the Admin UI handles all user creation. | Affects User Management module design. |
-| OQ-03 | **Is multi-factor authentication (MFA) required?** | If yes, MFA must be configured at the IdP level or integrated into the login flow. | Affects authentication configuration. |
+| OQ-01 | **~~Which enterprise identity provider (IdP) will be used?~~** | **RESOLVED:** The system uses admin-managed local accounts with email + password. No external IdP. JWT tokens are issued by the backend. | Resolved. |
+| OQ-02 | **~~Should users be provisioned manually by Admin, or synced from the enterprise directory?~~** | **RESOLVED:** Users are created manually by Admin. No directory sync. | Resolved. |
+| OQ-03 | **~~Is multi-factor authentication (MFA) required?~~** | **DEFERRED:** Not in MVP scope. Can be added later if needed. | Deferred. |
+| OQ-81 | **What is the minimum password policy?** | Options: (a) minimum 8 characters, (b) minimum 8 characters + uppercase + number + special, (c) configurable by Admin. Needs a decision before implementing user creation. | Affects user creation validation. Must resolve before Phase 1. |
+| OQ-82 | **What should the JWT token expiry duration be?** | Options: (a) 1 hour with refresh token, (b) 8 hours (one work shift), (c) 24 hours. Longer durations are less secure but more convenient for lab environments. | Affects session management. Must resolve before Phase 1. |
+| OQ-83 | **Should the forgot password flow in MVP show a specific admin contact email/phone, or just a generic message?** | The current plan says "contact your system administrator". Should the page show an actual contact (e.g., admin@company.com), or should this be configurable? | Affects forgot password page design. Low priority. |
+| OQ-84 | **Can a user with `specific` location scope be assigned to multiple locations?** | The current plan supports multiple location assignments. Confirm this is the desired behavior (e.g., a Focal Point assigned to both AIE and CT). | Affects `user_locations` data model and scope checking. |
+| OQ-85 | **Should Focal Point access be tied to location only, or also to specific labs within a location?** | The current plan derives lab access from location: if you have access to AIE, you access all labs in AIE. An alternative is lab-level assignment (more granular but more complex). The stakeholder spreadsheet assigns users to locations, not labs. | Affects access control granularity. Should resolve before Phase 1. |
 
 ---
 
@@ -202,8 +207,8 @@ The following questions emerged during the detailed workflow analysis (documents
 
 | Priority | Questions | Rationale |
 |---|---|---|
-| **Must resolve before Phase 1** | OQ-01, OQ-02, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41, OQ-61, OQ-65, OQ-66 | Foundation decisions that affect schema, auth, initial data, and PO numbering |
-| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47, OQ-56, OQ-57, OQ-62 | Ordering, approval workflow design, cart behavior, and vendor soft-delete |
-| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51, OQ-60, OQ-63, OQ-64 | Inventory management, check-in/checkout, Verify STD validation, and concurrency |
-| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55, OQ-58, OQ-59 | Monitoring, notifications, reporting, shelf-life extension, and peroxide result authority |
-| **Can be deferred** | OQ-03, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44 | Enhancements or post-MVP concerns |
+| **Must resolve before Phase 1** | ~~OQ-01~~, ~~OQ-02~~, OQ-04, OQ-38, OQ-39, OQ-40, OQ-41, OQ-61, OQ-65, **OQ-81, OQ-82, OQ-84, OQ-85** | Foundation decisions that affect schema, auth, password policy, and scope model |
+| **Must resolve before Phase 2** | OQ-08, OQ-09, OQ-10, OQ-11, OQ-12, OQ-14, OQ-15, OQ-16, OQ-45, OQ-46, OQ-47, OQ-56, OQ-57, OQ-62, OQ-66, OQ-67, OQ-69, OQ-70, OQ-71, OQ-72 | Ordering, approval workflow, PO number design, cart behavior, vendor soft-delete |
+| **Must resolve before Phase 3** | OQ-17, OQ-18, OQ-19, OQ-20, OQ-28, OQ-29, OQ-30, OQ-48, OQ-49, OQ-50, OQ-51, OQ-60, OQ-63, OQ-64, OQ-68, OQ-77, OQ-78, OQ-79, OQ-80 | Inventory management, check-in/checkout, item master seeding, max stock |
+| **Must resolve before Phase 4** | OQ-21, OQ-22, OQ-23, OQ-24, OQ-25, OQ-26, OQ-27, OQ-31, OQ-32, OQ-33, OQ-34, OQ-35, OQ-36, OQ-52, OQ-53, OQ-54, OQ-55, OQ-58, OQ-59, OQ-73, OQ-74, OQ-75, OQ-76 | Monitoring, notifications, reporting, peroxide sub-type rules |
+| **Can be deferred** | ~~OQ-03~~, OQ-05, OQ-06, OQ-07, OQ-13, OQ-37, OQ-42, OQ-43, OQ-44, OQ-83 | Enhancements or post-MVP concerns |
