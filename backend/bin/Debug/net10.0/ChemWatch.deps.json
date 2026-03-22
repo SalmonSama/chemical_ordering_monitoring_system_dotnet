@@ -10,6 +10,8 @@
         "dependencies": {
           "BCrypt.Net-Next": "4.1.0",
           "EFCore.NamingConventions": "9.0.0",
+          "ExcelDataReader": "3.8.0",
+          "ExcelDataReader.DataSet": "3.8.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "10.0.5",
           "Microsoft.EntityFrameworkCore": "9.0.14",
           "Microsoft.EntityFrameworkCore.Design": "9.0.14",
@@ -36,6 +38,25 @@
           "lib/net8.0/EFCore.NamingConventions.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "ExcelDataReader/3.8.0": {
+        "runtime": {
+          "lib/net8.0/ExcelDataReader.dll": {
+            "assemblyVersion": "3.8.0.0",
+            "fileVersion": "3.8.0.0"
+          }
+        }
+      },
+      "ExcelDataReader.DataSet/3.8.0": {
+        "dependencies": {
+          "ExcelDataReader": "3.8.0"
+        },
+        "runtime": {
+          "lib/net8.0/ExcelDataReader.DataSet.dll": {
+            "assemblyVersion": "3.8.0.0",
+            "fileVersion": "3.8.0.0"
           }
         }
       },
@@ -595,6 +616,20 @@
       "sha512": "sha512-heKIYzPdEWx+Ba4xuG6jfEssW9rEi7I0lX38eoN7wo7qgg9uw7nn8UEmDQfwGEYPzSDpetCVANnDr5tqt2Asjg==",
       "path": "efcore.namingconventions/9.0.0",
       "hashPath": "efcore.namingconventions.9.0.0.nupkg.sha512"
+    },
+    "ExcelDataReader/3.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kbUsldc5Fn9IKgzL2nr4VvN/mKqPqn8zGXUZpA7uL6svCA4psF+qMK519EhMvderpU4pAJoqk9DWpiSIkiZtXA==",
+      "path": "exceldatareader/3.8.0",
+      "hashPath": "exceldatareader.3.8.0.nupkg.sha512"
+    },
+    "ExcelDataReader.DataSet/3.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+eQg5oinHir7ayE/rF4dedvy8J6FBDG8RDyKFQsS/VZG9ygrnNgW6U8JSlrfGfe3DxYgbVoVwYV9Hbk63JQJFQ==",
+      "path": "exceldatareader.dataset/3.8.0",
+      "hashPath": "exceldatareader.dataset.3.8.0.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",

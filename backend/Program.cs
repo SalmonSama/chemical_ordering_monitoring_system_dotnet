@@ -61,7 +61,18 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddScoped<ChemWatch.Services.DataImportService>();
+
 var app = builder.Build();
+
+if (args.Contains("--import-data"))
+{
+    using var scope = app.Services.CreateScope();
+    var importService = scope.ServiceProvider.GetRequiredService<ChemWatch.Services.DataImportService>();
+    var filePath = args.SkipWhile(a => a != "--import-data").Skip(1).FirstOrDefault() ?? @"..\Database_Info_Draft_20032026.xlsx";
+    await importService.RunImportAsync(filePath);
+    return;
+}
 
 // ── Middleware Pipeline ──────────────────────────────────────────────
 

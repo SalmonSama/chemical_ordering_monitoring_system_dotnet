@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
     public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<ItemLabSetting> ItemLabSettings => Set<ItemLabSetting>();
+    public DbSet<PoReference> PoReferences => Set<PoReference>();
+    public DbSet<PeroxideConfigRule> PeroxideConfigRules => Set<PeroxideConfigRule>();
 
     // Inventory Core
     public DbSet<InventoryLot> InventoryLots { get; set; }
@@ -159,6 +161,35 @@ public class AppDbContext : DbContext
              .WithMany(l => l.ItemLabSettings)
              .HasForeignKey(ils => ils.LabId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── PoReference ───────────────────────────────────────────────
+        modelBuilder.Entity<PoReference>(e =>
+        {
+            e.HasIndex(p => p.PoNumber).IsUnique();
+            e.Property(p => p.PoNumber).HasMaxLength(50);
+
+            e.HasOne(p => p.Category)
+             .WithMany()
+             .HasForeignKey(p => p.CategoryId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(p => p.Lab)
+             .WithMany()
+             .HasForeignKey(p => p.LabId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(p => p.Vendor)
+             .WithMany()
+             .HasForeignKey(p => p.VendorId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── PeroxideConfigRule ────────────────────────────────────────
+        modelBuilder.Entity<PeroxideConfigRule>(e =>
+        {
+            e.HasIndex(p => p.PeroxideClass).IsUnique();
+            e.Property(p => p.PeroxideClass).HasMaxLength(20);
         });
 
         // ── InventoryLot ──────────────────────────────────────────────
