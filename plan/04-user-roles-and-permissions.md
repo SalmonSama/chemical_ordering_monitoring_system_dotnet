@@ -25,7 +25,8 @@ The system has three roles:
 | **Focal Point** | Manages operations for one or more specific locations. Can edit items and PO numbers. Can check in, check out, approve orders, extend shelf life, and add **and correct** peroxide test results within their scope. | Lab managers, senior lab technicians |
 | **User** | Day-to-day operational user. Can input item entries. Can check in, check out, and add peroxide test results within their assigned location(s). Cannot correct peroxide tests, approve orders, or extend shelf life. | Lab technicians, researchers |
 
-> **Note:** The earlier "Viewer / Auditor" role has been removed from the core role set. If read-only audit access is needed in the future, it can be added as a fourth role.
+
+> **Note:** The earlier "Viewer / Auditor" role has been removed from the core role set. If read-only audit access is needed in the future, it can be added as a fourth role. All existing references to "Viewer / Auditor" across other plan documents should be treated as deferred/removed from MVP scope.
 
 ---
 
@@ -45,7 +46,9 @@ Each user has a **location scope type** that controls their data visibility:
   - A Focal Point with `all` scope can approve orders and manage operations at any location.
   - A User with `all` scope can check in/out and log peroxide tests at any location.
   - A Focal Point or User with `specific` scope is restricted to their assigned locations only.
-- The location scope determines which **locations and their labs** the user can access. Lab-level access is derived from the location: if a user has access to location AIE, they can access all labs under AIE.
+
+
+- The location scope determines which **locations and their labs** the user can access. Lab-level access is derived from the location: if a user has access to location AIE, they can access all labs under AIE (PO Lab, EOU Lab, PG Lab, etc.).
 
 ### How Scope Affects the System
 
@@ -201,7 +204,8 @@ Admin can change the following at any time:
 4. System hashes the new password and updates the user record.
 5. The user must use the new password on next login.
 
-> **Note:** There is no self-service password reset in MVP. The forgot password page instructs users to contact their administrator.
+
+> **Note:** There is no self-service password reset in MVP. The forgot password page instructs users to contact their administrator. A future enhancement may add email-based reset links.
 
 ---
 

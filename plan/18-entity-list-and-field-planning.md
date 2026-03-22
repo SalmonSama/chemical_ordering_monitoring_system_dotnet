@@ -166,8 +166,10 @@ The **shared item master list**. Every orderable or trackable material/chemical 
 | `allows_checkout` | BOOLEAN | No | Can be checked out via the checkout workflow? Default `true` |
 | `tracks_expiry` | BOOLEAN | No | Does this item have an expiry date to monitor? Default `true` |
 | `requires_peroxide_monitoring` | BOOLEAN | No | Is this a peroxide-forming chemical? Default `false` |
-| `peroxide_class` | VARCHAR(10) | Yes | Peroxide classification group: `A`, `B`, `C` (null if not peroxide-forming) |
+| `peroxide_class` | VARCHAR(20) | Yes | Peroxide sub-type: `Peroxide_TS`, `Peroxide_CRF`, `Peroxide_A`, `Peroxide_B`, `Peroxide_C1`, `Peroxide_C2`, `Peroxide_D`, `Peroxide_D1`, `Peroxide_D2` (null if not peroxide-forming). See `13-peroxide-workflow.md`. |
 | `is_regulatory_related` | BOOLEAN | No | Does this item have regulatory reporting requirements? Default `false` |
+| `expiry_warning_days` | INTEGER | Yes | Days before expiry to trigger an expiry warning notification (e.g., 14 = warn 14 days before expiry). Per-item override of system default. Spreadsheet shows most items use 14 days; some use 30 or 60 days. |
+| `is_long_lead_time` | BOOLEAN | No | Indicates if this item has a long procurement lead time. Default `false`. Used for dashboard filtering and ordering priority. |
 | `is_active` | BOOLEAN | No | Soft-delete flag. Default `true` |
 
 **Unique:** `(part_no, default_vendor_id)` where both are non-null (same part number from the same vendor is the same item)
@@ -214,6 +216,7 @@ Per-item, per-lab configuration. This is where **min stock thresholds** live —
 | `item_id` | UUID FK → items | No | |
 | `lab_id` | UUID FK → labs | No | |
 | `min_stock` | DECIMAL(12,3) | Yes | Minimum stock threshold for this item in this lab. Null = no minimum configured. |
+| `max_stock` | DECIMAL(12,3) | Yes | Maximum stock threshold for this item in this lab. Null = no maximum configured. Spreadsheet provides max stock per location; normalize to per-lab. |
 | `reorder_quantity` | DECIMAL(12,3) | Yes | Suggested reorder quantity when below min stock |
 | `is_stocked` | BOOLEAN | No | Is this item stocked in this specific lab? Default `false` |
 | `storage_sublocation` | VARCHAR(100) | Yes | Default storage sublocation (e.g., "Cabinet A3", "Fridge 2") |
@@ -254,18 +257,39 @@ Many-to-many junction between items and regulations.
 
 ---
 
+### 12a. `po_number_mappings`
+
+Pre-assigned PO numbers keyed by (category, lab, vendor). Used when creating purchase requests and sending vendor emails. PO numbers are **not auto-generated**; they are fixed reference strings assigned by procurement.
+
+| Column | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | UUID PK | No | |
+| `category_id` | UUID FK → item_categories | No | Item category |
+| `lab_id` | UUID FK → labs | No | Target lab |
+| `vendor_id` | UUID FK → vendors | No | Vendor |
+| `po_number` | VARCHAR(50) | No | Pre-assigned PO number string (e.g., "45182095PG") |
+| `description` | TEXT | Yes | Optional description |
+| `is_active` | BOOLEAN | No | Default `true` |
+
+**Unique:** `po_number`
+**Index:** `(category_id, lab_id, vendor_id)`
+
+> **Note:** Some (category, lab, vendor) triples have multiple PO numbers (e.g., PE Lab has 3 Gas PO numbers for BIG). The unique constraint is on `po_number`, not on the triple.
+
+---
+
 ## Layer 2: Transactional Data
 
 ---
 
 ### 13. `purchase_requests`
 
-An order submitted by a user for a specific lab. This is the "order header" — called `purchase_requests` rather than `orders` to distinguish from the vendor-facing PO number, which is a reference on this record.
+An order submitted by a user for a specific lab. This is the "order header" — called `purchase_requests` rather than `orders` to distinguish from the vendor-facing PO number.
 
 | Column | Type | Nullable | Description |
 |---|---|---|---|
 | `id` | UUID PK | No | |
-| `po_number` | VARCHAR(50) | No | System-generated PO number (e.g., `PO-2026-0001`). Unique. |
+| `request_number` | VARCHAR(50) | No | System-generated internal reference number (e.g., `REQ-2026-0001`). Unique. For internal tracking. |
 | `lab_id` | UUID FK → labs | No | Target lab for this order |
 | `location_id` | UUID FK → locations | No | Denormalized from lab for query convenience |
 | `requested_by` | UUID FK → users | No | User who submitted the order |
@@ -280,7 +304,9 @@ An order submitted by a user for a specific lab. This is the "order header" — 
 | `has_failed_email` | BOOLEAN | No | True if any vendor email failed all retries. Default `false` |
 | `completed_at` | TIMESTAMPTZ | Yes | When all line items were fully received |
 
-**Unique:** `po_number`
+**Unique:** `request_number`
+
+> **Note:** The vendor-facing PO number is looked up from `po_number_mappings` at the vendor-email level (per vendor group), not stored directly on the purchase request header. A single purchase request may reference multiple PO numbers if items span multiple vendors.
 
 **Indexes:** `lab_id`, `status`, `submitted_at`, `requested_by`
 
@@ -426,9 +452,9 @@ Individual peroxide monitoring events, each linked to a specific inventory lot.
 | `test_date` | DATE | No | Date the test was performed |
 | `tested_by` | UUID FK → users | No | User who performed the test |
 | `test_method` | VARCHAR(100) | Yes | Method: "Test strip", "Titration", "Electronic meter", etc. |
-| `result_type` | VARCHAR(10) | No | `numeric` or `textual` |
+| `result_type` | VARCHAR(20) | No | `numeric`, `textual`, or `visual_inspection` |
 | `ppm_result` | DECIMAL(8,2) | Yes | PPM measurement (required if result_type = numeric) |
-| `result_text` | VARCHAR(200) | Yes | Textual result (required if result_type = textual) |
+| `result_text` | VARCHAR(200) | Yes | Textual result (required if result_type = textual or visual_inspection, e.g., "Pass", "Fail", "Negative") |
 | `classification` | VARCHAR(20) | No | `normal`, `warning`, `quarantine` |
 | `visual_observations` | TEXT | Yes | |
 | `next_monitor_due` | DATE | Yes | Auto-calculated next test date (null if quarantined) |

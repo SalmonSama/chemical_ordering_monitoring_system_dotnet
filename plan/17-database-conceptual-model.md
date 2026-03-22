@@ -32,6 +32,7 @@ The schema is conceptually organized into three layers:
 │  item_categories                                          │
 │  items ─→ item_location_settings ─→ item_lab_settings     │
 │  regulations ─→ item_regulations                          │
+│  po_number_mappings (category + lab + vendor → PO number) │
 └───────────────────────────────────────────────────────────┘
                            │
                      FK references
@@ -81,6 +82,7 @@ Master data represents the **organizational reference information** that is defi
 | **Catalog** | `items`, `item_categories`, `vendors` | The item master list is a shared product catalog. "Acetone" is defined once, not once per lab. Vendors supply across all locations. |
 | **Compliance** | `regulations`, `item_regulations` | Regulatory requirements apply to items regardless of where they are stocked. |
 | **Lab-specific configuration** | `item_location_settings`, `item_lab_settings` | While the item definition is shared, lab-specific details (min stock, stocked flag) are normalized into junction tables keyed by (item, lab). |
+| **PO number lookup** | `po_number_mappings` | Pre-assigned PO numbers per (category, lab, vendor) combination. Used at order time and in vendor emails. |
 
 ### Why the item master is not lab-specific
 

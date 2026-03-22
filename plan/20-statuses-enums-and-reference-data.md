@@ -103,20 +103,27 @@ Used on `peroxide_tests.result_type`. See `13-peroxide-workflow.md`.
 |---|---|---|
 | `numeric` | Numeric (ppm) | PPM value measured; system auto-calculates classification |
 | `textual` | Textual | Descriptive result (e.g., "Negative"); user selects classification manually |
+| `visual_inspection` | Visual Inspection | Pass/fail visual inspection (used for Peroxide_TS type); user selects classification manually |
 
 ---
 
 ## 6. Peroxide Classification Groups
 
-Used on `items.peroxide_class`. See `13-peroxide-workflow.md`.
+Used on `items.peroxide_class`. See `13-peroxide-workflow.md` for detailed per-type rules.
 
-| Value (DB) | Display Label | Description | Default Monitoring Interval |
-|---|---|---|---|
-| `A` | Class A | Severe hazard — form peroxides readily | 3 months |
-| `B` | Class B | Concentration hazard — hazardous on concentration | 6 months |
-| `C` | Class C | Low hazard — autopolymerize with peroxide initiation | 12 months |
+| Value (DB) | Display Label | Description |
+|---|---|---|
+| `Peroxide_TS` | Time Sensitive | Time-sensitive peroxide risk; visual inspection every 6 months |
+| `Peroxide_CRF` | Chloroform | Chloroform (stabilized); no periodic testing if sealed |
+| `Peroxide_A` | Class A | Severe hazard — test at open date |
+| `Peroxide_B` | Class B | Concentration hazard — test every 6 months after open and before distillation |
+| `Peroxide_C1` | Class C1 (w/ Inhibitor) | Monomer with inhibitor — test before distillation |
+| `Peroxide_C2` | Class C2 (w/o Inhibitor) | Monomer without inhibitor — dispose within 24 hours of opening |
+| `Peroxide_D` | Class D (General) | Polyether/glycol — test before distillation |
+| `Peroxide_D1` | Class D1 (Chemical) | Polyether/glycol for chemical use — test every 6 months |
+| `Peroxide_D2` | Class D2 (Retain Sample) | Polyether/glycol retained sample — conditional testing |
 
-> **Note:** Monitoring intervals are configurable. These are recommended defaults. On a Warning classification, the interval is halved.
+> **Note:** This replaces the earlier 3-class (A/B/C) system. See `07-category-behavior-matrix.md` for the sub-type reference table and `13-peroxide-workflow.md` for full monitoring and disposal rules per type.
 
 ---
 

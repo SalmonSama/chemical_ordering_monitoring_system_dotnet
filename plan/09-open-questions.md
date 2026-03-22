@@ -203,6 +203,46 @@ The following questions emerged during the detailed workflow analysis (documents
 
 ---
 
+## Spreadsheet-Sourced Questions (Database_Info_Draft_20032026)
+
+The following questions emerged from analyzing the stakeholder spreadsheet:
+
+### Location & Lab
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-67 | **What location does "SM Lab" belong to?** | SM Lab appears in the POnumber sheet (Chemical & Reagent PO: 45182740SM for Chemex; Gas PO: 45182061222 for BIG) but is **not listed** in the Location&Users sheet. It may be EBSM Lab (MTP), a renamed lab, or a separate lab not yet documented. | Affects location/lab seed data and PO number mapping. Must resolve before Phase 2. |
+| OQ-68 | **Are there labs that operate under "Shared" but appear with specific names in PO number mappings?** | Most MaterialList items are assigned to "Shared" lab, but PO numbers are assigned to specific labs (PG Lab, EOU Lab, etc.). Should items assigned to "Shared" use the PO number from the specific lab that orders them? | Affects PO number lookup logic and item-to-lab assignment. |
+
+### PO Numbers
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-69 | **What should happen when a user creates an order for a (category, lab, vendor) combination that has no pre-assigned PO number mapping?** | Not all combinations are covered. Options: (1) block the order, (2) allow with a warning and let Admin assign later, (3) generate a temporary placeholder. | Affects order validation workflow. Must resolve before Phase 2. |
+| OQ-70 | **Why does PE Lab (Gas, BIG) have three separate PO number mappings (45182061225, 45182061226, 45182061227)?** | Multiple PO numbers for the same (category, lab, vendor) triple violates the simple lookup pattern. Is this for different gas types, different contract periods, or data entry duplication? | Affects data model constraint design: should the PO number mapping allow multiple entries per triple? |
+| OQ-71 | **Should the system generate an internal sequential reference number (e.g., `REQ-2026-0001`) for each purchase request, separate from the vendor-facing PO number?** | Pre-assigned PO numbers are vendor-facing references. Internal tracking may still need a unique sequential identifier. Currently proposed in `18-entity-list-and-field-planning.md`. | Affects `purchase_requests` schema. Must resolve before Phase 2. |
+| OQ-72 | **The spreadsheet shows PO number `4518209POL` for POL Lab and `4518209RIG` for RIGID Lab — are these intentionally sharing the same prefix `4518209`?** | The prefix pattern differs from other labs (e.g., PG Lab uses `45182095PG`). Confirm whether the truncated prefix is intentional or a data entry error. | Affects PO number seed data accuracy. |
+
+### Peroxide Classification
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-73 | **What is the relationship between `Peroxide_D` (general) and `Peroxide_D1`/`Peroxide_D2`?** | Peroxide_Related sheet defines D, D1, and D2 separately. The "Peroxide requirement_1st talk" sheet only lists D1 and D2 explicitly. Is `Peroxide_D` a parent category, or does it apply to specific items distinct from D1/D2? No items in MaterialList use `Peroxide_D` directly. | Affects peroxide classification enum and monitoring rule implementation. |
+| OQ-74 | **For before-use testing (before distillation/concentration), how should the system trigger the test prompt?** | The checkout workflow could prompt users based on target purpose, but the system cannot know if a chemical is being used for distillation unless the user selects a specific purpose. Should a new checkout purpose be added (e.g., "Distillation/Concentration")? | Affects checkout workflow and purpose dropdown values. |
+| OQ-75 | **Should Peroxide_CRF items require testing after opening, or only within 18 months?** | The Peroxide_Related sheet shows no test is required for CRF when sealed. The 1st talk sheet simply says "dispose 18 months after open or 24 months after check-in." Confirm whether any monitoring is needed for CRF after opening. | Affects monitoring schedule for Chloroform items. |
+| OQ-76 | **The Peroxide_Related sheet shows `Peroxide_TS` uses "visual inspection (pass/fail)" rather than PPM testing. What constitutes a visual inspection failure?** | Examples: discoloration, precipitate formation, unusual viscosity. Need a defined checklist or criteria for fail conditions. | Affects test logging form and quarantine trigger logic. |
+
+### Item Master & Stock
+
+| # | Question | Context | Impact |
+|---|---|---|---|
+| OQ-77 | **The MaterialList "Lot" column shows "NA" for all shared items. Does this mean lot tracking is not used for incoming items, or that the lot number is assigned at check-in?** | If "NA" means no vendor lot numbers exist, the system should auto-generate internal lot identifiers at check-in. | Affects check-in workflow and lot number generation. |
+| OQ-78 | **Should `max_stock` trigger any system behavior (e.g., warnings when stock exceeds maximum)?** | The spreadsheet provides max stock per location, but it is unclear whether exceeding max stock should: (1) block check-in, (2) show a warning, or (3) have no effect beyond reporting. | Affects check-in validation and dashboard logic. |
+| OQ-79 | **The spreadsheet shows some items (e.g., Propylene Glycol Retained Sample, Hach reagents) assigned to specific labs (PG, EOU) rather than "Shared." Should these items have lab-restricted ordering, or can any lab order them?** | If lab-restricted, the catalog and ordering UI must filter items by the user's lab. If not, the lab assignment in the spreadsheet only indicates where the item is primarily consumed. | Affects catalog filtering logic and item_lab_settings seed data. |
+| OQ-80 | **Some items in MaterialList have `#VALUE!` in the Size column (rows with part numbers ending in periods like `188050.0010.`). What is the correct size for these items?** | Likely a spreadsheet formula error. Need correct values before seeding. | Affects item master seed data. |
+
+---
+
 ## Priority Classification
 
 | Priority | Questions | Rationale |

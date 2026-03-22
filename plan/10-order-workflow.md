@@ -169,7 +169,7 @@ The order-level status is computed from the aggregate of its line-item statuses:
    - All items are from orderable categories.
    - Target lab is set.
 3. System creates an **order record** with:
-   - Order number (auto-generated, e.g., `PO-2026-0001`).
+   - **PO number** looked up from the pre-assigned PO number table based on **category + lab + vendor** combination. Each vendor group within the order may reference a different PO number. If no PO number mapping exists for a given combination, the system flags it for Admin attention.
    - Requester user ID.
    - Target lab and location.
    - Submission date/time.
@@ -181,6 +181,8 @@ The order-level status is computed from the aggregate of its line-item statuses:
 **Transaction history entry:** `SUBMIT_ORDER` — records order ID, requester, lab, location, line items, and timestamp.
 
 **Status change:** In Cart → **Pending Approval**
+
+> **Important — PO Numbers:** The spreadsheet confirms that PO numbers are **pre-assigned** per (Category, Lab, Vendor) combination, not auto-generated sequential IDs. For example, `45182095PG` is the PO number for Chemical & Reagent orders from PG Lab to Chemex. A single purchase request containing items for multiple vendors may reference multiple PO numbers. See the "Pre-Assigned PO Number Reference" section below.
 
 ---
 
@@ -407,3 +409,50 @@ Admin can approve any order regardless of lab assignment. This is for escalation
 - If a user starts a cart on a desktop and switches to a tablet, the cart is intact.
 - Carts have no automatic expiration. Users can clear their cart manually.
 - If a catalog item is deactivated while it is in a user's cart, the system should warn the user on cart review and prevent submission until the deactivated item is removed.
+
+---
+
+## Pre-Assigned PO Number Reference
+
+The stakeholder spreadsheet (POnumber sheet) confirms that PO numbers are **pre-assigned per (Category, Lab, Vendor) combination**. They are not auto-generated. The system must store these mappings and look them up when creating orders and sending vendor emails.
+
+### PO Number Mappings
+
+| Category | Lab | PO Number | Vendor |
+|---|---|---|---|
+| Chemical & Reagent | PG Lab | 45182095PG | Chemex |
+| Chemical & Reagent | POL Lab | 4518209POL | Chemex |
+| Chemical & Reagent | RIGID Lab | 4518209RIG | Chemex |
+| Chemical & Reagent | PO Lab | 45182732PO | Chemex |
+| Chemical & Reagent | EOU Lab | 45182067EOU | Chemex |
+| Chemical & Reagent | EOU Lab | 45182068EOU | Hach |
+| Chemical & Reagent | SE Lab | 45182056SE | Chemex |
+| Chemical & Reagent | FM Lab | 45182811FM | Chemex |
+| Chemical & Reagent | PU Lab | 45182771PU | Chemex |
+| Chemical & Reagent | PS Lab | 45182771PS | Chemex |
+| Chemical & Reagent | SM Lab | 45182740SM | Chemex |
+| Chemical & Reagent | Latex Lab | 45182733LTX | Chemex |
+| Chemical & Reagent | EFF Lab | 45182735EFF | Chemex |
+| Chemical & Reagent | PE Lab | 45182740111 | Chemex |
+| Gas | SM Lab | 45182061222 | BIG |
+| Gas | PS Lab | 45182061223 | BIG |
+| Gas | Latex Lab | 45182061224 | BIG |
+| Gas | PE Lab | 45182061225 | BIG |
+| Gas | PE Lab | 45182061226 | BIG |
+| Gas | PE Lab | 45182061227 | BIG |
+| Gas | PO Lab | 45182061228 | Linde |
+| Gas | EOU Lab | 45182061229 | Linde |
+| Material & Consumable | PE Lab | 45182061230 | S&T |
+| Material & Consumable | PO Lab | 45182061231 | ThreeBond |
+| Material & Consumable | EOU Lab | 45182061232 | ThreeBond |
+
+### Data Model Implications
+
+1. **New entity: `po_number_mappings`** — a reference table keyed by `(category_id, lab_id, vendor_id)` that stores the pre-assigned PO number string.
+2. The `purchase_requests.po_number` field references this mapping rather than being auto-generated.
+3. A single purchase request may reference **multiple PO numbers** if items from different vendors are included — the PO number is resolved at the vendor-email level (per vendor group), not at the order level.
+4. The internal order identifier should use a separate auto-generated field (e.g., `internal_ref` or `request_number`) to uniquely identify each purchase request in the system.
+5. **SM Lab** appears in PO number mappings but is not listed in Location&Users. This is recorded as an open question in `09-open-questions.md`.
+6. Some labs have **multiple PO numbers for the same category** with different vendors (e.g., EOU Lab has separate PO numbers for Chemex and Hach). Some labs also have **multiple PO numbers for the same vendor** in the same category (e.g., PE Lab has three Gas PO numbers for BIG).
+
+> **Open Question:** Should the system also generate an internal sequential reference number (e.g., `REQ-2026-0001`) for each purchase request, separate from the vendor-facing PO number? See `09-open-questions.md`.
