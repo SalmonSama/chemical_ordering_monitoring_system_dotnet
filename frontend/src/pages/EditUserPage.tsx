@@ -11,9 +11,9 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [email, setEmail] = useState('');
 
   const [form, setForm] = useState({
+    email: '',
     fullName: '',
     roleId: '',
     locationScopeType: 'specific',
@@ -26,8 +26,8 @@ export default function EditUserPage() {
     Promise.all([getUser(id), getRoles(), getLocations()]).then(([user, r, l]) => {
       setRoles(r);
       setLocations(l);
-      setEmail(user.email);
       setForm({
+        email: user.email,
         fullName: user.fullName,
         roleId: user.roleId,
         locationScopeType: user.locationScopeType,
@@ -82,12 +82,18 @@ export default function EditUserPage() {
 
       {error && <div style={styles.error}>{error}</div>}
 
-      <div style={styles.readonlyField}>
-        <label style={styles.label}>Email</label>
-        <div style={styles.readonlyValue}>{email}</div>
-      </div>
-
       <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.field}>
+          <label style={styles.label}>Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
+            required
+            style={styles.input}
+          />
+        </div>
+
         <div style={styles.field}>
           <label style={styles.label}>Full Name</label>
           <input

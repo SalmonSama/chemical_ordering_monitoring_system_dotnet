@@ -55,6 +55,7 @@ export interface CreateUserRequest {
 }
 
 export interface UpdateUserRequest {
+  email: string;
   fullName: string;
   roleId: string;
   locationScopeType: string;

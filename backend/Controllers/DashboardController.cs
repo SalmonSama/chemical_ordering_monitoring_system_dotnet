@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ChemWatch.Data;
 using ChemWatch.Models;
+using System.Text.Json;
 
 namespace ChemWatch.Controllers;
 
@@ -247,5 +248,196 @@ public class DashboardController : ControllerBase
         .ToList();
 
         return Ok(result);
+    }
+
+    // GET: api/dashboard/summary
+    // Consolidated endpoint — returns all counts + preview rows in one call
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary()
+    {
+        var today = DateTime.UtcNow.Date;
+
+        // ── 1. Pending Approvals ──────────────────────────────────────
+        var pendingOrders = await _db.PurchaseRequests
+            .Include(pr => pr.RequestedByUser)
+            .Include(pr => pr.Lab)
+            .Include(pr => pr.Items).ThenInclude(li => li.Item)
+            .Where(pr => pr.Status == "pending_approval")
+            .OrderByDescending(pr => pr.SubmittedAt)
+            .ToListAsync();
+
+        var pendingApprovals = pendingOrders.Count;
+
+        var pendingOrdersPreview = pendingOrders.Take(5).Select(pr => {
+            var items = pr.Items;
+            var first = items.FirstOrDefault();
+            return new {
+                id = pr.Id,
+                poNumber = pr.PoNumber,
+                itemSummary = first == null ? "Empty" :
+                    (items.Count > 1 ? $"{first.Item.ItemName} (+{items.Count - 1} more)" : first.Item.ItemName),
+                totalQty = items.Sum(i => i.QuantityOrdered),
+                requester = pr.RequestedByUser.FullName,
+                labName = pr.Lab.Name,
+                submittedAt = pr.SubmittedAt
+            };
+        });
+
+        // ── 2. Low Stock ──────────────────────────────────────────────
+        var settings = await _db.ItemLabSettings
+            .Include(s => s.Item).ThenInclude(i => i.Category)
+            .Include(s => s.Lab).ThenInclude(l => l.Location)
+            .Where(s => s.MinStock > 0)
+            .ToListAsync();
+
+        var activeLots = await _db.InventoryLots
+            .Where(l => l.Status == "active")
+            .GroupBy(l => new { l.ItemId, l.LabId })
+            .Select(g => new { g.Key.ItemId, g.Key.LabId, Total = g.Sum(x => x.QuantityRemaining) })
+            .ToDictionaryAsync(k => $"{k.ItemId}_{k.LabId}", v => v.Total);
+
+        var lowStockItems = settings.Select(s => {
+            var key = $"{s.ItemId}_{s.LabId}";
+            var qty = activeLots.ContainsKey(key) ? activeLots[key] : 0;
+            var deficit = (s.MinStock ?? 0) - qty;
+            string cond = qty == 0 ? "out_of_stock" : (qty < s.MinStock ? "below_min" : "adequate");
+            return new {
+                statusIndicator = cond,
+                itemName = s.Item.ItemName,
+                catalogNumber = s.Item.PartNo,
+                category = s.Item.Category.Name,
+                labName = s.Lab.Name,
+                locationName = s.Lab.Location.Name,
+                totalQuantity = qty,
+                unit = s.Item.Unit,
+                minStock = s.MinStock,
+                deficit = deficit
+            };
+        }).Where(x => x.statusIndicator != "adequate")
+          .OrderByDescending(x => x.deficit)
+          .ToList();
+
+        var lowStockCount = lowStockItems.Count;
+        var lowStockPreview = lowStockItems.Take(5);
+
+        // ── 3. Expiring Soon ──────────────────────────────────────────
+        var expiringLots = await _db.InventoryLots
+            .Include(l => l.Item).ThenInclude(i => i.Category)
+            .Include(l => l.Lab)
+            .Where(l => (l.Status == "active" || l.Status == "expired") && l.ExpiryDate.HasValue)
+            .ToListAsync();
+
+        var expiringItems = expiringLots.Select(l => {
+            var daysLeft = (int)(l.ExpiryDate!.Value.Date - today).TotalDays;
+            string cond = daysLeft < 0 ? "expired" : (daysLeft <= 90 ? "near_expire" : "active");
+            return new {
+                id = l.Id,
+                statusIndicator = cond,
+                itemName = l.Item.ItemName,
+                lotNumber = l.LotNumber,
+                category = l.Item.Category.Name,
+                labName = l.Lab.Name,
+                expiryDate = l.ExpiryDate,
+                daysToExpiry = daysLeft,
+                quantityRemaining = l.QuantityRemaining,
+                unit = l.Unit
+            };
+        }).Where(x => x.statusIndicator != "active")
+          .OrderBy(x => x.daysToExpiry)
+          .ToList();
+
+        var expiringSoonCount = expiringItems.Count;
+        var expiringPreview = expiringItems.Take(5);
+
+        // ── 4. Peroxide Due ───────────────────────────────────────────
+        var peroxideLots = await _db.InventoryLots
+            .Include(l => l.Item)
+            .Include(l => l.Lab)
+            .Where(l => l.Item.RequiresPeroxideMonitoring && (l.Status == "active" || l.Status == "quarantined"))
+            .ToListAsync();
+
+        var pLotIds = peroxideLots.Select(l => l.Id).ToList();
+        var latestTests = await _db.PeroxideTests
+            .Where(pt => pLotIds.Contains(pt.InventoryLotId))
+            .GroupBy(pt => pt.InventoryLotId)
+            .Select(g => g.OrderByDescending(pt => pt.CreatedAt).FirstOrDefault())
+            .ToListAsync();
+        var testDict = latestTests.Where(pt => pt != null).ToDictionary(pt => pt!.InventoryLotId, pt => pt);
+
+        var peroxideItems = peroxideLots.Select(l => {
+            var test = testDict.ContainsKey(l.Id) ? testDict[l.Id] : null;
+            DateTime nextDate;
+            if (test != null && test.NextMonitorDue.HasValue) nextDate = test.NextMonitorDue.Value.Date;
+            else if (l.NextMonitorDate.HasValue) nextDate = l.NextMonitorDate.Value.Date;
+            else nextDate = (l.OpenDate ?? l.CheckedInAt).Date.AddMonths(6);
+
+            var dueIn = (int)(nextDate - today).TotalDays;
+            string cond = "normal";
+            if (l.Status == "quarantined" || l.PeroxideStatus == "Quarantine" || (test != null && test.Classification == "Quarantine"))
+                cond = "quarantined";
+            else if (dueIn < 0) cond = "overdue";
+            else if (dueIn <= 7) cond = "due_soon";
+            else if (l.PeroxideStatus == "Warning" || (test != null && test.Classification == "Warning"))
+                cond = "warning";
+
+            return new {
+                id = l.Id,
+                statusIndicator = cond,
+                itemName = l.Item.ItemName,
+                lotNumber = l.LotNumber,
+                labName = l.Lab.Name,
+                monitorDueIn = dueIn,
+                monitorDate = nextDate,
+                lastClassification = test?.Classification ?? "—"
+            };
+        }).Where(p => new[] { "overdue", "due_soon", "quarantined", "warning" }.Contains(p.statusIndicator))
+          .OrderBy(p => p.monitorDueIn)
+          .ToList();
+
+        var peroxideDueCount = peroxideItems.Count;
+        var peroxidePreview = peroxideItems.Take(5);
+
+        // ── 5. Recent Transactions ────────────────────────────────────
+        var txns = await _db.StockTransactions
+            .Include(t => t.Item)
+            .Include(t => t.Lab)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(8)
+            .ToListAsync();
+
+        var recentTransactions = txns.Select(t => {
+            string lotNum = "—";
+            if (!string.IsNullOrEmpty(t.Metadata))
+            {
+                try {
+                    using var doc = JsonDocument.Parse(t.Metadata);
+                    if (doc.RootElement.TryGetProperty("lot_number", out var prop))
+                        lotNum = prop.GetString() ?? "—";
+                } catch {}
+            }
+            return new {
+                id = t.Id,
+                timestamp = t.CreatedAt,
+                type = t.TransactionType,
+                itemName = t.Item?.ItemName ?? "Unknown",
+                lotNumber = lotNum,
+                quantity = t.Quantity,
+                userName = t.UserName,
+                labName = t.Lab?.Name ?? "—"
+            };
+        });
+
+        // ── Return ────────────────────────────────────────────────────
+        return Ok(new {
+            pendingApprovals,
+            lowStockCount,
+            expiringSoonCount,
+            peroxideDueCount,
+            pendingOrdersPreview,
+            lowStockPreview,
+            expiringPreview,
+            peroxidePreview,
+            recentTransactions
+        });
     }
 }

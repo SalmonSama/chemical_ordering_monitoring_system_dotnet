@@ -136,6 +136,14 @@ public class UsersController : ControllerBase
         if (user == null)
             return NotFound(new { message = "User not found." });
 
+        // Validate email
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest(new { message = "Email is required." });
+
+        var normalizedEmail = request.Email.Trim().ToLower();
+        if (await _db.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail && u.Id != id))
+            return Conflict(new { message = "A user with this email already exists." });
+
         // Validate role exists
         var role = await _db.Roles.FindAsync(request.RoleId);
         if (role == null)
@@ -151,6 +159,7 @@ public class UsersController : ControllerBase
             return BadRequest(new { message = "Users with specific location scope must have at least one assigned location." });
 
         // Update fields
+        user.Email = request.Email.Trim();
         user.FullName = request.FullName.Trim();
         user.RoleId = request.RoleId;
         user.LocationScopeType = scopeType;

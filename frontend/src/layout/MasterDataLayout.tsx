@@ -163,7 +163,7 @@ function navLinkStyle({ isActive }: { isActive: boolean }): React.CSSProperties 
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
     display: 'flex',
-    minHeight: '100vh',
+    height: '100vh',
     background: 'var(--color-bg-primary)',
     fontFamily: 'var(--font-family-sans)',
   },
@@ -176,6 +176,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     flexShrink: 0,
+    minHeight: 0,
     overflowY: 'auto',
   },
   logoArea: {
@@ -275,6 +276,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
+    minHeight: 0,
     overflow: 'hidden',
   },
   header: {
