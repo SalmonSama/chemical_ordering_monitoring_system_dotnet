@@ -1675,6 +1675,270 @@ namespace ChemWatch.Migrations
                             LocationScopeType = "all",
                             PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
                             RoleId = new Guid("a0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "mprapapan@dow.com",
+                            FullName = "Prapapan",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sutarinee@dow.com",
+                            FullName = "Wataporn",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "kboonyathee@dow.com",
+                            FullName = "Kunlaya",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "kannarach@dow.com",
+                            FullName = "Kannarach",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "natee@dow.com",
+                            FullName = "Natee",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "panida@dow.com",
+                            FullName = "Panida",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "thongchai@dow.com",
+                            FullName = "Thongchai",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "nantawan@dow.com",
+                            FullName = "Nantawan",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000a"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "onwara@dow.com",
+                            FullName = "Onwara",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000b"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "kesinee@dow.com",
+                            FullName = "Kesinee",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000c"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "nattaporna@dow.com",
+                            FullName = "NattapornA",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000d"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "suwichar@dow.com",
+                            FullName = "Suwichar",
+                            IsActive = true,
+                            LocationScopeType = "all",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000e"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "nattapornk@dow.com",
+                            FullName = "NattapornK",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000000f"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "jariya@dow.com",
+                            FullName = "Jariya",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "chonnipa@dow.com",
+                            FullName = "Chonnipa",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "soparat@dow.com",
+                            FullName = "Soparat",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sriprai@dow.com",
+                            FullName = "Sriprai",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "wanna@dow.com",
+                            FullName = "Wanna",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "supawadee@dow.com",
+                            FullName = "Supawadee",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "nannaphas@dow.com",
+                            FullName = "Nannaphas",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sunisa@dow.com",
+                            FullName = "Sunisa",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sudarat@dow.com",
+                            FullName = "Sudarat",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "saowaluck@dow.com",
+                            FullName = "Saowaluck",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "narinl@dow.com",
+                            FullName = "NarinL",
+                            IsActive = true,
+                            LocationScopeType = "specific",
+                            PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
+                            RoleId = new Guid("a0000000-0000-0000-0000-000000000003")
                         });
                 });
 
@@ -1708,6 +1972,127 @@ namespace ChemWatch.Migrations
                         .HasDatabaseName("ix_user_locations_user_id_location_id");
 
                     b.ToTable("user_locations", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 868, DateTimeKind.Utc).AddTicks(9509),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000001"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(806),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000001"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(812),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(817),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000001"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(822),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000003"),
+                            UserId = new Guid("20000000-0000-0000-0000-00000000000a")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(823),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000004"),
+                            UserId = new Guid("20000000-0000-0000-0000-00000000000e")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(825),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000001"),
+                            UserId = new Guid("20000000-0000-0000-0000-00000000000f")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(826),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(827),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000004"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000a"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(829),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000001"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000b"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(830),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000c"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(832),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000d"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(833),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000e"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(835),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000f"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(836),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(838),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000002"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 3, 23, 7, 7, 13, 869, DateTimeKind.Utc).AddTicks(839),
+                            LocationId = new Guid("b0000000-0000-0000-0000-000000000003"),
+                            UserId = new Guid("20000000-0000-0000-0000-000000000019")
+                        });
                 });
 
             modelBuilder.Entity("ChemWatch.Models.Vendor", b =>

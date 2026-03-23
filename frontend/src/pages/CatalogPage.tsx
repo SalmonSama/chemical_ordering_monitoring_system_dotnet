@@ -62,6 +62,22 @@ function CatalogPage({ cart, setCart }: CatalogPageProps): React.JSX.Element {
     return cart.find(c => c.itemId === itemId)?.quantity ?? 0;
   };
 
+  // Helper to clean item titles
+  const extractCleanTitle = (item: Item) => {
+    let title = item.itemShortName || item.itemName;
+    
+    // Remove vendor names in quotes (e.g., "Merck", "Labscan")
+    title = title.replace(/"[^"]+"/g, '');
+    
+    // Remove typical sizes at the end (e.g., 2.5 L, 100 ML, 1 KG)
+    title = title.replace(/\s+\d+(\.\d+)?\s*(L|ML|KG|G|EA|PK|Box|Pcs.*)\s*$/i, '');
+    
+    // Remove extra trailing commas, spaces, or dashes
+    title = title.replace(/[,-\s]+$/, '');
+    
+    return title.trim() || item.itemName; // Fallback to raw if logic stripped everything
+  };
+
   return (
     <div>
       <h1 style={styles.title}>Catalog</h1>
@@ -95,7 +111,7 @@ function CatalogPage({ cart, setCart }: CatalogPageProps): React.JSX.Element {
             return (
               <div key={item.id} style={styles.card}>
                 <div style={styles.cardHeader}>
-                  <span style={styles.itemName}>{item.itemName}</span>
+                  <span style={styles.itemName} title={item.itemName}>{extractCleanTitle(item)}</span>
                   {item.category && (
                     <span style={styles.categoryBadge}>{item.category.code}</span>
                   )}

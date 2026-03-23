@@ -40,6 +40,7 @@ public class DataImportService
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
+            await ImportUsersSheet(result);
             await ImportPOnumberSheet(result);
             await ImportMaterialListSheet(result);
             await ImportPeroxideRulesSheet(result);
@@ -85,6 +86,112 @@ public class DataImportService
             }
         }
         _logger.LogInformation("Imported {Count} new PO references.", added);
+    }
+
+    private async Task ImportUsersSheet(DataSet dataSet)
+    {
+        var dt = dataSet.Tables.Cast<DataTable>().FirstOrDefault(t => t.TableName.Contains("UserList", StringComparison.OrdinalIgnoreCase) || t.TableName.Contains("User", StringComparison.OrdinalIgnoreCase));
+        if (dt == null) 
+        {
+            _logger.LogWarning("UserList sheet not found.");
+            return;
+        }
+
+        int added = 0;
+        var defaultPasswordHash = BCrypt.Net.BCrypt.HashPassword("ChemWatch123!");
+
+        // Ensure roles exist
+        var roles = await _db.Roles.ToListAsync();
+        var adminRole = roles.FirstOrDefault(r => r.Name == "admin");
+        var focalPointRole = roles.FirstOrDefault(r => r.Name == "focal_point");
+        var userRole = roles.FirstOrDefault(r => r.Name == "user");
+
+        if (userRole == null)
+        {
+            userRole = new Role { Id = Guid.NewGuid(), Name = "user", DisplayName = "Standard User" };
+            _db.Roles.Add(userRole);
+            await _db.SaveChangesAsync();
+        }
+
+        foreach (DataRow row in dt.Rows)
+        {
+            var fullName = row["Name"]?.ToString()?.Trim();
+            if (string.IsNullOrEmpty(fullName)) continue;
+
+            var email = row["Email"]?.ToString()?.Trim();
+            if (string.IsNullOrEmpty(email))
+            {
+                // Generate email from name
+                var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    var first = parts[0].ToLowerInvariant();
+                    var last = parts.Length > 1 ? parts[parts.Length - 1].ToLowerInvariant() : "";
+                    email = $"{first}.{last}@chemwatch.local".Replace("..", ".");
+                }
+                else
+                {
+                    email = $"user{Guid.NewGuid().ToString().Substring(0, 8)}@chemwatch.local";
+                }
+            }
+
+            // Check if user exists
+            if (await _db.Users.AnyAsync(u => u.Email.ToLower() == email.ToLower()))
+                continue;
+
+            var roleStr = row["Role"]?.ToString()?.Trim()?.ToLowerInvariant();
+            var assignedRole = userRole;
+
+            if (roleStr == "admin" || roleStr == "administrator")
+                assignedRole = adminRole ?? userRole;
+            else if (roleStr == "focal point" || roleStr == "focal_point" || roleStr == "approver")
+                assignedRole = focalPointRole ?? userRole;
+
+            var scopeType = "specific";
+            if (assignedRole.Name == "admin")
+                scopeType = "all";
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                FullName = fullName,
+                Email = email,
+                PasswordHash = defaultPasswordHash,
+                RoleId = assignedRole.Id,
+                LocationScopeType = scopeType,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Users.Add(user);
+            added++;
+
+            // Locations assignment
+            if (scopeType == "specific")
+            {
+                var locStr = row["Location"]?.ToString()?.Trim();
+                if (!string.IsNullOrEmpty(locStr))
+                {
+                    var locations = locStr.Split(new[] { ',', '&', '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var l in locations)
+                    {
+                        var locName = l.Trim();
+                        var loc = await _db.Locations.FirstOrDefaultAsync(loc => loc.Name.ToLower() == locName.ToLower() || loc.Code.ToLower() == locName.ToLower());
+                        if (loc != null)
+                        {
+                            _db.UserLocations.Add(new UserLocation
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = user.Id,
+                                LocationId = loc.Id,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        _logger.LogInformation("Imported {Count} new Users.", added);
     }
 
     private async Task ImportMaterialListSheet(DataSet dataSet)

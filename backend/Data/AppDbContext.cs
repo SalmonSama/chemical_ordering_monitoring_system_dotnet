@@ -567,22 +567,77 @@ public class AppDbContext : DbContext
             new ItemLabSetting { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), ItemId = itemHCl.Id, LabId = labCT.Id, MinStock = 5.0m, ReorderQuantity = 10.0m, IsStocked = true, StorageSublocation = "Corrosives Cabinet", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
 
-        // ── Users (seed admin with bcrypt password) ───────────────────
-        // Password: Admin123!
+        // ── Users ─────────────────────────────────────────────────────
+        // Default password for all users: Admin123!
         // Static pre-computed hash (bcrypt) — do NOT use dynamic HashPassword() in seed data
         // as it generates a different hash each build, breaking EF migration snapshots.
+        var defaultHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG";
+        var seedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // ── System Admin (original) ──
+        var userSystemAdmin = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000001"), Email = "admin@chemwatch.local", FullName = "System Admin", PasswordHash = defaultHash, RoleId = roleAdmin.Id, LocationScopeType = "all", IsActive = true, CreatedAt = seedDate };
+
+        // ── Admins (from Excel) ──
+        var userPrapapan   = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000002"), Email = "mprapapan@dow.com",   FullName = "Prapapan",   PasswordHash = defaultHash, RoleId = roleAdmin.Id,      LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userWataporn   = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000003"), Email = "sutarinee@dow.com",   FullName = "Wataporn",   PasswordHash = defaultHash, RoleId = roleAdmin.Id,      LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userKunlaya    = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000004"), Email = "kboonyathee@dow.com", FullName = "Kunlaya",    PasswordHash = defaultHash, RoleId = roleAdmin.Id,      LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+
+        // ── Focal Points (from Excel) ──
+        var userKannarach  = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000005"), Email = "kannarach@dow.com",   FullName = "Kannarach",  PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userNatee      = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000006"), Email = "natee@dow.com",       FullName = "Natee",      PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userPanida     = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000007"), Email = "panida@dow.com",      FullName = "Panida",     PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userThongchai  = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000008"), Email = "thongchai@dow.com",   FullName = "Thongchai",  PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userNantawan   = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000009"), Email = "nantawan@dow.com",    FullName = "Nantawan",   PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userOnwara     = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000a"), Email = "onwara@dow.com",      FullName = "Onwara",     PasswordHash = defaultHash, RoleId = roleFocalPoint.Id, LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+
+        // ── Users (from Excel) ──
+        var userKesinee    = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000b"), Email = "kesinee@dow.com",     FullName = "Kesinee",    PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userNattapornA = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000c"), Email = "nattaporna@dow.com",  FullName = "NattapornA", PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userSuwichar   = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000d"), Email = "suwichar@dow.com",    FullName = "Suwichar",   PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "all",      IsActive = true, CreatedAt = seedDate };
+        var userNattapornK = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000e"), Email = "nattapornk@dow.com",  FullName = "NattapornK", PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userJariya     = new User { Id = Guid.Parse("20000000-0000-0000-0000-00000000000f"), Email = "jariya@dow.com",      FullName = "Jariya",     PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userChonnipa   = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000010"), Email = "chonnipa@dow.com",    FullName = "Chonnipa",   PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSoparat    = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000011"), Email = "soparat@dow.com",     FullName = "Soparat",    PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSriprai    = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000012"), Email = "sriprai@dow.com",     FullName = "Sriprai",    PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userWanna      = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000013"), Email = "wanna@dow.com",       FullName = "Wanna",      PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSupawadee  = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000014"), Email = "supawadee@dow.com",   FullName = "Supawadee",  PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userNannaphas  = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000015"), Email = "nannaphas@dow.com",   FullName = "Nannaphas",  PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSunisa     = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000016"), Email = "sunisa@dow.com",      FullName = "Sunisa",     PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSudarat    = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000017"), Email = "sudarat@dow.com",     FullName = "Sudarat",    PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userSaowaluck  = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000018"), Email = "saowaluck@dow.com",   FullName = "Saowaluck",  PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+        var userNarinL     = new User { Id = Guid.Parse("20000000-0000-0000-0000-000000000019"), Email = "narinl@dow.com",      FullName = "NarinL",     PasswordHash = defaultHash, RoleId = roleUser.Id,       LocationScopeType = "specific", IsActive = true, CreatedAt = seedDate };
+
         modelBuilder.Entity<User>().HasData(
-            new User
-            {
-                Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
-                Email = "admin@chemwatch.local",
-                FullName = "System Admin",
-                PasswordHash = "$2a$11$KXpGgVx0kUsaH5SzYFnBxu3pBXYf3MkGz8S1G0gKjHc5xV3uMCPyG",
-                RoleId = roleAdmin.Id,
-                LocationScopeType = "all",
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
+            userSystemAdmin,
+            userPrapapan, userWataporn, userKunlaya,
+            userKannarach, userNatee, userPanida, userThongchai, userNantawan, userOnwara,
+            userKesinee, userNattapornA, userSuwichar, userNattapornK,
+            userJariya, userChonnipa, userSoparat, userSriprai,
+            userWanna, userSupawadee, userNannaphas, userSunisa,
+            userSudarat, userSaowaluck, userNarinL
+        );
+
+        // ── UserLocations (for users with specific location scope) ────
+        modelBuilder.Entity<UserLocation>().HasData(
+            // Focal Points
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), UserId = userNatee.Id,      LocationId = locAIE.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), UserId = userPanida.Id,     LocationId = locAIE.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000003"), UserId = userThongchai.Id,  LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000004"), UserId = userNantawan.Id,   LocationId = locAIE.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000005"), UserId = userOnwara.Id,     LocationId = locCT.Id },
+            // Users
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000006"), UserId = userNattapornK.Id, LocationId = locATC.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000007"), UserId = userJariya.Id,     LocationId = locAIE.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000008"), UserId = userChonnipa.Id,   LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000009"), UserId = userSoparat.Id,    LocationId = locATC.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000a"), UserId = userSriprai.Id,    LocationId = locAIE.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000b"), UserId = userWanna.Id,      LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000c"), UserId = userSupawadee.Id,  LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000d"), UserId = userNannaphas.Id,  LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000e"), UserId = userSunisa.Id,     LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-00000000000f"), UserId = userSudarat.Id,    LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000010"), UserId = userSaowaluck.Id,  LocationId = locMTP.Id },
+            new UserLocation { Id = Guid.Parse("30000000-0000-0000-0000-000000000011"), UserId = userNarinL.Id,     LocationId = locCT.Id }
         );
     }
 }
