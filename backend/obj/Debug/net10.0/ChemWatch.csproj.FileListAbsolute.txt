@@ -407,3 +407,11 @@ C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backe
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\SixLabors.Fonts.dll
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\JIRAP\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\System.IO.Packaging.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\ClosedXML.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\ClosedXML.Parser.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\DocumentFormat.OpenXml.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\ExcelNumberFormat.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\RBush.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\SixLabors.Fonts.dll
+C:\Users\Salmon\Documents\GitHub\chemical_ordering_monitoring_system_dotnet\backend\bin\Debug\net10.0\System.IO.Packaging.dll
