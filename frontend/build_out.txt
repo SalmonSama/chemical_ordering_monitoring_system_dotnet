@@ -1,6 +1,0 @@
-
-> frontend@0.0.0 build
-> tsc -b && vite build
-
-src/pages/CheckoutPage.tsx(184,58): error TS17001: JSX elements cannot have multiple attributes with the same name.
-src/pages/CheckoutPage.tsx(185,57): error TS17001: JSX elements cannot have multiple attributes with the same name.
