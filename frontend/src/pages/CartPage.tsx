@@ -25,14 +25,14 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
   useEffect(() => {
     Promise.all([
       apiClient.get<Location[]>('/locations'),
-      apiClient.get<User[]>('/users'),
+      apiClient.get<User[]>('/users').catch(() => ({ data: user ? [user] : [] })),
     ])
       .then(([locRes, usersRes]) => {
         setLocations(locRes.data);
         setUsers(usersRes.data);
       })
       .catch(() => setError('Failed to load reference data'));
-  }, []);
+  }, [user]);
 
   // Compute labs when location changes
   useEffect(() => {

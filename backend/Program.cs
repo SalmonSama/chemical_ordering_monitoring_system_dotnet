@@ -62,6 +62,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<ChemWatch.Services.DataImportService>();
+builder.Services.AddScoped<ChemWatch.Services.IEmailService, ChemWatch.Services.SmtpEmailService>();
 
 var app = builder.Build();
 

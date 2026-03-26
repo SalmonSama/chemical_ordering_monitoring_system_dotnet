@@ -55,8 +55,13 @@ public record ApproveOrderRequest
 public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly ChemWatch.Services.IEmailService _emailService;
 
-    public OrdersController(AppDbContext db) => _db = db;
+    public OrdersController(AppDbContext db, ChemWatch.Services.IEmailService emailService)
+    {
+        _db = db;
+        _emailService = emailService;
+    }
 
     // ── POST /api/orders — Submit a new order ─────────────────────────
     [HttpPost]
@@ -385,7 +390,7 @@ public class OrdersController : ControllerBase
 
     // ── PUT /api/orders/{id}/approve — Approve order ──────────────────
     [HttpPut("{id:guid}/approve")]
-    [Authorize(Roles = "admin,focal_point")]
+    [Authorize]
     public async Task<IActionResult> ApproveOrder(Guid id, [FromBody] ApproveOrderRequest request)
     {
         var order = await _db.PurchaseRequests
@@ -436,6 +441,35 @@ public class OrdersController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        var itemsByVendor = order.Items
+            .Where(i => i.Status != "removed" && i.VendorId.HasValue)
+            .GroupBy(i => i.VendorId.Value)
+            .ToList();
+
+        foreach (var group in itemsByVendor)
+        {
+            var vendor = await _db.Vendors.FindAsync(group.Key);
+            if (vendor != null)
+            {
+                var targetEmail = !string.IsNullOrWhiteSpace(vendor.ContactEmail) 
+                    ? vendor.ContactEmail 
+                    : $"{vendor.Name.Replace(" ", "").ToLower()}@example.com";
+                    
+                var vendorItems = group.ToList();
+                foreach (var vi in vendorItems)
+                {
+                    if (vi.Item == null) await _db.Entry(vi).Reference(i => i.Item).LoadAsync();
+                }
+
+                await _emailService.SendVendorOrderEmailAsync(
+                    targetEmail,
+                    vendor.Name,
+                    order.PoNumber,
+                    vendorItems
+                );
+            }
+        }
 
         return Ok(new
         {

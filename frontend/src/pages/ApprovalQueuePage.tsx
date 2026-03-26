@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, ChangeEvent } from 'react';
 import apiClient from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import type {
   PurchaseRequest,
   PurchaseRequestLineItem,
@@ -15,6 +16,7 @@ interface EditState {
 }
 
 function ApprovalQueuePage(): React.JSX.Element {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +24,14 @@ function ApprovalQueuePage(): React.JSX.Element {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseRequest | null>(null);
   const [edits, setEdits] = useState<EditState>({});
-  const [approverUserId, setApproverUserId] = useState<string>('');
+  const [approverUserId, setApproverUserId] = useState<string>(user?.id || '');
   const [approvalNotes, setApprovalNotes] = useState<string>('');
+
+  useEffect(() => {
+    if (user?.id && !approverUserId) {
+      setApproverUserId(user.id);
+    }
+  }, [user?.id, approverUserId]);
   const [modifyNotes, setModifyNotes] = useState<string>('');
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
@@ -255,11 +263,11 @@ function ApprovalQueuePage(): React.JSX.Element {
             </label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {hasChanges() && (
-                <button onClick={handleModify} disabled={processing || !approverUserId} style={styles.modifyBtn}>
+                <button onClick={handleModify} disabled={processing} style={styles.modifyBtn}>
                   {processing ? '⏳...' : '✏️ Save Modifications'}
                 </button>
               )}
-              <button onClick={handleApprove} disabled={processing || !approverUserId} style={styles.approveBtn}>
+              <button onClick={handleApprove} disabled={processing} style={styles.approveBtn}>
                 {processing ? '⏳...' : '✅ Approve'}
               </button>
             </div>

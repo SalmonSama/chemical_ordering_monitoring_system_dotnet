@@ -67,7 +67,7 @@ function PeroxideLotsPage(): React.JSX.Element {
     setLoading(true);
     Promise.all([
       apiClient.get<PeroxideLot[]>('/peroxide/lots'),
-      apiClient.get<User[]>('/users')
+      apiClient.get<User[]>('/users').catch(() => ({ data: [] as User[] }))
     ])
       .then(([lotsRes, usersRes]) => {
         setLots(lotsRes.data);
@@ -318,9 +318,9 @@ function PeroxideLotsPage(): React.JSX.Element {
                       <button
                         onClick={() => openForm(lot.id)}
                         style={styles.actionBtn}
-                        disabled={activeId === lot.id || lot.status === 'quarantined'}
+                        disabled={activeId === lot.id}
                       >
-                        {lot.status === 'quarantined' ? '🚫 Quarantined' : '📝 Log Test'}
+                        {lot.status === 'quarantined' ? '📝 Log Test (Quarantined)' : '📝 Log Test'}
                       </button>
                     </td>
                   </tr>
