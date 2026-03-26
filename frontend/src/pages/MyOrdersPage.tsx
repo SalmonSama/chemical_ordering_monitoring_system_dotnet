@@ -45,7 +45,7 @@ function MyOrdersPage(): React.JSX.Element {
             <span>Status: <StatusBadge status={detail.status} /></span>
             <span>Lab: {detail.labName}</span>
             <span>Location: {detail.locationName}</span>
-            <span>Requester: {detail.requestedByName}</span>
+            <span>Requester: {detail.requestedByName ?? 'Unknown requester'}</span>
             <span>Submitted: {new Date(detail.submittedAt).toLocaleString()}</span>
             {detail.approvedByName && <span>Approved by: {detail.approvedByName}</span>}
             {detail.orderNotes && <span>Notes: {detail.orderNotes}</span>}
@@ -147,7 +147,7 @@ function MyOrdersPage(): React.JSX.Element {
                     <td>{o.locationName}</td>
                     <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.itemCount ?? '—'}</td>
                     <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalQty ?? '—'}</td>
-                    <td>{o.requestedByName}</td>
+                    <td>{o.requestedByName ?? 'Unknown requester'}</td>
                     <td>{new Date(o.submittedAt).toLocaleDateString()}</td>
                     <td>
                       <button onClick={() => viewDetail(o.id)} style={styles.viewBtn}>View</button>

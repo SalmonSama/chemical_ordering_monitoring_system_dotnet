@@ -491,7 +491,7 @@ public class OrdersController : ControllerBase
         pr.Status,
         labName = pr.Lab?.Name,
         locationName = pr.Location?.Name,
-        requestedBy = pr.RequestedByUser?.FullName,
+        requestedByName = pr.RequestedByUser?.FullName,
         pr.SubmittedAt,
         itemCount = pr.Items.Count(i => i.Status != "removed"),
         totalQty = pr.Items.Where(i => i.Status != "removed").Sum(i => i.QuantityOrdered),

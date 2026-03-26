@@ -190,7 +190,7 @@ function ApprovalQueuePage(): React.JSX.Element {
             <button onClick={() => setSelectedOrder(null)} style={styles.closeBtn}>✕ Close</button>
           </div>
           <div style={styles.meta}>
-            <span>Requester: {selectedOrder.requestedByName}</span>
+            <span>Requester: {selectedOrder.requestedByName ?? 'Unknown requester'}</span>
             <span>Lab: {selectedOrder.labName}</span>
             <span>Location: {selectedOrder.locationName}</span>
             <span>Submitted: {new Date(selectedOrder.submittedAt).toLocaleString()}</span>
@@ -298,7 +298,7 @@ function ApprovalQueuePage(): React.JSX.Element {
               {orders.map(o => (
                 <tr key={o.id}>
                   <td><code style={styles.code}>{o.poNumber}</code></td>
-                  <td>{o.requestedByName}</td>
+                  <td>{o.requestedByName ?? 'Unknown requester'}</td>
                   <td>{o.labName}</td>
                   <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.itemCount ?? '—'}</td>
                   <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{o.totalQty ?? '—'}</td>
