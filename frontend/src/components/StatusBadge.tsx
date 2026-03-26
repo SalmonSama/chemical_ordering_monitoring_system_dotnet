@@ -1,49 +1,57 @@
 export interface StatusBadgeProps {
     status: string;
+    size?: 'sm' | 'md';
 }
 
-export default function StatusBadge({ status }: StatusBadgeProps) {
+type BadgeType = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+
+const STATUS_MAP: Record<string, BadgeType> = {
+    // Success
+    active: 'success', received: 'success', 'fully received': 'success', fully_received: 'success',
+    approved: 'success', 'email sent': 'success', email_sent: 'success', normal: 'success', adequate: 'success',
+    // Warning
+    warning: 'warning', near_expire: 'warning', 'near-expiry': 'warning', 'below min': 'warning',
+    below_min: 'warning', 'partially received': 'warning', partially_received: 'warning',
+    // Danger
+    critical: 'danger', expired: 'danger', quarantine: 'danger', quarantined: 'danger',
+    'out of stock': 'danger', out_of_stock: 'danger', overdue: 'danger', rejected: 'danger',
+    // Info
+    'pending approval': 'info', pending_approval: 'info', modified: 'info',
+    'pending delivery': 'info', pending_delivery: 'info', pending: 'info',
+    'in-progress': 'info', in_progress: 'info', due_soon: 'info',
+    // Neutral
+    draft: 'neutral', 'in cart': 'neutral', in_cart: 'neutral', cancelled: 'neutral',
+    inactive: 'neutral', depleted: 'neutral', disposed: 'neutral', removed: 'neutral', consumed: 'neutral',
+};
+
+export default function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
     if (!status) return null;
 
-    const s = status.toLowerCase();
-    let type: 'success' | 'warning' | 'danger' | 'info' | 'neutral' = 'neutral';
-    
-    // Success mapping
-    if (['active', 'received', 'fully received', 'fully_received', 'approved', 'email sent', 'email_sent', 'normal', 'adequate'].includes(s)) type = 'success';
-    // Warning mapping
-    else if (['warning', 'near_expire', 'near-expiry', 'below min', 'below_min', 'partially received', 'partially_received'].includes(s)) type = 'warning';
-    // Danger mapping
-    else if (['critical', 'expired', 'quarantine', 'quarantined', 'out of stock', 'out_of_stock', 'overdue', 'rejected'].includes(s)) type = 'danger';
-    // Info mapping
-    else if (['pending approval', 'pending_approval', 'modified', 'pending delivery', 'pending_delivery', 'pending', 'in-progress', 'in_progress', 'due_soon'].includes(s)) type = 'info';
-    // Neutral mapping
-    else if (['draft', 'in cart', 'in_cart', 'cancelled', 'inactive', 'depleted', 'disposed', 'removed', 'consumed'].includes(s)) type = 'neutral';
-
-    let icon = '⚪';
-    if (type === 'success') icon = '✅';
-    if (type === 'warning') icon = '⚠️';
-    if (type === 'danger') icon = '🔴';
-    if (type === 'info') icon = '🔵';
-
+    const type = STATUS_MAP[status.toLowerCase()] ?? 'neutral';
     const cleanLabel = status.replace(/_/g, ' ');
+    const isSmall = size === 'sm';
 
     return (
-        <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            background: `var(--color-${type}-bg)`,
-            color: `var(--color-${type})`,
-            padding: '2px 10px',
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            textTransform: 'capitalize',
-            whiteSpace: 'nowrap',
-            border: `1px solid var(--color-${type})`,
-            opacity: 0.9
-        }}>
-            <span style={{fontSize: '0.65rem'}}>{icon}</span> {cleanLabel}
+        <span
+            className="badge"
+            style={{
+                background: `var(--color-${type}-bg)`,
+                color: `var(--color-${type})`,
+                fontSize: isSmall ? 'var(--text-xs)' : '0.8125rem',
+                padding: isSmall ? '2px 10px' : '3px 12px',
+                textTransform: 'capitalize',
+            }}
+        >
+            <span
+                style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: `var(--color-${type})`,
+                    flexShrink: 0,
+                }}
+            />
+            {cleanLabel}
         </span>
     );
 }

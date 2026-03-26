@@ -4,6 +4,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import {
+  ClipboardList,
+  Package,
+  Clock,
+  TestTube,
+  ShoppingCart,
+  Mail,
+  PackageCheck,
+  PackageMinus,
+  FlaskConical,
+  TimerReset,
+  ScrollText,
+  Scale,
+  CheckCircle,
+  RefreshCw,
+  MapPin,
+  ArrowRight,
+  type LucideIcon,
+} from 'lucide-react';
 import type {
   DashboardSummary,
   PendingOrderPreview,
@@ -64,10 +83,10 @@ export default function DashboardPage() {
           </p>
         </div>
         <div style={S.headerBadges}>
-          <span style={S.locationBadge}>📍 {locationLabel}</span>
+          <span style={S.locationBadge}><MapPin size={14} /> {locationLabel}</span>
           <span style={S.roleBadge}>{user?.roleDisplayName ?? 'User'}</span>
           <button onClick={fetchDashboard} style={S.refreshBtn} title="Refresh dashboard">
-            🔄
+            <RefreshCw size={14} />
           </button>
         </div>
       </div>
@@ -75,7 +94,7 @@ export default function DashboardPage() {
       {/* ── Error banner ────────────────────────────────────── */}
       {error && (
         <div style={S.errorBanner}>
-          ⚠️ {error}
+          {error}
           <button onClick={fetchDashboard} style={S.retryBtn}>Retry</button>
         </div>
       )}
@@ -83,7 +102,7 @@ export default function DashboardPage() {
       {/* ── Metric Cards ────────────────────────────────────── */}
       <div style={S.cardGrid}>
         <MetricCard
-          icon="📋" title="Pending Approvals"
+          Icon={ClipboardList} title="Pending Approvals"
           count={data?.pendingApprovals ?? 0}
           subtitle="Orders awaiting review"
           loading={loading} urgent={!!data && data.pendingApprovals > 0}
@@ -91,7 +110,7 @@ export default function DashboardPage() {
           onClick={() => navigate(canApprove ? '/orders/approval-queue' : '/orders/my-orders')}
         />
         <MetricCard
-          icon="📦" title="Low Stock Alerts"
+          Icon={Package} title="Low Stock Alerts"
           count={data?.lowStockCount ?? 0}
           subtitle="Items below minimum threshold"
           loading={loading} urgent={!!data && data.lowStockCount > 0}
@@ -99,7 +118,7 @@ export default function DashboardPage() {
           onClick={() => navigate('/reports/min-stock')}
         />
         <MetricCard
-          icon="⏳" title="Expiring Soon"
+          Icon={Clock} title="Expiring Soon"
           count={data?.expiringSoonCount ?? 0}
           subtitle="Lots at or near expiration"
           loading={loading} urgent={!!data && data.expiringSoonCount > 0}
@@ -107,7 +126,7 @@ export default function DashboardPage() {
           onClick={() => navigate('/reports/expired')}
         />
         <MetricCard
-          icon="🧪" title="Peroxide Due"
+          Icon={TestTube} title="Peroxide Due"
           count={data?.peroxideDueCount ?? 0}
           subtitle="Lots overdue or due soon"
           loading={loading} urgent={!!data && data.peroxideDueCount > 0}
@@ -119,18 +138,18 @@ export default function DashboardPage() {
       {/* ── Quick Actions ───────────────────────────────────── */}
       <SectionHeader title="Quick Actions" />
       <div style={S.actionsGrid}>
-        <ActionCard icon="🛒" label="Start New Order"    onClick={() => navigate('/orders/catalog')} />
-        <ActionCard icon="📬" label="Receive Delivery"   onClick={() => navigate('/inventory/check-in/pending-delivery')} />
+        <ActionCard Icon={ShoppingCart} label="Start New Order"    onClick={() => navigate('/orders/catalog')} />
+        <ActionCard Icon={Mail} label="Receive Delivery"   onClick={() => navigate('/inventory/check-in/pending-delivery')} />
         {canApprove && (
-          <ActionCard icon="📥" label="Manual Check-In"  onClick={() => navigate('/inventory/check-in/manual')} />
+          <ActionCard Icon={PackageCheck} label="Manual Check-In"  onClick={() => navigate('/inventory/check-in/manual')} />
         )}
-        <ActionCard icon="📤" label="Checkout / Consume" onClick={() => navigate('/inventory/checkout')} />
-        <ActionCard icon="⚗️" label="Peroxide Tracking"  onClick={() => navigate('/monitoring/peroxide')} />
+        <ActionCard Icon={PackageMinus} label="Checkout / Consume" onClick={() => navigate('/inventory/checkout')} />
+        <ActionCard Icon={FlaskConical} label="Peroxide Tracking"  onClick={() => navigate('/monitoring/peroxide')} />
         {canApprove && (
-          <ActionCard icon="⏳" label="Extend Shelf Life" onClick={() => navigate('/inventory/extend-shelf-life')} />
+          <ActionCard Icon={TimerReset} label="Extend Shelf Life" onClick={() => navigate('/inventory/extend-shelf-life')} />
         )}
-        <ActionCard icon="📋" label="Audit Log"          onClick={() => navigate('/reports/transactions')} />
-        <ActionCard icon="⚖️" label="Regulatory"         onClick={() => navigate('/reports/regulatory')} />
+        <ActionCard Icon={ScrollText} label="Audit Log"          onClick={() => navigate('/reports/transactions')} />
+        <ActionCard Icon={Scale} label="Regulatory"         onClick={() => navigate('/reports/regulatory')} />
       </div>
 
       {/* ── Preview Tables ──────────────────────────────────── */}
@@ -303,7 +322,7 @@ export default function DashboardPage() {
 /* ── Metric Card ─────────────────────────────────────────────── */
 
 interface MetricCardProps {
-  icon: string;
+  Icon: LucideIcon;
   title: string;
   count: number;
   subtitle: string;
@@ -313,7 +332,7 @@ interface MetricCardProps {
   onClick: () => void;
 }
 
-function MetricCard({ icon, title, count, subtitle, loading, urgent, accentColor, onClick }: MetricCardProps) {
+function MetricCard({ Icon, title, count, subtitle, loading, urgent, accentColor, onClick }: MetricCardProps) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -330,11 +349,13 @@ function MetricCard({ icon, title, count, subtitle, loading, urgent, accentColor
       onMouseLeave={() => setHovered(false)}
     >
       <div style={S.metricHeader}>
-        <span style={S.metricIcon}>{icon}</span>
+        <div style={{ ...S.metricIconWrap, background: `color-mix(in srgb, ${accentColor} 12%, transparent)` }}>
+          <Icon size={18} style={{ color: accentColor }} />
+        </div>
         <span style={S.metricTitle}>{title}</span>
       </div>
       {loading ? (
-        <div style={S.skeletonCount} />
+        <div className="skeleton" style={{ width: 60, height: '2.5rem', marginBottom: '0.35rem' }} />
       ) : (
         <div style={{
           ...S.metricCount,
@@ -344,7 +365,7 @@ function MetricCard({ icon, title, count, subtitle, loading, urgent, accentColor
         </div>
       )}
       <div style={S.metricSub}>{subtitle}</div>
-      <div style={S.metricAction}>View Details →</div>
+      <div style={S.metricAction}>View Details <ArrowRight size={14} /></div>
     </div>
   );
 }
@@ -359,7 +380,7 @@ function SectionHeader({ title }: { title: string }) {
 
 /* ── Action Card ─────────────────────────────────────────────── */
 
-function ActionCard({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+function ActionCard({ Icon, label, onClick }: { Icon: LucideIcon; label: string; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -373,7 +394,9 @@ function ActionCard({ icon, label, onClick }: { icon: string; label: string; onC
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <span style={S.actionIcon}>{icon}</span>
+      <div style={S.actionIconWrap}>
+        <Icon size={20} style={{ color: hovered ? 'var(--color-accent)' : 'var(--color-text-secondary)' }} />
+      </div>
       <span style={S.actionLabel}>{label}</span>
     </button>
   );
@@ -397,7 +420,7 @@ function PreviewPanel({ title, viewAllPath, navigate, children }: PreviewPanelPr
           style={S.viewAllBtn}
           onClick={() => navigate(viewAllPath)}
         >
-          View All →
+          View All <ArrowRight size={14} />
         </button>
       </div>
       <div style={S.previewBody}>
@@ -429,7 +452,7 @@ function SkeletonRows() {
 function EmptyPreview({ label }: { label: string }) {
   return (
     <div style={S.emptyState}>
-      <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>✅</span>
+      <CheckCircle size={24} style={{ opacity: 0.4 }} />
       <span>{label}</span>
     </div>
   );
@@ -577,7 +600,15 @@ const S: Record<string, CSSProperties> = {
     gap: '0.5rem',
     marginBottom: '0.75rem',
   },
-  metricIcon: { fontSize: '1.25rem' },
+  metricIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
   metricTitle: {
     color: 'var(--color-text-secondary)',
     fontSize: '0.8125rem',
@@ -601,14 +632,9 @@ const S: Record<string, CSSProperties> = {
     color: 'var(--color-accent)',
     fontSize: '0.8125rem',
     fontWeight: 600,
-  },
-  skeletonCount: {
-    width: '60px',
-    height: '2.5rem',
-    borderRadius: '6px',
-    background: 'var(--color-bg-hover)',
-    marginBottom: '0.35rem',
-    animation: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
   },
 
   // ── Section Title ──
@@ -638,7 +664,16 @@ const S: Record<string, CSSProperties> = {
     transition: 'all 0.15s ease',
     fontFamily: 'var(--font-family-sans)',
   },
-  actionIcon: { fontSize: '1.5rem' },
+  actionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: '10px',
+    background: 'var(--color-bg-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.15s ease',
+  },
   actionLabel: {
     fontSize: '0.8125rem',
     fontWeight: 600,
@@ -722,6 +757,7 @@ const S: Record<string, CSSProperties> = {
     height: '0.875rem',
     borderRadius: '4px',
     background: 'var(--color-bg-hover)',
+    animation: 'skeleton-pulse 1.5s ease-in-out infinite',
   },
 
   // ── Empty State ──

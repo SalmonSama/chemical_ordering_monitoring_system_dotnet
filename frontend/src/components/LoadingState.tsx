@@ -1,10 +1,24 @@
 import type { CSSProperties } from 'react';
 
-export default function LoadingState({ message = 'Loading data...' }: { message?: string }) {
+interface LoadingStateProps {
+    message?: string;
+    size?: 'sm' | 'md' | 'lg';
+}
+
+export default function LoadingState({ message = 'Loading data...', size = 'md' }: LoadingStateProps) {
+    const spinnerSize = size === 'sm' ? 16 : size === 'lg' ? 32 : 24;
+
     return (
         <div style={styles.container}>
-            <div style={styles.spinner}>⏳</div>
-            <div style={styles.text}>{message}</div>
+            <div
+                className="spinner"
+                style={{
+                    width: spinnerSize,
+                    height: spinnerSize,
+                    borderWidth: size === 'sm' ? 2 : 3,
+                }}
+            />
+            {message && <div style={styles.text}>{message}</div>}
         </div>
     );
 }
@@ -17,14 +31,10 @@ const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
         padding: '3rem',
         color: 'var(--color-text-secondary)',
-    },
-    spinner: {
-        fontSize: '2rem',
-        marginBottom: '1rem',
-        opacity: 0.8
+        gap: '0.75rem',
     },
     text: {
-        fontSize: '0.95rem',
-        fontWeight: 500
-    }
+        fontSize: 'var(--text-sm)',
+        fontWeight: 500,
+    },
 };

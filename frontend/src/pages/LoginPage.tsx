@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FlaskConical, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -31,7 +32,9 @@ export default function LoginPage() {
       <div style={styles.card}>
         {/* Logo / branding */}
         <div style={styles.brand}>
-          <div style={styles.brandIcon}>⚗️</div>
+          <div style={styles.brandIconWrap}>
+            <FlaskConical size={28} style={{ color: '#fff' }} />
+          </div>
           <h1 style={styles.brandName}>ChemWatch</h1>
           <p style={styles.brandSub}>Lab Inventory &amp; Chemical Ordering System</p>
         </div>
@@ -41,37 +44,43 @@ export default function LoginPage() {
 
           {error && (
             <div style={styles.errorBox} role="alert">
-              <span>⚠️</span> {error}
+              {error}
             </div>
           )}
 
           <div style={styles.field}>
             <label htmlFor="email" style={styles.label}>Email address</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              autoComplete="email"
-              autoFocus
-              style={styles.input}
-            />
+            <div style={styles.inputWrap}>
+              <Mail size={16} style={styles.inputIcon} />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+                autoFocus
+                style={styles.input}
+              />
+            </div>
           </div>
 
           <div style={styles.field}>
             <label htmlFor="password" style={styles.label}>Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              autoComplete="current-password"
-              style={styles.input}
-            />
+            <div style={styles.inputWrap}>
+              <Lock size={16} style={styles.inputIcon} />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+                style={styles.input}
+              />
+            </div>
           </div>
 
           <button
@@ -83,7 +92,17 @@ export default function LoginPage() {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? '⏳ Signing in…' : 'Sign In →'}
+            {loading ? (
+              <>
+                <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} />
+                Signing in…
+              </>
+            ) : (
+              <>
+                Sign In
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
 
           <div style={styles.links}>
@@ -120,9 +139,15 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     marginBottom: '2rem',
   },
-  brandIcon: {
-    fontSize: '2.5rem',
-    marginBottom: '0.5rem',
+  brandIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: '12px',
+    background: 'var(--color-accent)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '0.75rem',
   },
   brandName: {
     fontSize: '1.5rem',
@@ -168,11 +193,22 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     color: 'var(--color-text-secondary)',
   },
+  inputWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 12,
+    color: 'var(--color-text-tertiary)',
+    pointerEvents: 'none',
+  },
   input: {
-    // Base styles come from index.css; override only what's needed
-    padding: '9px 12px',
+    padding: '9px 12px 9px 36px',
     borderRadius: '8px',
     fontSize: '0.9375rem',
+    width: '100%',
   },
   button: {
     background: 'var(--color-accent)',
@@ -184,7 +220,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     marginTop: '4px',
     width: '100%',
+    display: 'flex',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: '8px',
   },
   links: {
     textAlign: 'center',
