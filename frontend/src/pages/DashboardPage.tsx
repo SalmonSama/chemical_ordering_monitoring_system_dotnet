@@ -484,7 +484,7 @@ function shortDate(iso: string): string {
 
 const S: Record<string, CSSProperties> = {
   page: {
-    maxWidth: '1400px',
+    width: '100%',
   },
 
   // ── Header ──

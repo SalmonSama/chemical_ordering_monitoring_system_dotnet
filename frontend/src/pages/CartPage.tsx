@@ -25,7 +25,7 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
   useEffect(() => {
     Promise.all([
       apiClient.get<Location[]>('/locations'),
-      apiClient.get<User[]>('/users').catch(() => ({ data: user ? [user] : [] })),
+      apiClient.get<User[]>('/users').catch(() => ({ data: (user ? [user] : []) as unknown as User[] })),
     ])
       .then(([locRes, usersRes]) => {
         setLocations(locRes.data);
