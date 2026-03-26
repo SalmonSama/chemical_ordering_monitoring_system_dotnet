@@ -9,14 +9,6 @@ import {
   Package,
   Clock,
   TestTube,
-  ShoppingCart,
-  Mail,
-  PackageCheck,
-  PackageMinus,
-  FlaskConical,
-  TimerReset,
-  ScrollText,
-  Scale,
   CheckCircle,
   RefreshCw,
   MapPin,
@@ -135,22 +127,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Quick Actions ───────────────────────────────────── */}
-      <SectionHeader title="Quick Actions" />
-      <div style={S.actionsGrid}>
-        <ActionCard Icon={ShoppingCart} label="Start New Order"    onClick={() => navigate('/orders/catalog')} />
-        <ActionCard Icon={Mail} label="Receive Delivery"   onClick={() => navigate('/inventory/check-in/pending-delivery')} />
-        {canApprove && (
-          <ActionCard Icon={PackageCheck} label="Manual Check-In"  onClick={() => navigate('/inventory/check-in/manual')} />
-        )}
-        <ActionCard Icon={PackageMinus} label="Checkout / Consume" onClick={() => navigate('/inventory/checkout')} />
-        <ActionCard Icon={FlaskConical} label="Peroxide Tracking"  onClick={() => navigate('/monitoring/peroxide')} />
-        {canApprove && (
-          <ActionCard Icon={TimerReset} label="Extend Shelf Life" onClick={() => navigate('/inventory/extend-shelf-life')} />
-        )}
-        <ActionCard Icon={ScrollText} label="Audit Log"          onClick={() => navigate('/reports/transactions')} />
-        <ActionCard Icon={Scale} label="Regulatory"         onClick={() => navigate('/reports/regulatory')} />
-      </div>
+
 
       {/* ── Preview Tables ──────────────────────────────────── */}
       <div style={S.tablesGrid}>
@@ -370,37 +347,7 @@ function MetricCard({ Icon, title, count, subtitle, loading, urgent, accentColor
   );
 }
 
-/* ── Section Header ──────────────────────────────────────────── */
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <h2 style={S.sectionTitle}>{title}</h2>
-  );
-}
-
-/* ── Action Card ─────────────────────────────────────────────── */
-
-function ActionCard({ Icon, label, onClick }: { Icon: LucideIcon; label: string; onClick: () => void }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      style={{
-        ...S.actionCard,
-        background: hovered ? 'var(--color-bg-hover)' : 'var(--color-bg-surface)',
-        borderColor: hovered ? 'var(--color-accent)' : 'var(--color-border)',
-        transform: hovered ? 'translateY(-1px)' : 'none',
-      }}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div style={S.actionIconWrap}>
-        <Icon size={20} style={{ color: hovered ? 'var(--color-accent)' : 'var(--color-text-secondary)' }} />
-      </div>
-      <span style={S.actionLabel}>{label}</span>
-    </button>
-  );
-}
 
 /* ── Preview Panel ───────────────────────────────────────────── */
 
@@ -637,49 +584,7 @@ const S: Record<string, CSSProperties> = {
     gap: '4px',
   },
 
-  // ── Section Title ──
-  sectionTitle: {
-    color: 'var(--color-text-primary)',
-    fontSize: '1.0625rem',
-    fontWeight: 700,
-    margin: '0 0 0.75rem',
-  },
 
-  // ── Action Cards ──
-  actionsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '0.75rem',
-    marginBottom: '2rem',
-  },
-  actionCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '1rem 0.75rem',
-    border: '1px solid var(--color-border)',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-    fontFamily: 'var(--font-family-sans)',
-  },
-  actionIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: '10px',
-    background: 'var(--color-bg-primary)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'background 0.15s ease',
-  },
-  actionLabel: {
-    fontSize: '0.8125rem',
-    fontWeight: 600,
-    color: 'var(--color-text-primary)',
-    textAlign: 'center',
-  },
 
   // ── Preview Panels ──
   tablesGrid: {
