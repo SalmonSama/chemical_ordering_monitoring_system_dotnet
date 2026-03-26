@@ -52,7 +52,6 @@ function InventoryLotsPage(): React.JSX.Element {
                 <th>Location</th>
                 <th>Qty Received</th>
                 <th>Qty Remaining</th>
-                <th>Unit</th>
                 <th>Status</th>
                 <th>Expiry</th>
                 <th>Source</th>
@@ -70,7 +69,6 @@ function InventoryLotsPage(): React.JSX.Element {
                     <td>{lot.location?.name ?? '—'}</td>
                     <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{lot.quantityReceived}</td>
                     <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{lot.quantityRemaining}</td>
-                    <td>{lot.unit}</td>
                     <td><StatusBadge status={lot.status} /></td>
                     <td>{fmtDate(lot.expiryDate)}</td>
                     <td><span style={styles.sourceTag}>{lot.sourceType}</span></td>

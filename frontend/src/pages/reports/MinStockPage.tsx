@@ -117,9 +117,9 @@ export default function MinStockPage() {
                       <div>{row.labName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.locationName}</div>
                     </td>
-                    <td ><strong style={{ color: row.statusIndicator === 'out_of_stock' ? 'var(--color-danger)' : 'var(--color-text-primary)'}}>{row.totalQuantity} {row.unit}</strong></td>
-                    <td >{row.minStock} {row.unit}</td>
-                    <td ><strong style={{ color: 'var(--color-warning)' }}>-{row.deficit} {row.unit}</strong></td>
+                    <td ><strong style={{ color: row.statusIndicator === 'out_of_stock' ? 'var(--color-danger)' : 'var(--color-text-primary)'}}>{row.totalQuantity}</strong></td>
+                    <td >{row.minStock}</td>
+                    <td ><strong style={{ color: 'var(--color-warning)' }}>-{row.deficit}</strong></td>
                     <td >
                       {row.longLeadTime === 'Yes' ? <span style={styles.leadTimeBadge}>⚠️ LONG</span> : <span style={{ color: 'var(--color-border)' }}>Standard</span>}
                     </td>

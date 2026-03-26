@@ -66,7 +66,7 @@ export default function CheckoutPage(): React.JSX.Element {
         notes: notes
       });
       
-      setSuccessMsg(`✅ Successfully checked out ${qty} ${lot.unit}. Remaining: ${resp.data.inventoryLot.quantityRemaining}`);
+      setSuccessMsg(`✅ Successfully checked out ${qty}. Remaining: ${resp.data.inventoryLot.quantityRemaining}`);
       
       // Update lot data with new info returned
       setLot({
@@ -134,7 +134,7 @@ export default function CheckoutPage(): React.JSX.Element {
             <div>
               <div style={styles.label}>Remaining</div>
               <div style={{...styles.value, fontWeight: 'bold'}}>
-                {lot.quantityRemaining} {lot.unit}
+                {lot.quantityRemaining}
               </div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function CheckoutPage(): React.JSX.Element {
           ) : (
              <form onSubmit={handleCheckout} style={styles.checkoutForm}>
                <label style={styles.formField}>
-                 <span style={styles.label}>Quantity to Consume ({lot.unit}) *</span>
+                 <span style={styles.label}>Quantity to Consume *</span>
                  <input
                    type="number"
                    step="0.001"

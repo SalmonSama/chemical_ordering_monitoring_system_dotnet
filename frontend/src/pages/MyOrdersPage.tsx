@@ -59,7 +59,6 @@ function MyOrdersPage(): React.JSX.Element {
                     <th>Item</th>
                     <th>Vendor</th>
                     <th>Qty</th>
-                    <th>Unit</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -70,7 +69,6 @@ function MyOrdersPage(): React.JSX.Element {
                         <td>{i.itemName}</td>
                         <td>{i.vendorName ?? '—'}</td>
                         <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{i.quantityOrdered}</td>
-                        <td>{i.unit}</td>
                         <td>
                           <StatusBadge status={i.status === 'pending' ? 'pending_approval' : i.status} />
                         </td>

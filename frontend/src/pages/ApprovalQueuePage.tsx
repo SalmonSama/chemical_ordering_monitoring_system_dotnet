@@ -203,7 +203,6 @@ function ApprovalQueuePage(): React.JSX.Element {
                 <th>Item</th>
                 <th>Vendor</th>
                 <th>Qty</th>
-                <th>Unit</th>
                 <th>Remove</th>
               </tr>
             </thead>
@@ -236,7 +235,6 @@ function ApprovalQueuePage(): React.JSX.Element {
                         disabled={edit.remove}
                       />
                     </td>
-                    <td>{li.unit}</td>
                     <td>
                       <input
                         type="checkbox"

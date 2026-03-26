@@ -146,7 +146,7 @@ function ManualCheckInPage(): React.JSX.Element {
           <p style={{ margin: 0, fontWeight: 600 }}>✅ Check-in completed successfully</p>
           <p style={{ margin: '0.5rem 0 0', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
             Lot <strong style={{ color: 'var(--color-accent-hover)' }}>{result.inventoryLot.lotNumber}</strong> created
-            — {result.inventoryLot.quantityReceived} {result.inventoryLot.unit}
+            — {result.inventoryLot.quantityReceived} received
             — Status: <StatusBadge status={result.inventoryLot.status} />
           </p>
         </div>
@@ -219,7 +219,7 @@ function ManualCheckInPage(): React.JSX.Element {
           </label>
         </div>
 
-        {/* Row 4: Lot #, Qty, Unit */}
+        {/* Row 4: Lot #, Qty */}
         <div style={styles.row}>
           <label style={styles.fieldBlock}>
             <span style={styles.label}>Lot Number *</span>
@@ -229,10 +229,7 @@ function ManualCheckInPage(): React.JSX.Element {
             <span style={styles.label}>Quantity *</span>
             <input type="number" min="0.001" step="any" value={form.quantity} onChange={onChange('quantity')} required placeholder="0.00" />
           </label>
-          <label style={{ ...styles.fieldBlock, maxWidth: '100px' }}>
-            <span style={styles.label}>Unit</span>
-            <input type="text" value={form.unit} onChange={onChange('unit')} readOnly />
-          </label>
+
         </div>
 
         {/* Row 5: Dates */}

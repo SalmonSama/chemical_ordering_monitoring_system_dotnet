@@ -123,7 +123,6 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
                   <th style={styles.th}>Item</th>
                   <th style={styles.th}>Vendor</th>
                   <th style={styles.th}>Qty</th>
-                  <th style={styles.th}>Unit</th>
                   <th style={styles.th}>Note</th>
                   <th style={styles.th}></th>
                 </tr>
@@ -143,7 +142,6 @@ function CartPage({ cart, setCart }: CartPageProps): React.JSX.Element {
                         style={styles.qtyInput}
                       />
                     </td>
-                    <td style={styles.td}>{c.unit}</td>
                     <td style={styles.td}>
                       <input
                         type="text"
@@ -236,6 +234,7 @@ const styles: Record<string, CSSProperties> = {
     background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: 'none',
     borderRadius: '6px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.85rem',
   },
+
   formSection: {
     background: 'var(--color-bg-surface)', borderRadius: '12px', border: '1px solid var(--color-border)',
     padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem',

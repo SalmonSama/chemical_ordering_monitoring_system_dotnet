@@ -182,9 +182,9 @@ function PendingDeliveryPage(): React.JSX.Element {
                     <td>{item.itemName}</td>
                     <td>{item.vendorName ?? '—'}</td>
                     <td>{item.labName} / {item.locationName}</td>
-                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityOrdered} {item.unit}</td>
-                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityReceived} {item.unit}</td>
-                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityRemaining} {item.unit}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityOrdered}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityReceived}</td>
+                    <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{item.quantityRemaining}</td>
                     <td><StatusBadge status={item.status} /></td>
                     <td>
                       <button
